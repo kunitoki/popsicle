@@ -1,0 +1,8 @@
+include CMakeLists.txt
+
+graft popsicle/data
+
+graft JUCE/modules
+graft JUCE/extras/Build
+
+global-exclude *.py[cod]
