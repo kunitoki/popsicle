@@ -1,0 +1,10 @@
+__pycache__/
+dist/
+build/
+cxxbuild/
+repro/
+*.pyc
+.DS_Store
+
+popsicle/data/
+popsicle.egg-info/
