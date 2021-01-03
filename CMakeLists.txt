@@ -28,7 +28,7 @@ function(juce_add_shared_library target)
 endfunction()
 
 juce_add_shared_library(${PROJECT_NAME}
-    VERSION     0.0.1)
+    VERSION     1.0.0)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 14)
 
