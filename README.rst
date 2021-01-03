@@ -32,7 +32,7 @@ Example usage
 
           random = juce.Random.getSystemRandom()
           rect = juce.Rectangle[int](0, 0, 20, 20)
- 
+
           for _ in range(100):
               g.setColour(juce.Colour(
                   random.nextInt(256),
@@ -69,7 +69,7 @@ Example usage
       def closeButtonPressed(self):
           juce.JUCEApplication.getInstance().systemRequestedQuit()
 
-  
+
   class Application(juce.JUCEApplication):
       def getApplicationName(self):
           return "JUCE-o-matic"
@@ -98,7 +98,7 @@ At the moment the wheels are not published to pypi so you will need to indepentl
 
 .. code-block:: bash
 
-  pip install cppyy>=1.8.0
+  pip install cppyy>=1.9.1
 
 Then build popsicle from source.
 
@@ -112,12 +112,12 @@ First step is to build JUCE. Step into the popsicle directory, then issue the fo
 
   rm -Rf cxxbuild
   mkdir -p cxxbuild
-  
+
   pushd cxxbuild
   cmake -G "Ninja Multi-Config"
   cmake --build . --config Release
   popd
-  
+
 Then it's possible to package a wheel and install it (this is currently only tested on macOS, and will need some more refinement):
 
 .. code-block:: bash

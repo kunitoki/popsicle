@@ -4,6 +4,15 @@ import setuptools
 import glob
 import shutil
 
+try:
+    from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
+    class bdist_wheel(_bdist_wheel):
+        def finalize_options(self):
+            _bdist_wheel.finalize_options(self)
+            self.root_is_pure = False
+except ImportError:
+    bdist_wheel = None
+
 data_folder = "popsicle/data"
 
 shutil.rmtree(data_folder, ignore_errors=True)
@@ -29,23 +38,27 @@ for f in glob.glob("cxxbuild/popsicle_artefacts/*.*"):
 package_data = glob.glob("{}/**/*".format(data_folder)) + glob.glob("{}/*".format(data_folder))
 package_data = [d for d in package_data if os.path.isfile(d)]
 
+with open("README.rst", "r") as f:
+    long_description = f.read()
+
 setuptools.setup(
     name="popsicle",
-    version="0.0.1",
+    version="0.0.2",
     author="Lucio 'kRAkEn/gORe' Asnaghi",
     author_email="kunitoki@gmail.com",
     description="popsicle is JUCE Python Bindings on top of cppyy",
-    long_description="popsicle is JUCE Python Bindings on top of cppyy",
-    long_description_content_type="text/plain",
+    long_description=long_description,
+    long_description_content_type="text/x-rst",
     url="https://github.com/kunitoki/popsicle",
     packages=setuptools.find_packages(".", exclude=["examples"]),
-    package_data={"": package_data},
+    package_data={ "": package_data },
     include_package_data=True,
     zip_safe=False,
-    platforms=["macosx", "win32", "linux"],
+    cmdclass={ "bdist_wheel": bdist_wheel },
+    platforms=[ "macosx", "win32", "linux" ],
     python_requires='>=3.6',
     install_requires=[
-        "cppyy>=1.8.0"
+        "cppyy>=1.9.1"
     ],
     license='GPLv3',
     classifiers=[
