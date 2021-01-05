@@ -23,12 +23,11 @@ function(juce_add_shared_library target)
 
     target_compile_definitions(${target} PRIVATE JUCE_STANDALONE_APPLICATION=1)
     _juce_initialise_target(${target} ${ARGN})
-    _juce_set_output_name(${target} "$<TARGET_PROPERTY:${target},JUCE_PRODUCT_NAME>.so")
+    _juce_set_output_name(${target} $<TARGET_PROPERTY:${target},JUCE_PRODUCT_NAME>)
     set_target_properties(${target} PROPERTIES JUCE_TARGET_KIND_STRING "App")
 endfunction()
 
-juce_add_shared_library(${PROJECT_NAME}
-    VERSION     1.0.0)
+juce_add_shared_library(${PROJECT_NAME} VERSION 1.0.0)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 14)
 
