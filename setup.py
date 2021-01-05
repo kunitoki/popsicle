@@ -1,17 +1,13 @@
 import os
-import sys
 import setuptools
 import glob
 import shutil
 
-try:
-    from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
-    class bdist_wheel(_bdist_wheel):
-        def finalize_options(self):
-            _bdist_wheel.finalize_options(self)
-            self.root_is_pure = False
-except ImportError:
-    bdist_wheel = None
+from setuptools.dist import Distribution
+
+class BinaryDistribution(Distribution):
+    def has_ext_modules(foo):
+        return True
 
 data_folder = "popsicle/data"
 
@@ -38,12 +34,12 @@ for f in glob.glob("cxxbuild/popsicle_artefacts/*.*"):
 package_data = glob.glob("{}/**/*".format(data_folder)) + glob.glob("{}/*".format(data_folder))
 package_data = [d for d in package_data if os.path.isfile(d)]
 
-with open("README.rst", "r") as f:
-    long_description = f.read()
+with open("VERSION.txt", "r") as f: version = f.read()
+with open("README.rst", "r") as f: long_description = f.read()
 
 setuptools.setup(
     name="popsicle",
-    version="0.0.2",
+    version=version,
     author="Lucio 'kRAkEn/gORe' Asnaghi",
     author_email="kunitoki@gmail.com",
     description="popsicle is JUCE Python Bindings on top of cppyy",
@@ -54,12 +50,10 @@ setuptools.setup(
     package_data={ "": package_data },
     include_package_data=True,
     zip_safe=False,
-    cmdclass={ "bdist_wheel": bdist_wheel },
+    distclass=BinaryDistribution,
     platforms=[ "macosx", "win32", "linux" ],
     python_requires=">=3.6",
-    install_requires=[
-        "cppyy>=1.9.1"
-    ],
+    install_requires=[ "cppyy>=1.9.1" ],
     license="GPLv3",
     classifiers=[
         "Intended Audience :: Developers",
