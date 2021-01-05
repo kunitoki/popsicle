@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8, pypy3]
+        python-version: [3.7, 3.8]
     steps:
     - uses: actions/checkout@v2
       with:
@@ -30,17 +30,17 @@ jobs:
     - name: Clean Python Wheel
       #working-directory: ${{runner.workspace}}
       shell: bash
-      run: python setup.py clean --all
+      run: python3 setup.py clean --all
     - name: Build Python Wheel
       #working-directory: ${{runner.workspace}}
       shell: bash
-      run: python setup.py sdist bdist_wheel
+      run: python3 setup.py sdist bdist_wheel
 
   macos_build:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8, pypy3]
+        python-version: [3.7, 3.8]
     steps:
     - uses: actions/checkout@v2
       with:
@@ -58,11 +58,11 @@ jobs:
     - name: Clean Python Wheel
       #working-directory: ${{runner.workspace}}
       shell: bash
-      run: python setup.py clean --all
+      run: python3 setup.py clean --all
     - name: Build Python Wheel
       #working-directory: ${{runner.workspace}}
       shell: bash
-      run: python setup.py sdist bdist_wheel
+      run: python3 setup.py sdist bdist_wheel
   
 #  windows_build:
 #    runs-on: windows-latest
