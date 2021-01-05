@@ -8,6 +8,10 @@ popsicle
 
 Popsicle is a project that aims to give JUCE a broader audience by allowing it to be used from python. By using *cppyy* (http://cppyy.readthedocs.io/en/latest/) it exposes the full JUCE api in a pythonic way, and the way it enables to write JUCE apps in python is very much similar to the way of writing them in C++.
 
+.. image:: https://github.com/kunitoki/popsicle/workflows/Build%20Wheels/badge.svg
+   :alt: status
+   :target: https://github.com/kunitoki/popsicle/actions
+
 -------------
 Example usage
 -------------
@@ -137,10 +141,21 @@ First step is to build JUCE. Step into the popsicle directory, then issue the fo
   cmake --build . --config Release
   popd
 
-Then it's possible to package a wheel and install it (this is currently only tested on macOS, and will need some more refinement):
+Then it's possible to package a wheel and install it (currently this is only tested on macOS and Linux):
 
 .. code-block:: bash
 
-  python setup.py clean --all
-  python setup.py sdist bdist_wheel
-  pip install dist/popsicle-0.0.1-py3-none-any.whl
+  # Cleanup the temporary folders
+  python3 setup.py clean --all
+
+  # Build the binary distribution
+  python3 setup.py bdist_wheel
+
+  # Install the local wheel
+  pip3 install dist/popsicle-*.whl
+
+Eventually uploading to PyPI:
+
+.. code-block:: bash
+
+  python3 -m twine upload --repository popsicle dist/popsicle-*.whl

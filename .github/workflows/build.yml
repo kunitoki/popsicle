@@ -1,6 +1,7 @@
 name: Build Wheels
 
-on: [push]
+on:
+  push
 
 env:
   BUILD_TYPE: Release
@@ -61,7 +62,7 @@ jobs:
     - name: Build Python Wheel
       shell: bash
       run: python3 setup.py bdist_wheel
-  
+
 #  windows_build:
 #    runs-on: windows-latest
 #    steps:
