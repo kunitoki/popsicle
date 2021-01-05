@@ -90,6 +90,25 @@ Example usage
 
 As easy as that ! You will find more example on JUCE usage in the *examples* folder.
 
+--------------------
+Example Applications
+--------------------
+
+.. image:: https://github.com/kunitoki/popsicle/raw/master/images/animated_component.png
+   :target: https://github.com/kunitoki/popsicle/blob/master/examples/animated_component.py
+
+.. image:: https://github.com/kunitoki/popsicle/raw/master/images/juce_o_matic.png
+   :target: https://github.com/kunitoki/popsicle/blob/master/examples/juce_o_matic.py
+
+.. image:: https://github.com/kunitoki/popsicle/raw/master/images/audio_player_waveform.png
+   :target: https://github.com/kunitoki/popsicle/blob/master/examples/audio_player_wave_cpp.py
+
+.. image:: https://github.com/kunitoki/popsicle/raw/master/images/layout_flexgrid.png
+   :target: https://github.com/kunitoki/popsicle/blob/master/examples/layout_flexgrid.py
+
+.. image:: https://github.com/kunitoki/popsicle/raw/master/images/layout_rectangles.png
+   :target: https://github.com/kunitoki/popsicle/blob/master/examples/layout_rectangles.py
+
 ------------
 Installation
 ------------
