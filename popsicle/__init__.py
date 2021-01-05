@@ -54,21 +54,25 @@ def START_JUCE_APPLICATION(application_class):
     elif sys.platform in ["darwin"]:
         juce.initialiseNSApplication()
 
-    app = application_class()
+    application = None
 
     try:
+        application = application_class()
+
         mm = juce.MessageManager.getInstance()
         mm.setCurrentThreadAsMessageThread()
 
-        if app.initialiseApp():
+        if application.initialiseApp():
             mm.runDispatchLoop()
 
     except Exception as e:
         print(e)
 
     finally:
-        result = app.shutdownApp()
-        del app
+        result = 255
+        if application:
+            result = application.shutdownApp()
+            del application
 
         gc.collect()
 

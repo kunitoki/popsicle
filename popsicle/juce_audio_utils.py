@@ -13,5 +13,17 @@ __all__ = []
 def __juce_include():
     __cppyy.include("juce_audio_utils/juce_audio_utils.h")
 
+    def __pythonize(klass, name):
+        if name == "AudioThumbnail":
+            original_set_source = klass.setSource
+
+            def set_source(obj, source):
+                source.__python_owns__ = False
+                original_set_source(obj, source)
+
+            klass.setSource = set_source
+
+    __cppyy.py.add_pythonization(__pythonize, "juce")
+
 __juce_bootstrap()
 __juce_include()
