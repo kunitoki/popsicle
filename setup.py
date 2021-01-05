@@ -56,18 +56,21 @@ setuptools.setup(
     zip_safe=False,
     cmdclass={ "bdist_wheel": bdist_wheel },
     platforms=[ "macosx", "win32", "linux" ],
-    python_requires='>=3.6',
+    python_requires=">=3.6",
     install_requires=[
         "cppyy>=1.9.1"
     ],
-    license='GPLv3',
+    license="GPLv3",
     classifiers=[
-        "Programming Language :: Python :: 3",
+        "Intended Audience :: Developers",
+        "Topic :: Software Development :: Libraries :: Application Frameworks",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+        "Development Status :: 3 - Alpha",
+        "Programming Language :: Python :: 3 :: Only",
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: Microsoft :: Windows",
-        "Operating System :: POSIX",
-    ],
+        "Operating System :: POSIX :: Linux"
+    ]
 )
 
 shutil.rmtree(data_folder, ignore_errors=True)
