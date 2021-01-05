@@ -57,12 +57,10 @@ class SimpleThumbnailComponent(juce_multi(juce.Component, juce.ChangeListener)):
         self.thumbnail = juce.AudioThumbnail(sourceSamplesPerThumbnailSample, formatManager, cache)
         self.thumbnail.addChangeListener(self)
 
-    def __del__(self):
-        self.thumbnail.clear()
-
     def setFile(self, file):
-        self.fileInputSource = juce.FileInputSource(file)
-        #self.thumbnail.setSource(self.fileInputSource)
+        source = juce.FileInputSource(file)
+        #source.__python_owns__ = False
+        self.thumbnail.setSource(source)
 
     def paint(self, g):
         if self.thumbnail.getNumChannels() == 0:
@@ -129,7 +127,7 @@ class MainContentComponent(juce_multi(cppyy.gbl.AudioAppComponent, juce.ChangeLi
 
     deviceManager = juce.AudioDeviceManager()
     formatManager = juce.AudioFormatManager()
-    #thumbnailCache = juce.AudioThumbnailCache(5)
+
     state = TransportState.Stopped
 
     def __init__(self):
@@ -167,9 +165,6 @@ class MainContentComponent(juce_multi(cppyy.gbl.AudioAppComponent, juce.ChangeLi
         self.setSize(600, 400)
 
     def __del__(self):
-        del self.thumbnailComp
-        self.thumbnailCache.clear()
-
         self.hasReader.store(False)
         self.deviceManager.removeAudioCallback(self.audioSourcePlayer)
 

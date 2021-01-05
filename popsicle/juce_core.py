@@ -12,10 +12,7 @@ def __juce_include():
 
     def __pythonize(klass, name):
         if name == "String":
-            try:
-                klass.__str__ = klass.toRawUTF8
-            except KeyError:
-                pass
+            klass.__str__ = klass.toRawUTF8
 
     __cppyy.py.add_pythonization(__pythonize, "juce")
 
