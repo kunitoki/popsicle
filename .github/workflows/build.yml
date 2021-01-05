@@ -18,7 +18,7 @@ jobs:
     - name: Set up *nix dependencies
       run: |
         sudo apt-get install zlib1g-dev libpng-dev libcurl3-dev libcurl4-openssl-dev libssl-dev libasound2-dev libfreetype6-dev libxcomposite-dev libxcursor-dev libxinerama-dev libxrandr-dev libxrender-dev libx11-dev x11proto-randr-dev x11proto-render-dev x11proto-xinerama-dev freeglut3-dev mesa-common-dev
-        sudo pip3 install setuptools
+        sudo pip3 install setuptools wheel
     - name: Create Build Environment For JUCE
       run: cmake -E make_directory cxxbuild
     - name: Configure JUCE
@@ -34,7 +34,7 @@ jobs:
       run: python3 setup.py clean --all
     - name: Build Python Wheel
       shell: bash
-      run: python3 setup.py sdist bdist_wheel
+      run: python3 setup.py bdist_wheel
 
   macos_build:
     runs-on: macos-latest
@@ -60,7 +60,7 @@ jobs:
       run: python3 setup.py clean --all
     - name: Build Python Wheel
       shell: bash
-      run: python3 setup.py sdist bdist_wheel
+      run: python3 setup.py bdist_wheel
   
 #  windows_build:
 #    runs-on: windows-latest
