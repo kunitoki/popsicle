@@ -1,6 +1,8 @@
 name: Release Wheels
 
-on: [release]
+on:
+  release:
+    types: [published]
 
 env:
   BUILD_TYPE: Release
