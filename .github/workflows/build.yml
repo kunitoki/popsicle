@@ -16,7 +16,7 @@ jobs:
       with:
         submodules: true
     - name: Set up *nix dependencies
-      run: sudo apt-get install zlib1g-dev libpng-dev libcurl3-dev libcurl4-openssl-dev libssl-dev libasound2-dev libfreetype6-dev libxcomposite-dev libxcursor-dev libxinerama-dev libxrandr-dev libxrender-dev libx11-dev x11proto-randr-dev x11proto-render-dev x11proto-xinerama-dev freeglut3-dev mesa-common-dev
+      run: sudo apt-get install python-setuptools zlib1g-dev libpng-dev libcurl3-dev libcurl4-openssl-dev libssl-dev libasound2-dev libfreetype6-dev libxcomposite-dev libxcursor-dev libxinerama-dev libxrandr-dev libxrender-dev libx11-dev x11proto-randr-dev x11proto-render-dev x11proto-xinerama-dev freeglut3-dev mesa-common-dev
     - name: Create Build Environment For JUCE
       run: cmake -E make_directory cxxbuild
     - name: Configure JUCE
