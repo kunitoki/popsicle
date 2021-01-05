@@ -53,6 +53,7 @@ setuptools.setup(
     distclass=BinaryDistribution,
     platforms=[ "macosx", "win32", "linux" ],
     python_requires=">=3.6",
+    setup_requires=[ "wheel" ],
     install_requires=[ "cppyy>=1.9.1" ],
     license="GPLv3",
     classifiers=[
