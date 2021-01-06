@@ -18,7 +18,7 @@ def __get_juce_library():
         return "libpopsicle.dll"
 
     elif sys.platform in ["darwin"]:
-        return "libpopsicle.so.dylib"
+        return "libpopsicle.dylib"
 
     return "libpopsicle.so"
 

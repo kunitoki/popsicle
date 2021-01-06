@@ -28,7 +28,7 @@ for module in glob.glob("JUCE/modules/**"):
 for f in glob.glob("cxxbuild/popsicle_artefacts/**/*.*"):
     shutil.copy(f, data_folder)
 
-for f in glob.glob("cxxbuild/popsicle_artefacts/*.*"):
+for f in glob.glob("cxxbuild/popsicle_artefacts/JuceLibraryCode/**/Defs.txt"):
     shutil.copy(f, data_folder)
 
 package_data = glob.glob("{}/**/*".format(data_folder)) + glob.glob("{}/*".format(data_folder))
