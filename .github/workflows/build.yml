@@ -16,10 +16,21 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: true
-    - name: Set up *nix dependencies
+    - name: Set up Linux dependencies
       run: |
-        sudo apt-get install zlib1g-dev libpng-dev libcurl3-dev libcurl4-openssl-dev libssl-dev libasound2-dev libfreetype6-dev libxcomposite-dev libxcursor-dev libxinerama-dev libxrandr-dev libxrender-dev libx11-dev x11proto-randr-dev x11proto-render-dev x11proto-xinerama-dev freeglut3-dev mesa-common-dev
-        sudo pip3 install setuptools wheel
+        sudo apt-get install zlib1g-dev libpng-dev libcurl3-dev libcurl4-openssl-dev libssl-dev
+        sudo apt-get install libasound2-dev libfreetype6-dev libxcomposite-dev libxcursor-dev
+        sudo apt-get install libxinerama-dev libxrandr-dev libxrender-dev libx11-dev
+        sudo apt-get install x11proto-randr-dev x11proto-render-dev x11proto-xinerama-dev
+        sudo apt-get install freeglut3-dev mesa-common-dev
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install Python dependencies
+      run: |
+        python3 -m pip install --upgrade pip
+        pip3 install setuptools wheel twine
     - name: Create Build Environment For JUCE
       run: cmake -E make_directory cxxbuild
     - name: Configure JUCE
@@ -46,6 +57,14 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: true
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install Python dependencies
+      run: |
+        python3 -m pip install --upgrade pip
+        pip3 install setuptools wheel twine
     - name: Create Build Environment For JUCE
       run: cmake -E make_directory cxxbuild
     - name: Configure JUCE
