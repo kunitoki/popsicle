@@ -6,7 +6,15 @@
 popsicle
 ========
 
-Popsicle is a project that aims to give JUCE a broader audience by allowing it to be used from python. By using *cppyy* (http://cppyy.readthedocs.io/en/latest/) it exposes the full JUCE api in a pythonic way, and the way it enables to write JUCE apps in python is very much similar to the way of writing them in C++.
+Popsicle is a project that aims to give *JUCE* (https://juce.com/) a broader audience by allowing it to be used from python. Thanks to *cppyy* (http://cppyy.readthedocs.io/en/latest/) it exposes the JUCE framework api in a pythonic way, and the way it enables to write apps in python is very much similar to the way of writing them in C++ but without the overweight of manging a project build.
+
+---------
+Features:
+---------
+- Easy to iterate over a JUCE application, no need to setup a build environment.
+- The way it allows to write JUCE code is very similar to how you would write it in C++.
+- It allows to mix Python and C++, and even compile C++ code at runtime when needed.
+- It is fast, and when the speed of C++ is required, it is possible to write them in C++ directly.
 
 .. image:: https://github.com/kunitoki/popsicle/workflows/Build%20Wheels/badge.svg
    :alt: status
@@ -15,6 +23,8 @@ Popsicle is a project that aims to give JUCE a broader audience by allowing it t
 -------------
 Example usage
 -------------
+
+A single 70 lines long script is better than thousand of words:
 
 .. code-block:: python
 
@@ -98,20 +108,28 @@ As easy as that ! You will find more example on JUCE usage in the *examples* fol
 Example Applications
 --------------------
 
+Some images of JUCE tutorials and other small apps ported to *popsicle*:
+
+Animated Component (https://docs.juce.com/master/tutorial_animation.html)
 .. image:: https://github.com/kunitoki/popsicle/raw/master/images/animated_component.png
    :target: https://github.com/kunitoki/popsicle/blob/master/examples/animated_component.py
 
-.. image:: https://github.com/kunitoki/popsicle/raw/master/images/juce_o_matic.png
-   :target: https://github.com/kunitoki/popsicle/blob/master/examples/juce_o_matic.py
-
+Audio Player with waveforms (https://docs.juce.com/master/tutorial_audio_thumbnail.html)
 .. image:: https://github.com/kunitoki/popsicle/raw/master/images/audio_player_waveform.png
    :target: https://github.com/kunitoki/popsicle/blob/master/examples/audio_player_wave_cpp.py
 
+Responsive GUI layouts using FlexBox and Grid (https://docs.juce.com/master/tutorial_flex_box_grid.html)
 .. image:: https://github.com/kunitoki/popsicle/raw/master/images/layout_flexgrid.png
    :target: https://github.com/kunitoki/popsicle/blob/master/examples/layout_flexgrid.py
 
+Advanced GUI layout techniques (https://docs.juce.com/master/tutorial_rectangle_advanced.html)
 .. image:: https://github.com/kunitoki/popsicle/raw/master/images/layout_rectangles.png
    :target: https://github.com/kunitoki/popsicle/blob/master/examples/layout_rectangles.py
+
+Super Simple Animated Graphics
+.. image:: https://github.com/kunitoki/popsicle/raw/master/images/juce_o_matic.png
+   :target: https://github.com/kunitoki/popsicle/blob/master/examples/juce_o_matic.py
+
 
 ------------
 Installation
