@@ -6,7 +6,10 @@ import shutil
 from setuptools.dist import Distribution
 
 class BinaryDistribution(Distribution):
-    def has_ext_modules(foo):
+    def is_pure(self):
+        return False
+
+    def has_ext_modules(self):
         return True
 
 data_folder = "popsicle/data"
