@@ -6,19 +6,20 @@
 popsicle
 ========
 
-Popsicle is a project that aims to give *JUCE* (https://juce.com/) a broader audience by allowing it to be used from python. Thanks to *cppyy* (http://cppyy.readthedocs.io/en/latest/) it exposes the JUCE framework api in a pythonic way, and the way it enables to write apps in python is very much similar to the way of writing them in C++ but without the overweight of manging a project build.
-
----------
-Features:
----------
-- Easy to iterate over a JUCE application, no need to setup a build environment.
-- The way it allows to write JUCE code is very similar to how you would write it in C++.
-- It allows to mix Python and C++, and even compile C++ code at runtime when needed.
-- It is fast, and when the speed of C++ is required, it is possible to write them in C++ directly.
+Popsicle is a project that aims to give *JUCE* (https://juce.com/) a broader audience by allowing it to be used from python. Thanks to *cppyy* (http://cppyy.readthedocs.io/en/latest/) it exposes the JUCE framework api in a pythonic way, and the way it enables to write apps in python is very much similar to the way of writing them in C++ but without the overweight of managing a project build.
 
 .. image:: https://github.com/kunitoki/popsicle/workflows/Build%20Wheels/badge.svg
    :alt: status
    :target: https://github.com/kunitoki/popsicle/actions
+
+--------
+Features
+--------
+
+- Easy to iterate over a JUCE application, no need to setup a build environment.
+- The way it allows to write JUCE code is very similar to how you would write it in C++.
+- It allows to mix Python and C++, and even compile C++ code at runtime when needed.
+- It is fast, and when the speed of C++ is required, it is possible to write them in C++ directly.
 
 -------------
 Example usage
@@ -152,7 +153,7 @@ Then build popsicle from source.
 Build From Source
 -----------------
 
-First step is to build JUCE. Step into the popsicle directory, then issue the following commands (or you can use the *build_juce.sh* script):
+First step is to build JUCE. Step into the popsicle directory, then issue the following commands (or you can use the *scripts/build_juce.sh* script):
 
 .. code-block:: bash
 
