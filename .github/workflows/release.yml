@@ -2,7 +2,7 @@ name: Release Wheels
 
 on:
   release:
-    types: [published]
+    types: [published, edited]
 
 env:
   BUILD_TYPE: Release
@@ -52,12 +52,11 @@ jobs:
       env:
         TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-        TWINE_REPOSITORY: ${{ secrets.TWINE_REPOSITORY }}
       shell: bash
       run: |
         python3 setup.py clean --all
         python3 setup.py bdist_wheel
-        python3 -m twine upload dist/*.whl
+        python3 -m twine upload --repository-url ${{ secrets.TWINE_REPOSITORY }} dist/*.whl
 
   macos_build:
     runs-on: macos-latest
@@ -95,12 +94,11 @@ jobs:
       env:
         TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-        TWINE_REPOSITORY: ${{ secrets.TWINE_REPOSITORY }}
       shell: bash
       run: |
         python3 setup.py clean --all
         python3 setup.py bdist_wheel
-        python3 -m twine upload dist/*.whl
+        python3 -m twine upload --repository-url ${{ secrets.TWINE_REPOSITORY }} dist/*.whl
 
 #  windows_build:
 #    runs-on: windows-latest
