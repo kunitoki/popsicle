@@ -9,7 +9,7 @@ env:
 
 jobs:
   linux_build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
 
     strategy:
       matrix:
@@ -36,7 +36,7 @@ jobs:
     - name: Install Python dependencies
       run: |
         python3 -m pip install --upgrade pip
-        pip3 install setuptools wheel twine
+        pip3 install setuptools wheel twine auditwheel
     
     - name: Create Build Environment For JUCE
       run: cmake -E make_directory cxxbuild
@@ -56,7 +56,8 @@ jobs:
       run: |
         python3 setup.py clean --all
         python3 setup.py bdist_wheel
-        python3 -m twine upload --repository-url ${{ secrets.TWINE_REPOSITORY }} dist/*.whl
+        auditwheel repair -L data -w dist/ dist/*.whl
+        python3 -m twine upload --repository-url ${{ secrets.TWINE_REPOSITORY }} dist/*-manylinux*.whl
 
   macos_build:
     runs-on: macos-latest
