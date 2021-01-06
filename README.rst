@@ -6,7 +6,7 @@
 popsicle
 ========
 
-Popsicle is a project that aims to give *JUCE* (https://juce.com/) a broader audience by allowing it to be used from python. Thanks to *cppyy* (http://cppyy.readthedocs.io/en/latest/) it exposes the JUCE framework api in a pythonic way, and the way it enables to write apps in python is very much similar to the way of writing them in C++ but without the overweight of managing a project build.
+Popsicle is a project that aims to give *JUCE* (https://juce.com/) a broader audience by allowing it to be used from python. Thanks to *cppyy* (http://cppyy.readthedocs.io/en/latest/) it exposes the JUCE framework api in a pythonic way, and the way it enables to write apps in python is very much similar to the way of writing them in C++ but without the overweight of managing project build, configurations and IDE solutions.
 
 .. image:: https://github.com/kunitoki/popsicle/workflows/Build%20Wheels/badge.svg
    :alt: status
@@ -16,10 +16,10 @@ Popsicle is a project that aims to give *JUCE* (https://juce.com/) a broader aud
 Features
 --------
 
-- Easy to iterate over a JUCE application, no need to setup a build environment.
+- Easy and quick to iterate over a JUCE application, no need to setup a build environment.
 - The way it allows to write JUCE code is very similar to how you would write it in C++.
 - It allows to mix Python and C++, and even compile C++ code at runtime when needed.
-- It is fast, and when the speed of C++ is required, it is possible to write them in C++ directly.
+- It is fast, and when the speed of C++ is required, it is possible to write those parts in C++ directly.
 
 -------------
 Example usage
@@ -136,24 +136,27 @@ Super Simple Animated Graphics
 .. image:: https://github.com/kunitoki/popsicle/raw/master/images/juce_o_matic.png
    :target: https://github.com/kunitoki/popsicle/blob/master/examples/juce_o_matic.py
 
-
 ------------
 Installation
 ------------
 
-At the moment the wheels are not published to pypi so you will need to indepently install the dependencies.
+Installing popsicle is as easy as pulling from pypi (osx only for now):
 
 .. code-block:: bash
 
-  pip install cppyy>=1.9.1
-
-Then build popsicle from source.
+  pip3 install popsicle
 
 -----------------
 Build From Source
 -----------------
 
-First step is to build JUCE. Step into the popsicle directory, then issue the following commands (or you can use the *scripts/build_juce.sh* script):
+Install python dependencies first.
+
+.. code-block:: bash
+
+  pip3 install cppyy>=1.9.1
+
+Then next step is to build JUCE. Move into the popsicle directory, then issue the following commands (or you can use the *scripts/build_juce.sh* script):
 
 .. code-block:: bash
 
