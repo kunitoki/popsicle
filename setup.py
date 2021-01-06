@@ -4,6 +4,7 @@ import glob
 import shutil
 
 from setuptools.dist import Distribution
+from setuptools.command.install import install
 
 class BinaryDistribution(Distribution):
     def is_pure(self):
@@ -11,6 +12,12 @@ class BinaryDistribution(Distribution):
 
     def has_ext_modules(self):
         return True
+
+class InstallPlatformLibrary(install):
+    def finalize_options(self):
+        install.finalize_options(self)
+        if self.distribution.has_ext_modules():
+            self.install_lib = self.install_platlib
 
 data_folder = "popsicle/data"
 
@@ -51,6 +58,7 @@ setuptools.setup(
     url="https://github.com/kunitoki/popsicle",
     packages=setuptools.find_packages(".", exclude=["examples"]),
     package_data={ "": package_data },
+    cmdclass={ "install": InstallPlatformLibrary },
     include_package_data=True,
     zip_safe=False,
     distclass=BinaryDistribution,
