@@ -108,25 +108,30 @@ As easy as that ! You will find more example on JUCE usage in the *examples* fol
 Example Applications
 --------------------
 
-Some images of JUCE tutorials and other small apps ported to *popsicle*:
+Some images of JUCE tutorials and other small apps ported to *popsicle*.
 
 Animated Component (https://docs.juce.com/master/tutorial_animation.html)
+
 .. image:: https://github.com/kunitoki/popsicle/raw/master/images/animated_component.png
    :target: https://github.com/kunitoki/popsicle/blob/master/examples/animated_component.py
 
 Audio Player with waveforms (https://docs.juce.com/master/tutorial_audio_thumbnail.html)
+
 .. image:: https://github.com/kunitoki/popsicle/raw/master/images/audio_player_waveform.png
    :target: https://github.com/kunitoki/popsicle/blob/master/examples/audio_player_wave_cpp.py
 
 Responsive GUI layouts using FlexBox and Grid (https://docs.juce.com/master/tutorial_flex_box_grid.html)
+
 .. image:: https://github.com/kunitoki/popsicle/raw/master/images/layout_flexgrid.png
    :target: https://github.com/kunitoki/popsicle/blob/master/examples/layout_flexgrid.py
 
 Advanced GUI layout techniques (https://docs.juce.com/master/tutorial_rectangle_advanced.html)
+
 .. image:: https://github.com/kunitoki/popsicle/raw/master/images/layout_rectangles.png
    :target: https://github.com/kunitoki/popsicle/blob/master/examples/layout_rectangles.py
 
 Super Simple Animated Graphics
+
 .. image:: https://github.com/kunitoki/popsicle/raw/master/images/juce_o_matic.png
    :target: https://github.com/kunitoki/popsicle/blob/master/examples/juce_o_matic.py
 
