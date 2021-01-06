@@ -2,7 +2,7 @@ name: Release Wheels
 
 on:
   release:
-    types: [published]
+    types: [published, edited]
 
 env:
   BUILD_TYPE: Release
