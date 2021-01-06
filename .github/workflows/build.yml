@@ -9,13 +9,16 @@ env:
 jobs:
   linux_build:
     runs-on: ubuntu-latest
+
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8]
+    
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: true
+    
     - name: Set up Linux dependencies
       run: |
         sudo apt-get install zlib1g-dev libpng-dev libcurl3-dev libcurl4-openssl-dev libssl-dev
@@ -23,64 +26,70 @@ jobs:
         sudo apt-get install libxinerama-dev libxrandr-dev libxrender-dev libx11-dev
         sudo apt-get install x11proto-randr-dev x11proto-render-dev x11proto-xinerama-dev
         sudo apt-get install freeglut3-dev mesa-common-dev
+
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+    
     - name: Install Python dependencies
       run: |
         python3 -m pip install --upgrade pip
         pip3 install setuptools wheel twine
+    
     - name: Create Build Environment For JUCE
       run: cmake -E make_directory cxxbuild
-    - name: Configure JUCE
-      shell: bash
-      working-directory: cxxbuild
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+    
     - name: Build JUCE
+      shell: bash
       working-directory: cxxbuild
-      shell: bash
-      run: cmake --build . --config $BUILD_TYPE
-    - name: Clean Python Wheel
-      shell: bash
-      run: python3 setup.py clean --all
+      run: |
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+        cmake --build . --config $BUILD_TYPE
+    
     - name: Build Python Wheel
       shell: bash
-      run: python3 setup.py bdist_wheel
+      run: |
+        python3 setup.py clean --all
+        python3 setup.py bdist_wheel
 
   macos_build:
     runs-on: macos-latest
+    
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8]
+    
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: true
+    
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+    
     - name: Install Python dependencies
       run: |
         python3 -m pip install --upgrade pip
         pip3 install setuptools wheel twine
+    
     - name: Create Build Environment For JUCE
       run: cmake -E make_directory cxxbuild
-    - name: Configure JUCE
-      shell: bash
-      working-directory: cxxbuild
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+    
     - name: Build JUCE
+      shell: bash
       working-directory: cxxbuild
-      shell: bash
-      run: cmake --build . --config $BUILD_TYPE
-    - name: Clean Python Wheel
-      shell: bash
-      run: python3 setup.py clean --all
+      run: |
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+        cmake --build . --config $BUILD_TYPE
+    
     - name: Build Python Wheel
       shell: bash
-      run: python3 setup.py bdist_wheel
+      run: |
+        python3 setup.py clean --all
+        python3 setup.py bdist_wheel
 
 #  windows_build:
 #    runs-on: windows-latest
