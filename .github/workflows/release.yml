@@ -10,59 +10,97 @@ env:
 jobs:
   linux_build:
     runs-on: ubuntu-latest
+
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8]
+    
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: true
-    - name: Set up *nix dependencies
+    
+    - name: Set up Linux dependencies
       run: |
-        sudo apt-get install zlib1g-dev libpng-dev libcurl3-dev libcurl4-openssl-dev libssl-dev libasound2-dev libfreetype6-dev libxcomposite-dev libxcursor-dev libxinerama-dev libxrandr-dev libxrender-dev libx11-dev x11proto-randr-dev x11proto-render-dev x11proto-xinerama-dev freeglut3-dev mesa-common-dev
-        sudo pip3 install setuptools wheel
+        sudo apt-get install zlib1g-dev libpng-dev libcurl3-dev libcurl4-openssl-dev libssl-dev
+        sudo apt-get install libasound2-dev libfreetype6-dev libxcomposite-dev libxcursor-dev
+        sudo apt-get install libxinerama-dev libxrandr-dev libxrender-dev libx11-dev
+        sudo apt-get install x11proto-randr-dev x11proto-render-dev x11proto-xinerama-dev
+        sudo apt-get install freeglut3-dev mesa-common-dev
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install Python dependencies
+      run: |
+        python3 -m pip install --upgrade pip
+        pip3 install setuptools wheel twine
+    
     - name: Create Build Environment For JUCE
       run: cmake -E make_directory cxxbuild
-    - name: Configure JUCE
-      shell: bash
-      working-directory: cxxbuild
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+    
     - name: Build JUCE
+      shell: bash
       working-directory: cxxbuild
-      shell: bash
-      run: cmake --build . --config $BUILD_TYPE
-    - name: Clean Python Wheel
-      shell: bash
-      run: python3 setup.py clean --all
+      run: |
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+        cmake --build . --config $BUILD_TYPE
+    
     - name: Build Python Wheel
+      env:
+        TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+        TWINE_REPOSITORY: ${{ secrets.TWINE_REPOSITORY }}
       shell: bash
-      run: python3 setup.py bdist_wheel
+      run: |
+        python3 setup.py clean --all
+        python3 setup.py bdist_wheel
+        python3 -m twine upload dist/*.whl
 
   macos_build:
     runs-on: macos-latest
+    
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8]
+    
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: true
+    
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install Python dependencies
+      run: |
+        python3 -m pip install --upgrade pip
+        pip3 install setuptools wheel twine
+    
     - name: Create Build Environment For JUCE
       run: cmake -E make_directory cxxbuild
-    - name: Configure JUCE
-      shell: bash
-      working-directory: cxxbuild
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+    
     - name: Build JUCE
+      shell: bash
       working-directory: cxxbuild
-      shell: bash
-      run: cmake --build . --config $BUILD_TYPE
-    - name: Clean Python Wheel
-      shell: bash
-      run: python3 setup.py clean --all
+      run: |
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+        cmake --build . --config $BUILD_TYPE
+    
     - name: Build Python Wheel
+      env:
+        TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+        TWINE_REPOSITORY: ${{ secrets.TWINE_REPOSITORY }}
       shell: bash
-      run: python3 setup.py bdist_wheel
+      run: |
+        python3 setup.py clean --all
+        python3 setup.py bdist_wheel
+        python3 -m twine upload dist/*.whl
 
 #  windows_build:
 #    runs-on: windows-latest
