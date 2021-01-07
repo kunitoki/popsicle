@@ -13,12 +13,12 @@ jobs:
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9]
-    
+
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: true
-    
+
     - name: Set up Linux dependencies
       run: |
         sudo apt-get install zlib1g-dev libpng-dev libcurl3-dev libcurl4-openssl-dev libssl-dev
@@ -31,22 +31,22 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    
+
     - name: Install Python dependencies
       run: |
         python3 -m pip install --upgrade pip
         pip3 install setuptools wheel
-    
+
     - name: Create Build Environment For JUCE
       run: cmake -E make_directory cxxbuild
-    
+
     - name: Build JUCE
       shell: bash
       working-directory: cxxbuild
       run: |
         cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
         cmake --build . --config $BUILD_TYPE
-    
+
     - name: Build Python Wheel
       shell: bash
       run: |
@@ -55,36 +55,36 @@ jobs:
 
   macos_build:
     runs-on: macos-latest
-    
+
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9]
-    
+
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: true
-    
+
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    
+
     - name: Install Python dependencies
       run: |
         python3 -m pip install --upgrade pip
         pip3 install setuptools wheel
-    
+
     - name: Create Build Environment For JUCE
       run: cmake -E make_directory cxxbuild
-    
+
     - name: Build JUCE
       shell: bash
       working-directory: cxxbuild
       run: |
         cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
         cmake --build . --config $BUILD_TYPE
-    
+
     - name: Build Python Wheel
       shell: bash
       run: |
