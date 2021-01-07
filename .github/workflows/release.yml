@@ -101,23 +101,44 @@ jobs:
         python3 setup.py bdist_wheel
         python3 -m twine upload --repository-url ${{ secrets.TWINE_REPOSITORY }} dist/*.whl
 
-#  windows_build:
-#    runs-on: windows-latest
-#    steps:
-#    - uses: actions/checkout@v2
-#      with:
-#        submodules: true
-#    - name: Create Build Environment
-#      run: cmake -E make_directory ${{runner.workspace}}/build
-#    - name: Configure CMake
-#      shell: bash
-#      working-directory: ${{runner.workspace}}/build
-#      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
-#    - name: Build
-#      working-directory: ${{runner.workspace}}/build
-#      shell: bash
-#      run: cmake --build . --config $BUILD_TYPE
-#    - name: Test Lua 5.1
-#      working-directory: ${{runner.workspace}}/build/Tests/Release
-#      shell: bash
-#      run: ./LuaBridgeTests51.exe
+  windows_build:
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install setuptools wheel twine
+
+    - name: Create Build Environment For JUCE
+      run: cmake -E make_directory cxxbuild
+
+    - name: Build JUCE
+      shell: bash
+      working-directory: cxxbuild
+      run: |
+        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+        cmake --build . --config $BUILD_TYPE
+
+    - name: Build Python Wheel
+      env:
+        TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+      shell: bash
+      run: |
+        python setup.py clean --all
+        python setup.py bdist_wheel
+        python -m twine upload --repository-url ${{ secrets.TWINE_REPOSITORY }} dist/*.whl
