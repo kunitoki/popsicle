@@ -8,17 +8,15 @@ popsicle
 
 Popsicle is a project that aims to give *JUCE* (https://juce.com/) a broader audience by allowing it to be used from python. Thanks to *cppyy* (http://cppyy.readthedocs.io/en/latest/) it exposes the JUCE framework api in a pythonic way, and the way it enables to write apps in python is very much similar to the way of writing them in C++ but without the overweight of managing project build, configurations and IDE solutions.
 
-|linux_builds| |macos_builds| |windows_builds|
-
-.. |linux_builds| image:: ![Linux Builds](https://github.com/kunitoki/popsicle/workflows/Linux%20Builds/badge.svg)
+.. image:: https://github.com/kunitoki/popsicle/workflows/Linux%20Builds/badge.svg
    :alt: Linux Builds Status
    :target: https://github.com/kunitoki/popsicle/actions
 
-.. |macos_builds| image:: ![macOS Builds](https://github.com/kunitoki/popsicle/workflows/macOS%20Builds/badge.svg)
+.. image:: https://github.com/kunitoki/popsicle/workflows/macOS%20Builds/badge.svg
    :alt: macOS Builds Status
    :target: https://github.com/kunitoki/popsicle/actions
 
-.. |windows_builds| image:: ![Windows Builds](https://github.com/kunitoki/popsicle/workflows/Windows%20Builds/badge.svg)
+.. image:: https://github.com/kunitoki/popsicle/workflows/Windows%20Builds/badge.svg
    :alt: Windows Builds Status
    :target: https://github.com/kunitoki/popsicle/actions
 
@@ -156,6 +154,8 @@ Installing popsicle is as easy as pulling from pypi (osx only for now):
 
   pip3 install popsicle
 
+Make sure you have a recent *pip* if you are on BigSur intel.
+
 -----------------
 Build From Source
 -----------------
@@ -164,7 +164,7 @@ Install python dependencies first.
 
 .. code-block:: bash
 
-  pip3 install cppyy>=1.9.1
+  pip3 install "cppyy>=1.9.1"
 
 Then next step is to build JUCE. Move into the popsicle directory, then issue the following commands (or you can use the *scripts/build_juce.sh* script):
 
@@ -174,7 +174,7 @@ Then next step is to build JUCE. Move into the popsicle directory, then issue th
   mkdir -p cxxbuild
 
   pushd cxxbuild
-  cmake -G "Ninja Multi-Config"
+  cmake -G "Ninja Multi-Config" ../
   cmake --build . --config Release
   popd
 
