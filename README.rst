@@ -8,26 +8,31 @@ popsicle
 
 Popsicle is a project that aims to give *JUCE* (https://juce.com/) a broader audience by allowing it to be used from python. Thanks to *cppyy* (http://cppyy.readthedocs.io/en/latest/) it exposes the JUCE framework api in a pythonic way, and the way it enables to write apps in python is very much similar to the way of writing them in C++ but without the overweight of managing project build, configurations and IDE solutions.
 
-.. image:: https://github.com/kunitoki/popsicle/workflows/Linux%20Builds/badge.svg
+|linux_builds| |macos_builds| |windows_builds| |pypi_version| |pypi_license| |pypi_downloads|
+
+.. |linux_builds| image:: https://github.com/kunitoki/popsicle/workflows/Linux%20Builds/badge.svg
     :alt: Linux Builds Status
     :target: https://github.com/kunitoki/popsicle/actions
 
-.. image:: https://github.com/kunitoki/popsicle/workflows/macOS%20Builds/badge.svg
+.. |macos_builds| image:: https://github.com/kunitoki/popsicle/workflows/macOS%20Builds/badge.svg
     :alt: macOS Builds Status
     :target: https://github.com/kunitoki/popsicle/actions
 
-.. image:: https://github.com/kunitoki/popsicle/workflows/Windows%20Builds/badge.svg
+.. |windows_builds| image:: https://github.com/kunitoki/popsicle/workflows/Windows%20Builds/badge.svg
     :alt: Windows Builds Status
     :target: https://github.com/kunitoki/popsicle/actions
 
-.. image:: https://img.shields.io/pypi/pyversions/popsicle
+.. |pypi_version| image:: https://img.shields.io/pypi/pyversions/popsicle
     :alt: PyPI - Python Version
+    :target: https://pypi.org/project/popsicle/
 
-.. image:: https://img.shields.io/pypi/l/popsicle
+.. |pypi_license| image:: https://img.shields.io/pypi/l/popsicle
     :alt: PyPI - License
+    :target: https://pypi.org/project/popsicle/
 
-.. image:: https://img.shields.io/pypi/dm/popsicle
+.. |pypi_downloads| image:: https://img.shields.io/pypi/dm/popsicle
     :alt: PyPI - Downloads
+    :target: https://pypi.org/project/popsicle/
 
 --------
 Features
