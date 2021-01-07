@@ -193,6 +193,7 @@ Install python dependencies.
 Build the JUCE shared library. Move into the popsicle directory, then issue the following commands (or you can use the *scripts/build_juce.sh* script):
 
 .. code-block:: bash
+
   cd popsicle
 
   rm -Rf cxxbuild
