@@ -1,6 +1,6 @@
 .. image:: https://github.com/kunitoki/popsicle/raw/master/logo.png
-   :alt: popsicle
-   :target: https://github.com/kunitoki/popsicle
+    :alt: popsicle
+    :target: https://github.com/kunitoki/popsicle
 
 ========
 popsicle
@@ -9,16 +9,25 @@ popsicle
 Popsicle is a project that aims to give *JUCE* (https://juce.com/) a broader audience by allowing it to be used from python. Thanks to *cppyy* (http://cppyy.readthedocs.io/en/latest/) it exposes the JUCE framework api in a pythonic way, and the way it enables to write apps in python is very much similar to the way of writing them in C++ but without the overweight of managing project build, configurations and IDE solutions.
 
 .. image:: https://github.com/kunitoki/popsicle/workflows/Linux%20Builds/badge.svg
-   :alt: Linux Builds Status
-   :target: https://github.com/kunitoki/popsicle/actions
+    :alt: Linux Builds Status
+    :target: https://github.com/kunitoki/popsicle/actions
 
 .. image:: https://github.com/kunitoki/popsicle/workflows/macOS%20Builds/badge.svg
-   :alt: macOS Builds Status
-   :target: https://github.com/kunitoki/popsicle/actions
+    :alt: macOS Builds Status
+    :target: https://github.com/kunitoki/popsicle/actions
 
 .. image:: https://github.com/kunitoki/popsicle/workflows/Windows%20Builds/badge.svg
-   :alt: Windows Builds Status
-   :target: https://github.com/kunitoki/popsicle/actions
+    :alt: Windows Builds Status
+    :target: https://github.com/kunitoki/popsicle/actions
+
+.. image:: https://img.shields.io/pypi/pyversions/popsicle
+    :alt: PyPI - Python Version
+
+.. image:: https://img.shields.io/pypi/l/popsicle
+    :alt: PyPI - License
+
+.. image:: https://img.shields.io/pypi/dm/popsicle
+    :alt: PyPI - Downloads
 
 --------
 Features
@@ -122,27 +131,27 @@ Some images of JUCE tutorials and other small apps ported to *popsicle*.
 Animated Component (https://docs.juce.com/master/tutorial_animation.html)
 
 .. image:: https://github.com/kunitoki/popsicle/raw/master/images/animated_component.png
-   :target: https://github.com/kunitoki/popsicle/blob/master/examples/animated_component.py
+    :target: https://github.com/kunitoki/popsicle/blob/master/examples/animated_component.py
 
 Audio Player with waveforms (https://docs.juce.com/master/tutorial_audio_thumbnail.html)
 
 .. image:: https://github.com/kunitoki/popsicle/raw/master/images/audio_player_waveform.png
-   :target: https://github.com/kunitoki/popsicle/blob/master/examples/audio_player_wave_cpp.py
+    :target: https://github.com/kunitoki/popsicle/blob/master/examples/audio_player_wave_cpp.py
 
 Responsive GUI layouts using FlexBox and Grid (https://docs.juce.com/master/tutorial_flex_box_grid.html)
 
 .. image:: https://github.com/kunitoki/popsicle/raw/master/images/layout_flexgrid.png
-   :target: https://github.com/kunitoki/popsicle/blob/master/examples/layout_flexgrid.py
+    :target: https://github.com/kunitoki/popsicle/blob/master/examples/layout_flexgrid.py
 
 Advanced GUI layout techniques (https://docs.juce.com/master/tutorial_rectangle_advanced.html)
 
 .. image:: https://github.com/kunitoki/popsicle/raw/master/images/layout_rectangles.png
-   :target: https://github.com/kunitoki/popsicle/blob/master/examples/layout_rectangles.py
+    :target: https://github.com/kunitoki/popsicle/blob/master/examples/layout_rectangles.py
 
 Super Simple Animated Graphics
 
 .. image:: https://github.com/kunitoki/popsicle/raw/master/images/juce_o_matic.png
-   :target: https://github.com/kunitoki/popsicle/blob/master/examples/juce_o_matic.py
+    :target: https://github.com/kunitoki/popsicle/blob/master/examples/juce_o_matic.py
 
 ------------
 Installation
@@ -160,15 +169,22 @@ Make sure you have a recent *pip* if you are on BigSur intel.
 Build From Source
 -----------------
 
-Install python dependencies first.
+Clone the repository recursively as JUCE is a submodule
+
+.. code-block:: bash
+
+  git clone --recursive git@github.com:kunitoki/popsicle.git
+
+Install python dependencies.
 
 .. code-block:: bash
 
   pip3 install "cppyy>=1.9.1"
 
-Then next step is to build JUCE. Move into the popsicle directory, then issue the following commands (or you can use the *scripts/build_juce.sh* script):
+Build the JUCE shared library. Move into the popsicle directory, then issue the following commands (or you can use the *scripts/build_juce.sh* script):
 
 .. code-block:: bash
+  cd popsicle
 
   rm -Rf cxxbuild
   mkdir -p cxxbuild
