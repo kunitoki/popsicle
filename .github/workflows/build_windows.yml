@@ -26,8 +26,8 @@ jobs:
 
     - name: Install Python dependencies
       run: |
-        python3 -m pip install --upgrade pip
-        pip3 install setuptools wheel
+        python -m pip install --upgrade pip
+        pip install setuptools wheel
 
     - name: Create Build Environment For JUCE
       run: cmake -E make_directory cxxbuild
@@ -42,5 +42,5 @@ jobs:
     - name: Build Python Wheel
       shell: bash
       run: |
-        python3 setup.py clean --all
-        python3 setup.py bdist_wheel
+        python setup.py clean --all
+        python setup.py bdist_wheel
