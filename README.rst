@@ -28,7 +28,7 @@ Popsicle is a project that aims to give *JUCE* (https://juce.com/) a broader aud
 
 .. |pypi_license| image:: https://img.shields.io/pypi/l/popsicle
     :alt: PyPI - License
-    :target: https://pypi.org/project/popsicle/
+    :target: https://github.com/kunitoki/popsicle/blob/master/LICENSE
 
 .. |pypi_downloads| image:: https://img.shields.io/pypi/dm/popsicle
     :alt: PyPI - Downloads
