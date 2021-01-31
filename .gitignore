@@ -1,4 +1,6 @@
 __pycache__/
+.eggs/
+.vscode/
 dist/
 build/
 cxxbuild/

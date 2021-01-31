@@ -18,20 +18,21 @@ project(${PROJECT_NAME})
 
 add_subdirectory("JUCE")
 
-function(juce_add_shared_library target)
-    add_library(${target} SHARED)
+if(UNIX AND NOT APPLE AND POPSICLE_MANYLINUX)
+    message(STATUS "Popsicle - Compiling JUCE for manylinux2010")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-zero-as-null-pointer-constant")
+    set(POPSICLE_LTO "")
+else()
+    set(POPSICLE_LTO "juce::juce_recommended_lto_flags")
+endif()
 
-    target_compile_definitions(${target} PRIVATE JUCE_STANDALONE_APPLICATION=1)
-    _juce_initialise_target(${target} ${ARGN})
-    _juce_set_output_name(${target} $<TARGET_PROPERTY:${target},JUCE_PRODUCT_NAME>)
-    set_target_properties(${target} PROPERTIES JUCE_TARGET_KIND_STRING "App")
-endfunction()
+add_library(${PROJECT_NAME} SHARED)
 
-juce_add_shared_library(${PROJECT_NAME} VERSION 1.0.0)
-
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 14)
+set_target_properties(${PROJECT_NAME} PROPERTIES JUCE_TARGET_KIND_STRING "App")
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 11)
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
+    JUCE_STANDALONE_APPLICATION=1
     JUCE_DISPLAY_SPLASH_SCREEN=0
     JUCE_WEB_BROWSER=0
     JUCE_ALLOW_STATIC_NULL_VARIABLES=0
@@ -57,5 +58,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     juce::juce_osc
     juce::juce_video
     juce::juce_recommended_config_flags
-    juce::juce_recommended_lto_flags
-    juce::juce_recommended_warning_flags)
+    juce::juce_recommended_warning_flags
+    ${POPSICLE_LTO})
+
+_juce_initialise_target(${PROJECT_NAME} VERSION 1.0.0)
+_juce_set_output_name(${PROJECT_NAME} $<TARGET_PROPERTY:${PROJECT_NAME},JUCE_PRODUCT_NAME>)

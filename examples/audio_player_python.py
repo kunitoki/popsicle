@@ -1,43 +1,31 @@
 import sys
 sys.path.insert(0, "../")
 
-import math
 import cppyy
 from enum import Enum
 
 from popsicle import juce_gui_basics, juce_audio_utils
 from popsicle import juce, juce_multi, START_JUCE_COMPONENT
 
-cppyy.cppdef("""
 
-class AudioAppComponent : public juce::Component, public juce::AudioSource
-{
-public:
-    AudioAppComponent() = default;
+class AudioSource(juce.AudioSource):
+    transportSource = juce.AudioTransportSource()
+    hasReader = juce.Atomic[bool](False)
 
-    void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override
-    {
-        transportSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
-    }
+    def __init__(self):
+        super().__init__()
 
-    void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) override
-    {
-        if (!hasReader.get())
-            bufferToFill.clearActiveBufferRegion();
-        else
-            transportSource.getNextAudioBlock(bufferToFill);
-    }
+    def prepareToPlay(self, samplesPerBlockExpected, sampleRate):
+        self.transportSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
 
-    void releaseResources() override
-    {
-        transportSource.releaseResources();
-    }
+    def getNextAudioBlock(self, bufferToFill):
+        if not self.hasReader.get():
+            self.bufferToFill.clearActiveBufferRegion()
+        else:
+            self.transportSource.getNextAudioBlock(bufferToFill)
 
-    juce::AudioTransportSource transportSource;
-    juce::AudioSourcePlayer audioSourcePlayer;
-    juce::Atomic<bool> hasReader{ false };
-};
-""")
+    def releaseResources(self):
+        self.transportSource.releaseResources()
 
 
 class TransportState(Enum):
@@ -47,19 +35,22 @@ class TransportState(Enum):
     Stopping = 3
 
 
-class MainContentComponent(juce_multi(cppyy.gbl.AudioAppComponent, juce.ChangeListener, juce.Timer)):
+class MainContentComponent(juce_multi(juce.Component, juce.ChangeListener, juce.Timer)):
     openButton = juce.TextButton()
     playButton = juce.TextButton()
     stopButton = juce.TextButton()
     loopingToggle = juce.ToggleButton()
     currentPositionLabel = juce.Label()
 
+    audioSource = AudioSource()
+    audioSourcePlayer = juce.AudioSourcePlayer()
+
     deviceManager = juce.AudioDeviceManager()
     formatManager = juce.AudioFormatManager()
     state = TransportState.Stopped
 
     def __init__(self):
-        super().__init__((), (), ())
+        super().__init__((), (), (), ())
 
         self.addAndMakeVisible(self.openButton)
         self.openButton.setButtonText("Open...")
@@ -85,20 +76,20 @@ class MainContentComponent(juce_multi(cppyy.gbl.AudioAppComponent, juce.ChangeLi
         self.currentPositionLabel.setText("Stopped", juce.dontSendNotification)
 
         self.formatManager.registerBasicFormats()
-        self.transportSource.addChangeListener(self)
+        self.audioSource.transportSource.addChangeListener(self)
 
         self.deviceManager.initialise(0, 2, cppyy.nullptr, True)
         self.deviceManager.addAudioCallback(self.audioSourcePlayer)
-        self.audioSourcePlayer.setSource(self)
+        self.audioSourcePlayer.setSource(self.audioSource)
 
         self.setSize(400, 400)
         self.startTimer(20)
 
     def __del__(self):
-        self.hasReader.set(False)
+        self.audioSource.hasReader.set(False)
         self.deviceManager.removeAudioCallback(self.audioSourcePlayer)
 
-        self.transportSource.setSource(cppyy.nullptr)
+        self.audioSource.transportSource.setSource(cppyy.nullptr)
         self.audioSourcePlayer.setSource(cppyy.nullptr)
 
         self.deviceManager.closeAudioDevice()
@@ -111,15 +102,15 @@ class MainContentComponent(juce_multi(cppyy.gbl.AudioAppComponent, juce.ChangeLi
         self.currentPositionLabel.setBounds (10, 130, self.getWidth() - 20, 20)
 
     def changeListenerCallback(self, source):
-        if source == self.transportSource:
-            if self.transportSource.isPlaying():
+        if source == self.audioSource.transportSource:
+            if self.audioSource.transportSource.isPlaying():
                 self.changeState(TransportState.Playing)
             else:
                 self.changeState(TransportState.Stopped)
 
     def timerCallback(self):
-        if self.transportSource.isPlaying():
-            position = juce.RelativeTime(self.transportSource.getCurrentPosition())
+        if self.audioSource.transportSource.isPlaying():
+            position = juce.RelativeTime(self.audioSource.transportSource.getCurrentPosition())
 
             minutes = int(position.inMinutes()) % 60
             seconds = int(position.inSeconds()) % 60
@@ -144,17 +135,17 @@ class MainContentComponent(juce_multi(cppyy.gbl.AudioAppComponent, juce.ChangeLi
         if self.state == TransportState.Stopped:
             self.stopButton.setEnabled(False)
             self.playButton.setEnabled(True)
-            self.transportSource.setPosition(0.0)
+            self.audioSource.transportSource.setPosition(0.0)
 
         elif self.state == TransportState.Starting:
             self.playButton.setEnabled(False)
-            self.transportSource.start()
+            self.audioSource.transportSource.start()
 
         elif self.state == TransportState.Playing:
             self.stopButton.setEnabled(True)
 
         elif self.state == TransportState.Stopping:
-            self.transportSource.stop()
+            self.audioSource.transportSource.stop()
 
     def openButtonClicked(self):
         chooser = juce.FileChooser("Select a Wave file to play...", juce.File(), "*.wav")
@@ -164,12 +155,12 @@ class MainContentComponent(juce_multi(cppyy.gbl.AudioAppComponent, juce.ChangeLi
 
             if reader:
                 self.readerSource = juce.AudioFormatReaderSource(reader, True)
-                self.transportSource.setSource(self.readerSource, 0, cppyy.nullptr, reader.sampleRate, 2)
-                self.hasReader.set(True)
+                self.audioSource.transportSource.setSource(self.readerSource, 0, cppyy.nullptr, reader.sampleRate, 2)
+                self.audioSource.hasReader.set(True)
 
                 self.playButton.setEnabled(True)
             else:
-                self.hasReader.set(False)
+                self.audioSource.hasReader.set(False)
 
     def playButtonClicked(self):
         self.updateLoopState(self.loopingToggle.getToggleState())
