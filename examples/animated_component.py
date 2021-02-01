@@ -6,7 +6,6 @@ import math
 from popsicle import juce_gui_basics, juce_gui_extra
 from popsicle import juce, START_JUCE_COMPONENT
 
-
 class MainContentComponent(juce.AnimatedAppComponent):
     def __init__(self):
         super().__init__()

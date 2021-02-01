@@ -1,14 +1,13 @@
-import sys
-import os
-import gc
+import sys as __sys
+import gc as __gc
+
 import cppyy
 
-from .utils import juce_bind
 from .utils import juce_bootstrap as __juce_bootstrap
 from . import juce_events as __juce_events
 
 
-__all__ = [ "juce", "juce_multi", "juce_bind", "juce_equals", "START_JUCE_APPLICATION", "START_JUCE_COMPONENT" ]
+__all__ = [ "juce", "juce_multi", "START_JUCE_APPLICATION", "START_JUCE_COMPONENT" ]
 
 
 __juce_bootstrap()
@@ -25,13 +24,6 @@ void initialise()
     juce::JUCEApplicationBase::createInstance = create_juce_instance;
 }
 
-// Homebrew extensions
-template <class T, class U>
-bool equals(T* t, U* u) noexcept
-{
-    return t == u;
-}
-
 } // namespace popsicle
 """)
 
@@ -43,15 +35,14 @@ __popsicle.initialise()
 from cppyy.gbl import juce
 
 juce_multi = cppyy.multi
-juce_equals = __popsicle.equals
 
 
 def START_JUCE_APPLICATION(application_class):
     juce.initialiseJuce_GUI()
 
-    if sys.platform in ["win32", "cygwin"]:
+    if __sys.platform in ["win32", "cygwin"]:
         juce.Process.setCurrentModuleInstanceHandle()
-    elif sys.platform in ["darwin"]:
+    elif __sys.platform in ["darwin"]:
         juce.initialiseNSApplication()
 
     application = None
@@ -74,11 +65,11 @@ def START_JUCE_APPLICATION(application_class):
             result = application.shutdownApp()
             del application
 
-        gc.collect()
+        __gc.collect()
 
         juce.shutdownJuce_GUI()
 
-        sys.exit(result)
+        __sys.exit(result)
 
 
 def START_JUCE_COMPONENT(component_class, name="Component Example", version="1.0", width=800, height=600):

@@ -1,16 +1,13 @@
 import sys
 sys.path.insert(0, "../")
 
-import math
 import cppyy
-from cppyy.gbl import std
 from enum import Enum
 
 from popsicle import juce_gui_basics, juce_audio_utils
-from popsicle import juce, juce_multi, juce_equals, juce_bind, START_JUCE_COMPONENT
+from popsicle import juce, juce_multi, START_JUCE_COMPONENT
 
 cppyy.cppdef("""
-#include <atomic>
 
 class AudioAppComponent : public juce::Component, public juce::AudioSource
 {
@@ -24,7 +21,7 @@ public:
 
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) override
     {
-        if (!hasReader)
+        if (!hasReader.get())
             bufferToFill.clearActiveBufferRegion();
         else
             transportSource.getNextAudioBlock(bufferToFill);
@@ -38,7 +35,7 @@ public:
     juce::AudioTransportSource transportSource;
     juce::AudioSourcePlayer audioSourcePlayer;
     juce::AudioThumbnailCache thumbnailCache{ 5 };
-    std::atomic<int> hasReader{ false };
+    juce::Atomic<bool> hasReader{ false };
 };
 """)
 
@@ -59,7 +56,6 @@ class SimpleThumbnailComponent(juce_multi(juce.Component, juce.ChangeListener)):
 
     def setFile(self, file):
         source = juce.FileInputSource(file)
-        #source.__python_owns__ = False
         self.thumbnail.setSource(source)
 
     def paint(self, g):
@@ -80,7 +76,7 @@ class SimpleThumbnailComponent(juce_multi(juce.Component, juce.ChangeListener)):
         self.thumbnail.drawChannels(g, self.getLocalBounds(), 0.0, self.thumbnail.getTotalLength(), 1.0)
 
     def changeListenerCallback(self, source):
-        if juce_equals(source, self.thumbnail):
+        if source == self.thumbnail:
             self.thumbnailChanged()
 
     def thumbnailChanged(self):
@@ -135,17 +131,17 @@ class MainContentComponent(juce_multi(cppyy.gbl.AudioAppComponent, juce.ChangeLi
 
         self.addAndMakeVisible(self.openButton)
         self.openButton.setButtonText("Open...")
-        self.openButton.onClick = juce_bind(self, self.openButtonClicked)
+        self.openButton.onClick = self.openButtonClicked
 
         self.addAndMakeVisible (self.playButton)
         self.playButton.setButtonText ("Play")
-        self.playButton.onClick = juce_bind(self, self.playButtonClicked)
+        self.playButton.onClick = self.playButtonClicked
         self.playButton.setColour(juce.TextButton.buttonColourId, juce.Colours.green)
         self.playButton.setEnabled(False)
 
         self.addAndMakeVisible(self.stopButton)
         self.stopButton.setButtonText("Stop")
-        self.stopButton.onClick = juce_bind(self, self.stopButtonClicked)
+        self.stopButton.onClick = self.stopButtonClicked
         self.stopButton.setColour(juce.TextButton.buttonColourId, juce.Colours.red)
         self.stopButton.setEnabled(False)
 
@@ -165,7 +161,7 @@ class MainContentComponent(juce_multi(cppyy.gbl.AudioAppComponent, juce.ChangeLi
         self.setSize(600, 400)
 
     def __del__(self):
-        self.hasReader.store(False)
+        self.hasReader.set(False)
         self.deviceManager.removeAudioCallback(self.audioSourcePlayer)
 
         self.transportSource.setSource(cppyy.nullptr)
@@ -183,7 +179,7 @@ class MainContentComponent(juce_multi(cppyy.gbl.AudioAppComponent, juce.ChangeLi
         self.positionOverlay.setBounds(thumbnailBounds)
 
     def changeListenerCallback(self, source):
-        if juce_equals(source, self.transportSource):
+        if source == self.transportSource:
             if self.transportSource.isPlaying():
                 self.changeState(TransportState.Playing)
             else:
@@ -221,11 +217,11 @@ class MainContentComponent(juce_multi(cppyy.gbl.AudioAppComponent, juce.ChangeLi
                 self.readerSource = juce.AudioFormatReaderSource(reader, True)
                 self.transportSource.setSource(self.readerSource, 0, cppyy.nullptr, reader.sampleRate, 2)
                 self.thumbnailComp.setFile(file)
-                self.hasReader.store(True)
+                self.hasReader.set(True)
 
                 self.playButton.setEnabled(True)
             else:
-                self.hasReader.store(False)
+                self.hasReader.set(False)
 
     def playButtonClicked(self):
         self.changeState(TransportState.Starting)

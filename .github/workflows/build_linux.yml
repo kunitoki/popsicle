@@ -3,9 +3,6 @@ name: Linux Builds
 on:
   push
 
-env:
-  BUILD_TYPE: Release
-
 jobs:
   linux_build:
     runs-on: ubuntu-18.04
@@ -36,16 +33,6 @@ jobs:
       run: |
         python3 -m pip install --upgrade pip
         pip3 install setuptools wheel
-
-    - name: Create Build Environment For JUCE
-      run: cmake -E make_directory cxxbuild
-
-    - name: Build JUCE
-      shell: bash
-      working-directory: cxxbuild
-      run: |
-        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
-        cmake --build . --config $BUILD_TYPE
 
     - name: Build Python Wheel
       shell: bash

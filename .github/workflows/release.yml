@@ -4,9 +4,6 @@ on:
   release:
     types: [published, edited]
 
-env:
-  BUILD_TYPE: Release
-
 jobs:
   linux_build:
     runs-on: ubuntu-16.04
@@ -38,16 +35,6 @@ jobs:
         python3 -m pip install --upgrade pip
         pip3 install setuptools wheel twine auditwheel
 
-    - name: Create Build Environment For JUCE
-      run: cmake -E make_directory cxxbuild
-
-    - name: Build JUCE
-      shell: bash
-      working-directory: cxxbuild
-      run: |
-        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
-        cmake --build . --config $BUILD_TYPE
-
     - name: Build Python Wheel
       env:
         TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
@@ -57,7 +44,7 @@ jobs:
         python3 setup.py clean --all
         python3 setup.py bdist_wheel --plat-name linux_x86_64
         auditwheel show dist/*.whl
-        auditwheel repair -L data -w dist/ dist/*.whl
+        auditwheel repair --plat manylinux2010_x86_64 --strip -L data -w dist/ dist/*.whl
         python3 -m twine upload --repository-url ${{ secrets.TWINE_REPOSITORY }} dist/*-manylinux*.whl
 
   macos_build:
@@ -81,16 +68,6 @@ jobs:
       run: |
         python3 -m pip install --upgrade pip
         pip3 install setuptools wheel twine
-
-    - name: Create Build Environment For JUCE
-      run: cmake -E make_directory cxxbuild
-
-    - name: Build JUCE
-      shell: bash
-      working-directory: cxxbuild
-      run: |
-        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
-        cmake --build . --config $BUILD_TYPE
 
     - name: Build Python Wheel
       env:
@@ -123,16 +100,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install setuptools wheel twine
-
-    - name: Create Build Environment For JUCE
-      run: cmake -E make_directory cxxbuild
-
-    - name: Build JUCE
-      shell: bash
-      working-directory: cxxbuild
-      run: |
-        cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
-        cmake --build . --config $BUILD_TYPE
 
     - name: Build Python Wheel
       env:

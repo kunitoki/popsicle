@@ -1,9 +1,5 @@
 include CMakeLists.txt
 include VERSION.txt
+include LICENSE
 
-graft popsicle/data
-
-graft JUCE/modules
-graft JUCE/extras/Build
-
-global-exclude *.py[cod]
+global-exclude *.py[cod] __pycache__ .DS_Store
