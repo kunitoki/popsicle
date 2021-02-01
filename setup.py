@@ -1,4 +1,5 @@
 import os
+import sys
 import pathlib
 import glob
 import shutil
@@ -19,7 +20,7 @@ def is_manylinux():
     try:
         with open("/etc/redhat-release", "r") as f:
             for line in f.readlines():
-                if 'CentOS release 6.10 (Final)' in line:
+                if "CentOS release 6.10 (Final)" in line:
                     return True
     except (OSError, IOError):
         pass
@@ -47,14 +48,15 @@ class BuildExtension(build_ext):
 
         output_dir = str(extdir.parent.absolute())
 
-        config = 'Debug' if self.debug else 'Release'
+        config = "Debug" if self.debug else "Release"
+
         cmake_args = [
-            '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + output_dir,
-            '-DCMAKE_BUILD_TYPE=' + config
+            f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={output_dir}",
+            f"-DCMAKE_BUILD_TYPE={config}"
         ]
 
         if is_manylinux():
-            cmake_args.append('-DPOPSICLE_MANYLINUX=1')
+            cmake_args.append("-DPOPSICLE_MANYLINUX=1")
 
         os.chdir(str(build_temp))
 
@@ -62,11 +64,16 @@ class BuildExtension(build_ext):
         os.makedirs(binary_dest, exist_ok=True)
 
         try:
-            self.spawn(['cmake', str(cwd)] + cmake_args)
+            self.spawn(["cmake", str(cwd)] + cmake_args)
 
             if self.dry_run: return
 
-            self.spawn(['cmake', '--build', '.', '--config', config, '--', '-j4'])
+            build_command = ["cmake", "--build", ".", "--config", config]
+
+            if sys.platform not in ["win32", "cygwin"]:
+                build_command += ["--", f"-j{os.cpu_count()}"]
+
+            self.spawn(build_command)
 
             for f in glob.glob("popsicle_artefacts/**/*.*"):
                 shutil.copy(f, binary_dest)
