@@ -29,7 +29,7 @@ class AudioCallback : public juce::AudioIODeviceCallback
     void audioDeviceAboutToStart(juce::AudioIODevice* device) override
     {
     }
- 
+
     void audioDeviceStopped() override
     {
     }

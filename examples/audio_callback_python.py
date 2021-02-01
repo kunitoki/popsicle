@@ -1,5 +1,5 @@
-import sys
-sys.path.insert(0, "../")
+#import sys
+#sys.path.insert(0, "../")
 
 import math
 import cppyy
@@ -10,23 +10,19 @@ from popsicle import juce, juce_multi, START_JUCE_COMPONENT
 
 class AudioCallback(juce.AudioIODeviceCallback):
     def audioDeviceIOCallback(self, inputChannelData, numInputChannels, outputChannelData, numOutputChannels, numSamples):
-        try:
-            #print(f"called with samples={numSamples} and inputs={numInputChannels} / outputs={numOutputChannels}")
+        #try:
+        for channel in range(numOutputChannels):
+            channelData = outputChannelData[channel]
+            for sample in range(numSamples):
+                channelData[sample] = 0.0
 
-            print(outputChannelData)
-            for channel in range(numOutputChannels):
-                channelData = cppyy.addressof(outputChannelData[channel])
-                print(channelData)
-                for sample in range(numSamples):
-                    print(channelData[sample])
-                    #channelData[sample] = 0.0
-
-        except Exception as e:
-            print(e)
+        #except Exception as e:
+        #    print(e)
+        #    exit(1)
 
     def audioDeviceAboutToStart(self, device):
         print("started")
- 
+
     def audioDeviceStopped(self):
         print("stopped")
 
