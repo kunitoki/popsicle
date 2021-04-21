@@ -15,7 +15,7 @@ __target_paths = [ "RelWithDebInfo", "Release", "Debug", None ]
 @__lru_cache(maxsize=1024)
 def __get_juce_library():
     if __sys.platform in ["win32", "cygwin"]:
-        return "libpopsicle.dll"
+        return "popsicle.dll"
 
     elif __sys.platform in ["darwin"]:
         return "libpopsicle.dylib"
