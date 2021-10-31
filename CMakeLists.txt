@@ -26,6 +26,12 @@ else()
     set(POPSICLE_LTO "juce::juce_recommended_lto_flags")
 endif()
 
+if(UNIX AND NOT APPLE)
+    set(POPSICLE_CURL_LIBRARY "curl")
+else()
+    set(POPSICLE_CURL_LIBRARY "")
+endif()
+
 add_library(${PROJECT_NAME} SHARED)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES JUCE_TARGET_KIND_STRING "App")
@@ -59,7 +65,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     juce::juce_video
     juce::juce_recommended_config_flags
     juce::juce_recommended_warning_flags
-    ${POPSICLE_LTO})
+    ${POPSICLE_LTO}
+    ${POPSICLE_CURL_LIBRARY})
 
 _juce_initialise_target(${PROJECT_NAME} VERSION 1.0.0)
 _juce_set_output_name(${PROJECT_NAME} $<TARGET_PROPERTY:${PROJECT_NAME},JUCE_PRODUCT_NAME>)
