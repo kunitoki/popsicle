@@ -9,7 +9,7 @@ from setuptools import Extension
 from setuptools.dist import Distribution
 from setuptools.command.install import install
 from setuptools.command.build_ext import build_ext
-from wheel.bdist_wheel import bdist_wheel
+from wheel.bdist_wheel import bdist_wheel, get_platform
 
 project_name = "popsicle"
 
@@ -103,9 +103,11 @@ class BinaryDistribution(Distribution):
 
 class BinaryDistWheel(bdist_wheel):
     def finalize_options(self):
-        from distutils.util import get_platform
-        self.plat_name = get_platform()
-        self.universal = True
+        if sys.platform == "darwin":
+            self.plat_name = "macosx_10_6_intel"
+        else:
+            self.plat_name = get_platform(self.bdist_dir)
+        self.universal = False
         bdist_wheel.finalize_options(self)
         self.root_is_pure = True
 
@@ -126,6 +128,7 @@ setuptools.setup(
     url="https://github.com/kunitoki/popsicle",
     packages=setuptools.find_packages(".", exclude=["examples"]),
     include_package_data=True,
+    distclass=BinaryDistribution,
     cmdclass={
         "install": InstallPlatformLibrary,
         "bdist_wheel": BinaryDistWheel,
@@ -133,11 +136,10 @@ setuptools.setup(
     },
     ext_modules=[CMakeExtension("popsicle")],
     zip_safe=False,
-    distclass=BinaryDistribution,
     platforms=[ "macosx", "win32", "linux" ],
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     setup_requires=[ "wheel" ],
-    install_requires=[ "cppyy>=1.9.2" ],
+    install_requires=[ "cppyy>=2.3.1" ],
     license="GPLv3",
     classifiers=[
         "Intended Audience :: Developers",

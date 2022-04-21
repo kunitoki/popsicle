@@ -188,21 +188,7 @@ Install python dependencies.
 
 .. code-block:: bash
 
-  pip3 install "cppyy>=1.9.1"
-
-Build the JUCE shared library. Move into the popsicle directory, then issue the following commands (or you can use the *scripts/build_juce.sh* script):
-
-.. code-block:: bash
-
-  cd popsicle
-
-  rm -Rf cxxbuild
-  mkdir -p cxxbuild
-
-  pushd cxxbuild
-  cmake -G "Ninja Multi-Config" ../
-  cmake --build . --config Release
-  popd
+  pip3 install "cppyy>=2.3.1"
 
 Then it's possible to package a wheel and install it (currently this is only tested on macOS and Linux):
 
