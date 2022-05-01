@@ -16,16 +16,6 @@ project_name = "popsicle"
 with open("VERSION.txt", "r") as f: version = f.read()
 with open("README.rst", "r") as f: long_description = f.read()
 
-def is_manylinux():
-    try:
-        with open("/etc/redhat-release", "r") as f:
-            for line in f.readlines():
-                if "CentOS release 6.10 (Final)" in line:
-                    return True
-    except (OSError, IOError):
-        pass
-
-    return False
 
 class CMakeExtension(Extension):
     def __init__(self, name):
@@ -54,9 +44,6 @@ class BuildExtension(build_ext):
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={output_dir}",
             f"-DCMAKE_BUILD_TYPE={config}"
         ]
-
-        if is_manylinux():
-            cmake_args.append("-DPOPSICLE_MANYLINUX=1")
 
         os.chdir(str(build_temp))
 

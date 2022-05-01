@@ -18,19 +18,16 @@ project(${PROJECT_NAME})
 
 add_subdirectory("JUCE")
 
-if(UNIX AND NOT APPLE AND POPSICLE_MANYLINUX)
-    message(STATUS "Popsicle - Compiling JUCE for manylinux2010")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-zero-as-null-pointer-constant")
-    set(POPSICLE_LTO "")
-else()
-    set(POPSICLE_LTO "juce::juce_recommended_lto_flags")
-endif()
-
 add_library(${PROJECT_NAME} SHARED)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES JUCE_TARGET_KIND_STRING "App")
-set_target_properties(${PROJECT_NAME} PROPERTIES OSX_ARCHITECTURES "arm64;x86_64")
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
+
+if(APPLE)
+    set_target_properties(${PROJECT_NAME} PROPERTIES OSX_ARCHITECTURES "arm64;x86_64")
+endif()
+
+set(POPSICLE_LTO "juce::juce_recommended_lto_flags")
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     JUCE_STANDALONE_APPLICATION=1
