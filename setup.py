@@ -103,10 +103,11 @@ class BinaryDistribution(Distribution):
 
 class BinaryDistWheel(bdist_wheel):
     def finalize_options(self):
-        if sys.platform == "darwin":
-            self.plat_name = "macosx_10_6_intel"
-        else:
-            self.plat_name = get_platform(self.bdist_dir)
+        # For some reason without this it keeps failing to generate a wheel on my local osx
+        #if sys.platform == "darwin":
+        #    self.plat_name = "macosx_10_6_intel"
+        #else:
+        self.plat_name = get_platform(self.bdist_dir)
         self.universal = False
         bdist_wheel.finalize_options(self)
         self.root_is_pure = True
@@ -143,10 +144,15 @@ setuptools.setup(
     license="GPLv3",
     classifiers=[
         "Intended Audience :: Developers",
+        "Development Status :: 3 - Alpha",
         "Topic :: Software Development :: Libraries :: Application Frameworks",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-        "Development Status :: 3 - Alpha",
-        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: C++",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: Microsoft :: Windows",
         "Operating System :: POSIX :: Linux"

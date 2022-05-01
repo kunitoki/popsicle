@@ -9,7 +9,7 @@ jobs:
     name: Build wheel for ${{ matrix.build }}
 
     runs-on: ${{ matrix.os }}
-    continue-on-error: true
+    continue-on-error: false
 
     if: github.event_name == 'release' && github.event.action == 'published'
 
