@@ -3,7 +3,7 @@ name: Windows Builds
 on:
   push
     branches-ignore:
-      - 'kraken/**'
+    - 'kraken/**'
 
 jobs:
   windows_build:

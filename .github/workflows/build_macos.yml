@@ -3,7 +3,7 @@ name: macOS Builds
 on:
   push
     branches-ignore:
-      - 'kraken/**'
+    - 'kraken/**'
 
 jobs:
   macos_build:
