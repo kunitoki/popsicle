@@ -1,7 +1,6 @@
 name: Linux Builds
 
-on:
-  push
+on: push
 
 jobs:
   linux_build:
@@ -16,7 +15,7 @@ jobs:
       with:
         submodules: true
 
-    - name: Set up Linux dependencies
+    - name: Set up Linux Dependencies
       run: |
         sudo apt-get install zlib1g-dev libpng-dev libcurl3-dev libcurl4-openssl-dev libssl-dev
         sudo apt-get install libasound2-dev libfreetype6-dev libxcomposite-dev libxcursor-dev
@@ -29,7 +28,8 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Install Python dependencies
+    - name: Install Python Dependencies
+      shell: bash
       run: |
         python3 -m pip install --upgrade pip
         pip3 install setuptools wheel
