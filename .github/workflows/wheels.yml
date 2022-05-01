@@ -2,9 +2,8 @@ name: Test Deploy
 
 on:
   push:
-    branches-ignore:
-      - master
-      - '**'
+    branches:
+      - kraken/github_actions
 
 jobs:
   build-wheels:
