@@ -6,11 +6,11 @@ on:
 
 jobs:
   linux_build:
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-18.04
 
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: [3.7, 3.8, 3.9, 3.10]
 
     steps:
     - uses: actions/checkout@v2
@@ -44,15 +44,16 @@ jobs:
         python3 setup.py clean --all
         python3 setup.py bdist_wheel --plat-name linux_x86_64
         auditwheel show dist/*.whl
-        auditwheel repair --plat manylinux2010_x86_64 --strip -L data -w dist/ dist/*.whl
+        auditwheel repair --plat manylinux2014_x86_64 --strip -L data -w dist/ dist/*.whl
         python3 -m twine upload --repository-url ${{ secrets.TWINE_REPOSITORY }} dist/*-manylinux*.whl
+
 
   macos_build:
     runs-on: macos-latest
 
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: [3.7, 3.8, 3.9, 3.10]
 
     steps:
     - uses: actions/checkout@v2
@@ -79,12 +80,13 @@ jobs:
         python3 setup.py bdist_wheel
         python3 -m twine upload --repository-url ${{ secrets.TWINE_REPOSITORY }} dist/*.whl
 
+
   windows_build:
     runs-on: windows-latest
 
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: [3.7, 3.8, 3.9, 3.10]
 
     steps:
     - uses: actions/checkout@v2
