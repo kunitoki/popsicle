@@ -16,16 +16,6 @@ project_name = "popsicle"
 with open("VERSION.txt", "r") as f: version = f.read()
 with open("README.rst", "r") as f: long_description = f.read()
 
-def is_manylinux():
-    try:
-        with open("/etc/redhat-release", "r") as f:
-            for line in f.readlines():
-                if "CentOS release 6.10 (Final)" in line:
-                    return True
-    except (OSError, IOError):
-        pass
-
-    return False
 
 class CMakeExtension(Extension):
     def __init__(self, name):
@@ -54,9 +44,6 @@ class BuildExtension(build_ext):
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={output_dir}",
             f"-DCMAKE_BUILD_TYPE={config}"
         ]
-
-        if is_manylinux():
-            cmake_args.append("-DPOPSICLE_MANYLINUX=1")
 
         os.chdir(str(build_temp))
 
@@ -103,13 +90,14 @@ class BinaryDistribution(Distribution):
 
 class BinaryDistWheel(bdist_wheel):
     def finalize_options(self):
-        if sys.platform == "darwin":
-            self.plat_name = "macosx_10_6_intel"
-        else:
-            self.plat_name = get_platform(self.bdist_dir)
-        self.universal = False
+        # For some reason without this it keeps failing to generate a wheel on my local osx
+        #if sys.platform == "darwin":
+        #    self.plat_name = "macosx_10_6_intel"
+        #else:
+        #self.plat_name = get_platform(self.bdist_dir)
+        #self.universal = False
         bdist_wheel.finalize_options(self)
-        self.root_is_pure = True
+        #self.root_is_pure = True
 
 class InstallPlatformLibrary(install):
     def finalize_options(self):
@@ -131,7 +119,6 @@ setuptools.setup(
     distclass=BinaryDistribution,
     cmdclass={
         "install": InstallPlatformLibrary,
-        "bdist_wheel": BinaryDistWheel,
         "build_ext": BuildExtension,
     },
     ext_modules=[CMakeExtension("popsicle")],
@@ -143,10 +130,15 @@ setuptools.setup(
     license="GPLv3",
     classifiers=[
         "Intended Audience :: Developers",
+        "Development Status :: 3 - Alpha",
         "Topic :: Software Development :: Libraries :: Application Frameworks",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-        "Development Status :: 3 - Alpha",
-        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: C++",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: Microsoft :: Windows",
         "Operating System :: POSIX :: Linux"

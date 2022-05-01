@@ -1,10 +1,8 @@
 name: Test Deploy
 
 on:
-  push:
-    branches-ignore:
-      - master
-      - '**'
+  release:
+    types: [published]
 
 jobs:
   build-wheels:
@@ -13,12 +11,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     continue-on-error: false
 
-    #if: github.event_name == 'release' && github.event.action == 'published'
+    if: github.event_name == 'release' && github.event.action == 'published'
 
     strategy:
       matrix:
         include:
-        - { os: macos-latest, build: cp36-macosx_x86_64 }
         - { os: macos-latest, build: cp37-macosx_x86_64 }
         - { os: macos-latest, build: cp38-macosx_x86_64 }
         - { os: macos-latest, build: cp39-macosx_x86_64 }
@@ -28,27 +25,24 @@ jobs:
         - { os: macos-latest, build: cp310-macosx_universal2 }
         - { os: macos-latest, build: pp37-macosx_x86_64 }
         - { os: macos-latest, build: pp38-macosx_x86_64 }
-        - { os: windows-latest, build: cp36-win_amd64 }
         - { os: windows-latest, build: cp37-win_amd64 }
         - { os: windows-latest, build: cp38-win_amd64 }
         - { os: windows-latest, build: cp39-win_amd64 }
         - { os: windows-latest, build: cp310-win_amd64 }
         - { os: windows-latest, build: pp37-win_amd64 }
         - { os: windows-latest, build: pp38-win_amd64 }
-        - { os: ubuntu-latest, build: cp36-manylinux_x86_64 }
-        - { os: ubuntu-latest, build: cp36-manylinux_aarch64 }
         - { os: ubuntu-latest, build: cp37-manylinux_x86_64 }
-        - { os: ubuntu-latest, build: cp37-manylinux_aarch64 }
+        # - { os: ubuntu-latest, build: cp37-manylinux_aarch64 }
         - { os: ubuntu-latest, build: cp38-manylinux_x86_64 }
-        - { os: ubuntu-latest, build: cp38-manylinux_aarch64 }
+        # - { os: ubuntu-latest, build: cp38-manylinux_aarch64 }
         - { os: ubuntu-latest, build: cp39-manylinux_x86_64 }
-        - { os: ubuntu-latest, build: cp39-manylinux_aarch64 }
+        # - { os: ubuntu-latest, build: cp39-manylinux_aarch64 }
         - { os: ubuntu-latest, build: cp310-manylinux_x86_64 }
-        - { os: ubuntu-latest, build: cp310-manylinux_aarch64 }
+        # - { os: ubuntu-latest, build: cp310-manylinux_aarch64 }
         - { os: ubuntu-latest, build: pp37-manylinux_x86_64 }
-        - { os: ubuntu-latest, build: pp37-manylinux_aarch64 }
+        # - { os: ubuntu-latest, build: pp37-manylinux_aarch64 }
         - { os: ubuntu-latest, build: pp38-manylinux_x86_64 }
-        - { os: ubuntu-latest, build: pp38-manylinux_aarch64 }
+        # - { os: ubuntu-latest, build: pp38-manylinux_aarch64 }
 
     steps:
       - uses: actions/checkout@v2
@@ -60,15 +54,15 @@ jobs:
           python-version: "3.8"
 
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel>=2.0.0a4
+        run: python -m pip install cibuildwheel>=2.5.0
 
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_BUILD: ${{ matrix.build }}
           CIBW_ARCHS: auto64
-          CIBW_ARCHS_LINUX: auto64 aarch64 # Useful for building linux images with Apple Silicon
-          CIBW_ARCHS_MACOS: x86_64 universal2 # Support Apple Silicon
+          CIBW_ARCHS_LINUX: x86_64
+          CIBW_ARCHS_MACOS: x86_64 universal2
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: pip install auditwheel-symbols && (auditwheel repair -w {dest_dir} {wheel} || auditwheel-symbols --manylinux 2014 {wheel})
           CIBW_BEFORE_BUILD_LINUX: |
             yum install -y \
@@ -77,7 +71,7 @@ jobs:
               freetype-devel \
               freeglut-devel \
               alsa-lib-devel \
-              mesa-common-devel \
+              mesa-libGL-devel \
               xorg-x11-proto-devel \
               xorg-x11-proto-devel \
               libcurl-devel \
@@ -103,8 +97,7 @@ jobs:
     needs: [build-wheels]
     runs-on: ubuntu-latest
 
-    if: ${{ false }}
-    #if: github.event_name == 'release' && github.event.action == 'published'
+    if: github.event_name == 'release' && github.event.action == 'published'
 
     steps:
       - uses: actions/download-artifact@v2
