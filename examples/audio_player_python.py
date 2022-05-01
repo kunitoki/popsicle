@@ -16,11 +16,11 @@ class AudioSource(juce.AudioSource):
         super().__init__()
 
     def prepareToPlay(self, samplesPerBlockExpected, sampleRate):
-        self.transportSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
+        self.transportSource.prepareToPlay(samplesPerBlockExpected, sampleRate)
 
     def getNextAudioBlock(self, bufferToFill):
         if not self.hasReader.get():
-            self.bufferToFill.clearActiveBufferRegion()
+            bufferToFill.clearActiveBufferRegion()
         else:
             self.transportSource.getNextAudioBlock(bufferToFill)
 
