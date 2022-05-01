@@ -31,9 +31,10 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Install Python dependencies
+    - name: Install Python Dependencies
       run: |
         python3 -m pip install --upgrade pip
-        pip3 install setuptools wheel twine auditwheel
+        pip3 install setuptools wheel twine auditwheel auditwheel-symbols
 
     - name: Build Python Wheel
       env:
@@ -45,6 +46,7 @@ jobs:
         python3 setup.py bdist_wheel --plat-name linux_x86_64
         auditwheel show dist/*.whl
         auditwheel repair --plat manylinux2014_x86_64 --strip -L data -w dist/ dist/*.whl
+        auditwheel-symbols --manylinux 2014 dist/*-manylinux*.whl
         python3 -m twine upload --repository-url ${{ secrets.TWINE_REPOSITORY }} dist/*-manylinux*.whl
 
 
