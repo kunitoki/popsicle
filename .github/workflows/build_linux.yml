@@ -2,6 +2,8 @@ name: Linux Builds
 
 on:
   push
+    branches-ignore:
+      - 'kraken/**'
 
 jobs:
   linux_build:
