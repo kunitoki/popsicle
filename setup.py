@@ -107,10 +107,10 @@ class BinaryDistWheel(bdist_wheel):
         #if sys.platform == "darwin":
         #    self.plat_name = "macosx_10_6_intel"
         #else:
-        self.plat_name = get_platform(self.bdist_dir)
-        self.universal = False
+        #self.plat_name = get_platform(self.bdist_dir)
+        #self.universal = False
         bdist_wheel.finalize_options(self)
-        self.root_is_pure = True
+        #self.root_is_pure = True
 
 class InstallPlatformLibrary(install):
     def finalize_options(self):
@@ -132,7 +132,6 @@ setuptools.setup(
     distclass=BinaryDistribution,
     cmdclass={
         "install": InstallPlatformLibrary,
-        "bdist_wheel": BinaryDistWheel,
         "build_ext": BuildExtension,
     },
     ext_modules=[CMakeExtension("popsicle")],
