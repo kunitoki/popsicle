@@ -7,7 +7,7 @@ from .utils import juce_bootstrap as __juce_bootstrap
 from . import juce_events as __juce_events
 
 
-__all__ = [ "juce", "juce_multi", "START_JUCE_APPLICATION", "START_JUCE_COMPONENT" ]
+__all__ = [ "juce", "juce_multi", "juce_delete", "juce_set_sample_data", "START_JUCE_APPLICATION", "START_JUCE_COMPONENT" ]
 
 
 __juce_bootstrap()
@@ -24,6 +24,11 @@ void initialise()
     juce::JUCEApplicationBase::createInstance = create_juce_instance;
 }
 
+void set_sample_data(float* output, int sample, float value)
+{
+    output[sample] = value;
+}
+
 } // namespace popsicle
 """)
 
@@ -35,6 +40,16 @@ __popsicle.initialise()
 from cppyy.gbl import juce
 
 juce_multi = cppyy.multi
+
+
+def juce_delete(object):
+    if object and hasattr(object, "aboutToBeDeleted"):
+        object.aboutToBeDeleted()
+        del object
+
+
+def juce_set_sample_data(output, sample, value):
+    __popsicle.set_sample_data(output, sample, value)
 
 
 def START_JUCE_APPLICATION(application_class):
@@ -74,6 +89,8 @@ def START_JUCE_APPLICATION(application_class):
 
 def START_JUCE_COMPONENT(component_class, name="Component Example", version="1.0", width=800, height=600):
     class MainWindow(juce.DocumentWindow):
+        component = None
+
         def __init__(self):
             super().__init__(
                 juce.JUCEApplication.getInstance().getApplicationName(),
@@ -89,14 +106,16 @@ def START_JUCE_COMPONENT(component_class, name="Component Example", version="1.0
             self.setVisible(True)
 
         def __del__(self):
-            if hasattr(self, "component") and self.component:
-                del self.component
+            self.clearContentComponent()
+
+            juce_delete(self.component)
 
         def closeButtonPressed(self):
-            self.setVisible(False)
             juce.JUCEApplication.getInstance().systemRequestedQuit()
 
     class Application(juce.JUCEApplication):
+        window = None
+
         def getApplicationName(self):
             return name
 
@@ -107,7 +126,7 @@ def START_JUCE_COMPONENT(component_class, name="Component Example", version="1.0
             self.window = MainWindow()
 
         def shutdown(self):
-            if hasattr(self, "window") and self.window:
+            if self.window:
                 del self.window
 
     START_JUCE_APPLICATION(Application)

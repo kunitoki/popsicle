@@ -2,7 +2,7 @@ import sys
 sys.path.insert(0, "../")
 
 from popsicle import juce_gui_basics
-from popsicle import juce, juce_multi, START_JUCE_APPLICATION
+from popsicle import juce, juce_multi, juce_delete, START_JUCE_APPLICATION
 
 
 class MainContentComponent(juce_multi(juce.Component, juce.Timer)):
@@ -11,7 +11,7 @@ class MainContentComponent(juce_multi(juce.Component, juce.Timer)):
         self.setSize(600, 400)
         self.startTimerHz(60)
 
-    def __del__(self):
+    def aboutToBeDeleted(self):
         self.stopTimer()
 
     def paint(self, g):
@@ -19,7 +19,7 @@ class MainContentComponent(juce_multi(juce.Component, juce.Timer)):
 
         random = juce.Random.getSystemRandom()
         rect = juce.Rectangle[int](0, 0, 20, 20)
- 
+
         for _ in range(100):
             g.setColour(juce.Colour(
                 random.nextInt(256),
@@ -35,6 +35,8 @@ class MainContentComponent(juce_multi(juce.Component, juce.Timer)):
 
 
 class MainWindow(juce.DocumentWindow):
+    component = None
+
     def __init__(self):
         super().__init__(
             juce.JUCEApplication.getInstance().getApplicationName(),
@@ -50,14 +52,15 @@ class MainWindow(juce.DocumentWindow):
         self.setVisible(True)
 
     def __del__(self):
-        if hasattr(self, "component"):
-            del self.component
+        juce_delete(self.component)
 
     def closeButtonPressed(self):
         juce.JUCEApplication.getInstance().systemRequestedQuit()
 
 
 class Application(juce.JUCEApplication):
+    window = None
+
     def getApplicationName(self):
         return "JUCE-o-matic"
 
@@ -68,8 +71,7 @@ class Application(juce.JUCEApplication):
         self.window = MainWindow()
 
     def shutdown(self):
-        if hasattr(self, "window"):
-            del self.window
+        del self.window
 
 
 if __name__ == "__main__":

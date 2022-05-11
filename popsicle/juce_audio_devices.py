@@ -12,5 +12,13 @@ __all__ = []
 def __juce_include():
     __cppyy.include("juce_audio_devices/juce_audio_devices.h")
 
+    def __pythonize(klass, name):
+        if name == "AudioSourcePlayer":
+            klass.audioDeviceIOCallback.__release_gil__ = True
+        elif name == "AudioDeviceManager":
+            klass.removeAudioCallback.__release_gil__ = True
+
+    __cppyy.py.add_pythonization(__pythonize, "juce")
+
 __juce_bootstrap()
 __juce_include()

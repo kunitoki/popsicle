@@ -44,6 +44,8 @@ class MainContentComponent(juce_multi(juce.Component, juce.ChangeListener, juce.
 
     audioSource = AudioSource()
     audioSourcePlayer = juce.AudioSourcePlayer()
+    readerSource = cppyy.nullptr
+    isLooping = False
 
     deviceManager = juce.AudioDeviceManager()
     formatManager = juce.AudioFormatManager()
@@ -85,7 +87,7 @@ class MainContentComponent(juce_multi(juce.Component, juce.ChangeListener, juce.
         self.setSize(400, 400)
         self.startTimer(20)
 
-    def __del__(self):
+    def aboutToBeDeleted(self):
         self.audioSource.hasReader.set(False)
         self.deviceManager.removeAudioCallback(self.audioSourcePlayer)
 
@@ -123,8 +125,10 @@ class MainContentComponent(juce_multi(juce.Component, juce.ChangeListener, juce.
             self.currentPositionLabel.setText("Stopped", juce.dontSendNotification)
 
     def updateLoopState(self, shouldLoop):
+        self.isLooping = shouldLoop
+
         if self.readerSource:
-            self.readerSource.setLooping(shouldLoop)
+            self.readerSource.setLooping(self.isLooping)
 
     def changeState (self, newState):
         if self.state == newState:
@@ -155,6 +159,9 @@ class MainContentComponent(juce_multi(juce.Component, juce.ChangeListener, juce.
 
             if reader:
                 self.readerSource = juce.AudioFormatReaderSource(reader, True)
+                if self.isLooping:
+                    self.readerSource.setLooping(self.isLooping)
+
                 self.audioSource.transportSource.setSource(self.readerSource, 0, cppyy.nullptr, reader.sampleRate, 2)
                 self.audioSource.hasReader.set(True)
 
