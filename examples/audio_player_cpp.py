@@ -95,6 +95,9 @@ class MainContentComponent(juce_multi(cppyy.gbl.AudioAppComponent, juce.ChangeLi
         self.startTimer(20)
 
     def __del__(self):
+        if not self.deviceManager:
+            return
+
         self.hasReader.set(False)
         self.deviceManager.removeAudioCallback(self.audioSourcePlayer)
 
@@ -102,13 +105,14 @@ class MainContentComponent(juce_multi(cppyy.gbl.AudioAppComponent, juce.ChangeLi
         self.audioSourcePlayer.setSource(cppyy.nullptr)
 
         self.deviceManager.closeAudioDevice()
+        self.deviceManager = None
 
     def resized(self):
-        self.openButton          .setBounds (10, 10,  self.getWidth() - 20, 20)
-        self.playButton          .setBounds (10, 40,  self.getWidth() - 20, 20)
-        self.stopButton          .setBounds (10, 70,  self.getWidth() - 20, 20)
-        self.loopingToggle       .setBounds (10, 100, self.getWidth() - 20, 20)
-        self.currentPositionLabel.setBounds (10, 130, self.getWidth() - 20, 20)
+        self.openButton.setBounds(10, 10, self.getWidth() - 20, 20)
+        self.playButton.setBounds(10, 40, self.getWidth() - 20, 20)
+        self.stopButton.setBounds(10, 70, self.getWidth() - 20, 20)
+        self.loopingToggle.setBounds(10, 100, self.getWidth() - 20, 20)
+        self.currentPositionLabel.setBounds(10, 130, self.getWidth() - 20, 20)
 
     def changeListenerCallback(self, source):
         if source == self.transportSource:

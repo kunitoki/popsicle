@@ -18,10 +18,10 @@ class AudioCallback(juce.AudioIODeviceCallback):
                 juce_set_sample_data(channelData, sample, random.random() * 2.0 - 1.0)
 
     def audioDeviceAboutToStart(self, device):
-        print("started")
+        pass
 
     def audioDeviceStopped(self):
-        print("stopped")
+        pass
 
     def audioDeviceError(self, errorMessage):
         print(errorMessage.toRawUTF8())
@@ -42,13 +42,17 @@ class MainContentComponent2(juce.Component):
 
         self.setSize(800, 600)
 
-    def paint(self, g):
-        g.fillAll(juce.Colours.slategrey)
+    def __del__(self):
+        if not self.deviceManager:
+            return
 
-    def aboutToBeDeleted(self):
         self.deviceManager.removeAudioCallback(self.audioCallback)
 
         self.deviceManager.closeAudioDevice()
+        self.deviceManager = None
+
+    def paint(self, g):
+        g.fillAll(juce.Colours.slategrey)
 
 
 if __name__ == "__main__":

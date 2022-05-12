@@ -2,16 +2,17 @@ import sys
 sys.path.insert(0, "../")
 
 from popsicle import juce_gui_basics
-from popsicle import juce, juce_multi, juce_delete, START_JUCE_APPLICATION
+from popsicle import juce, juce_multi, START_JUCE_APPLICATION
 
 
 class MainContentComponent(juce_multi(juce.Component, juce.Timer)):
     def __init__(self):
         super().__init__((), ())
+
         self.setSize(600, 400)
         self.startTimerHz(60)
 
-    def aboutToBeDeleted(self):
+    def __del__(self):
         self.stopTimer()
 
     def paint(self, g):
@@ -52,7 +53,9 @@ class MainWindow(juce.DocumentWindow):
         self.setVisible(True)
 
     def __del__(self):
-        juce_delete(self.component)
+        if self.component:
+            self.component.__del__()
+            self.component = None
 
     def closeButtonPressed(self):
         juce.JUCEApplication.getInstance().systemRequestedQuit()
@@ -71,7 +74,9 @@ class Application(juce.JUCEApplication):
         self.window = MainWindow()
 
     def shutdown(self):
-        del self.window
+        if self.window:
+            self.window.__del__()
+            self.window = None
 
 
 if __name__ == "__main__":

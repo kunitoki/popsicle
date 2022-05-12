@@ -1,18 +1,20 @@
+import cppyy
+
 import sys as __sys
 import gc as __gc
-
-import cppyy
 
 from .utils import juce_bootstrap as __juce_bootstrap
 from . import juce_events as __juce_events
 
 
-__all__ = [ "juce", "juce_multi", "juce_delete", "juce_set_sample_data", "START_JUCE_APPLICATION", "START_JUCE_COMPONENT" ]
+__all__ = [ "juce", "juce_multi", "juce_set_sample_data", "START_JUCE_APPLICATION", "START_JUCE_COMPONENT" ]
 
 
+# Bootstrap code to initialise library and defines
 __juce_bootstrap()
 
 
+# Main juce defines to initialise the cpp part of juce
 cppyy.cppdef("""
 namespace popsicle {
 
@@ -24,6 +26,7 @@ void initialise()
     juce::JUCEApplicationBase::createInstance = create_juce_instance;
 }
 
+// Utilities
 void set_sample_data(float* output, int sample, float value)
 {
     output[sample] = value;
@@ -33,25 +36,23 @@ void set_sample_data(float* output, int sample, float value)
 """)
 
 
+# Popsicle initialisation
 from cppyy.gbl import popsicle as __popsicle
 __popsicle.initialise()
 
 
+# Juce import, without this no symbols will be imported by python
 from cppyy.gbl import juce
 
+
+# Exported juce utilities
 juce_multi = cppyy.multi
-
-
-def juce_delete(object):
-    if object and hasattr(object, "aboutToBeDeleted"):
-        object.aboutToBeDeleted()
-        del object
-
 
 def juce_set_sample_data(output, sample, value):
     __popsicle.set_sample_data(output, sample, value)
 
 
+# Main juce entry point
 def START_JUCE_APPLICATION(application_class):
     juce.initialiseJuce_GUI()
 
@@ -78,7 +79,10 @@ def START_JUCE_APPLICATION(application_class):
         result = 255
         if application:
             result = application.shutdownApp()
-            del application
+
+            if hasattr(application, "__del__"):
+                application.__del__()
+            application = None
 
         __gc.collect()
 
@@ -87,7 +91,8 @@ def START_JUCE_APPLICATION(application_class):
         __sys.exit(result)
 
 
-def START_JUCE_COMPONENT(component_class, name="Component Example", version="1.0", width=800, height=600):
+# Additional juce entry point for simplified examples
+def START_JUCE_COMPONENT(component_class, name: str = "Component Example", version: str = "1.0", width: int = 800, height: int = 600):
     class MainWindow(juce.DocumentWindow):
         component = None
 
@@ -108,7 +113,9 @@ def START_JUCE_COMPONENT(component_class, name="Component Example", version="1.0
         def __del__(self):
             self.clearContentComponent()
 
-            juce_delete(self.component)
+            if self.component and hasattr(self.component, "__del__"):
+                self.component.__del__()
+                self.component = None
 
         def closeButtonPressed(self):
             juce.JUCEApplication.getInstance().systemRequestedQuit()
@@ -126,7 +133,8 @@ def START_JUCE_COMPONENT(component_class, name="Component Example", version="1.0
             self.window = MainWindow()
 
         def shutdown(self):
-            if self.window:
-                del self.window
+            if self.window and hasattr(self.window, "__del__"):
+                self.window.__del__()
+                self.window = None
 
     START_JUCE_APPLICATION(Application)

@@ -9,6 +9,7 @@ from popsicle import juce, START_JUCE_COMPONENT
 class MainContentComponent(juce.AnimatedAppComponent):
     def __init__(self):
         super().__init__()
+
         self.setSize(800, 600)
         self.setFramesPerSecond(60)
 
