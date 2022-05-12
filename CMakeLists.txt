@@ -1,7 +1,7 @@
 # ==============================================================================
 #
 #  This file is part of the popsicle project.
-#  Copyright (c) 2020 - Lucio Asnaghi aka kRAkEn/gORe
+#  Copyright (c) 2022 - Lucio Asnaghi aka kRAkEn/gORe
 #
 #  You may use this code under the terms of the MIT (see www.gnu.org/licenses).
 #

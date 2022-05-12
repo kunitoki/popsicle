@@ -13,10 +13,7 @@ def __juce_include():
 
     def __pythonize(klass, name):
         if name == "MessageManager":
-            try:
-                klass.runDispatchLoop.__release_gil__ = True
-            except KeyError:
-                pass
+            klass.runDispatchLoop.__release_gil__ = True
 
     __cppyy.py.add_pythonization(__pythonize, "juce")
 

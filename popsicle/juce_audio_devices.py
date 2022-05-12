@@ -15,6 +15,7 @@ def __juce_include():
     def __pythonize(klass, name):
         if name == "AudioSourcePlayer":
             klass.audioDeviceIOCallback.__release_gil__ = True
+
         elif name == "AudioDeviceManager":
             klass.removeAudioCallback.__release_gil__ = True
 
