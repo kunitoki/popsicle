@@ -161,6 +161,9 @@ class MainContentComponent(juce_multi(cppyy.gbl.AudioAppComponent, juce.ChangeLi
         self.setSize(600, 400)
 
     def __del__(self):
+        if not self.deviceManager:
+            return
+
         self.hasReader.set(False)
         self.deviceManager.removeAudioCallback(self.audioSourcePlayer)
 
@@ -168,6 +171,7 @@ class MainContentComponent(juce_multi(cppyy.gbl.AudioAppComponent, juce.ChangeLi
         self.audioSourcePlayer.setSource(cppyy.nullptr)
 
         self.deviceManager.closeAudioDevice()
+        self.deviceManager = None
 
     def resized(self):
         self.openButton.setBounds(10, 10, self.getWidth() - 20, 20)

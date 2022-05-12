@@ -47,16 +47,18 @@ class SelectionColumnCustomComponent(juce.Component):
         self.columnId = 0
 
         self.toggleButton = juce.ToggleButton()
+        self.toggleButton.onClick = lambda: self.owner.setSelection(self.row, self.toggleButton.getToggleState())
         self.addAndMakeVisible(self.toggleButton)
 
-        self.toggleButton.onClick = lambda: self.owner.setSelection(self.row, self.toggleButton.getToggleState())
-
     def resized(self):
-        self.toggleButton.setBoundsInset(juce.BorderSize[int](2))
+        #self.toggleButton.setBoundsInset(juce.BorderSize[int](2))
+        #self.toggleButton.setBounds(0, 0, self.getWidth(), self.getHeight())
+        pass
 
     def setRowAndColumn(self, newRow, newColumn):
         self.row = newRow
         self.columnId = newColumn
+
         self.toggleButton.setToggleState(self.owner.getSelection(self.row), juce.dontSendNotification)
 
 
@@ -67,7 +69,7 @@ class TutorialDataSorter(object):
 
     def compareElements(self, first, second):
         sortWith = second.getStringAttribute(self.attributeToSort)
-        result = self.getStringAttribute(self.attributeToSort).compareNatural(sortWith)
+        result = first.getStringAttribute(self.attributeToSort).compareNatural(sortWith)
 
         if result == 0:
             result = first.getStringAttribute("ID").compareNatural(second.getStringAttribute("ID"))
@@ -133,9 +135,10 @@ class TableTutorialComponent(juce_multi(juce.Component, juce.TableListBoxModel))
         g.fillRect(width - 1, 0, 1, height)
 
     def sortOrderChanged(self, newSortColumnId, isForwards):
-        if newSortColumnId != 0:
+        if newSortColumnId != 0 and self.dataList:
             sorter = TutorialDataSorter(self.getAttributeNameForColumnId(newSortColumnId), isForwards)
-            # TODO - self.dataList.sortChildElements[TutorialDataSorter](sorter)
+
+            self.dataList.sortChildElements(lambda lhs, rhs: sorter.compareElements(lhs, rhs))
 
             self.table.updateContent()
 

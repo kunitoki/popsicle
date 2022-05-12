@@ -35,10 +35,10 @@ class MainContentComponent(juce.Component):
         self.limeContent.setColour(juce.TextButton.buttonColourId, juce.Colours.lime)
         self.addAndMakeVisible(self.limeContent)
 
-        self.grapefruitContent.setColour (juce.TextButton.buttonColourId, juce.Colours.yellowgreen)
+        self.grapefruitContent.setColour(juce.TextButton.buttonColourId, juce.Colours.yellowgreen)
         self.addAndMakeVisible(self.grapefruitContent)
 
-        self.lemonContent.setColour (juce.TextButton.buttonColourId, juce.Colours.yellow)
+        self.lemonContent.setColour(juce.TextButton.buttonColourId, juce.Colours.yellow)
         self.addAndMakeVisible(self.lemonContent)
 
         self.orangeContent.setColour(juce.TextButton.buttonColourId, juce.Colours.orange)
@@ -53,17 +53,17 @@ class MainContentComponent(juce.Component):
         area = self.getLocalBounds()
 
         headerFooterHeight = 36
-        self.header.setBounds(area.removeFromTop    (headerFooterHeight))
-        self.footer.setBounds(area.removeFromBottom (headerFooterHeight))
+        self.header.setBounds(area.removeFromTop(headerFooterHeight))
+        self.footer.setBounds(area.removeFromBottom(headerFooterHeight))
 
         sidebarWidth = 80
-        self.sidebar.setBounds(area.removeFromLeft  (sidebarWidth))
+        self.sidebar.setBounds(area.removeFromLeft(sidebarWidth))
 
         contentItemHeight = 24
-        self.limeContent.setBounds       (area.removeFromTop (contentItemHeight))
-        self.grapefruitContent.setBounds (area.removeFromTop (contentItemHeight))
-        self.lemonContent.setBounds      (area.removeFromTop (contentItemHeight))
-        self.orangeContent.setBounds     (area.removeFromTop (contentItemHeight))
+        self.limeContent.setBounds(area.removeFromTop(contentItemHeight))
+        self.grapefruitContent.setBounds(area.removeFromTop(contentItemHeight))
+        self.lemonContent.setBounds(area.removeFromTop(contentItemHeight))
+        self.orangeContent.setBounds(area.removeFromTop(contentItemHeight))
 
 
 if __name__ == "__main__":

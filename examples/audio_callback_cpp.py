@@ -52,12 +52,17 @@ class MainContentComponent2(juce.Component):
 
         self.setSize(800, 600)
 
+    def __del__(self):
+        if not self.deviceManager:
+            return
+
+        self.deviceManager.removeAudioCallback(self.audioCallback)
+
+        self.deviceManager.closeAudioDevice()
+        self.deviceManager = None
+
     def paint(self, g):
         g.fillAll(juce.Colours.slategrey)
-
-    def __del__(self):
-        self.deviceManager.closeAudioDevice()
-
 
 if __name__ == "__main__":
     START_JUCE_COMPONENT(MainContentComponent2, name="C++ Audio Callback")
