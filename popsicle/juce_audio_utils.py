@@ -15,13 +15,14 @@ def __juce_include():
 
     def __pythonize(klass, name):
         if name == "AudioThumbnail":
-            original_set_source = klass.setSource
-
-            def set_source(obj, source):
+            originalSetSource = klass.setSource
+            def setSource(obj, source):
                 source.__python_owns__ = False
-                original_set_source(obj, source)
+                originalSetSource(obj, source)
+            klass.setSource = setSource
 
-            klass.setSource = set_source
+        elif name == "AudioAppComponent":
+            klass.shutdownAudio.__release_gil__ = True
 
     __cppyy.py.add_pythonization(__pythonize, "juce")
 
