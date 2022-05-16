@@ -70,4 +70,4 @@ class MainContentComponent(juce.AudioAppComponent):
         self.decibelSlider.setBounds(130, 10, self.getWidth() - 140, 20);
 
 if __name__ == "__main__":
-    START_JUCE_COMPONENT(MainContentComponent, name="Slider Decibels Example", width=600, height=100)
+    START_JUCE_COMPONENT(MainContentComponent, name="Slider Decibels Example")

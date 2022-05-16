@@ -157,6 +157,16 @@ Advanced GUI layout techniques (https://docs.juce.com/master/tutorial_rectangle_
 .. image:: https://github.com/kunitoki/popsicle/raw/master/images/layout_rectangles.png
     :target: https://github.com/kunitoki/popsicle/blob/master/examples/layout_rectangles.py
 
+Slider decibels (https://docs.juce.com/master/tutorial_synth_db_level_control.html)
+
+.. image:: https://github.com/kunitoki/popsicle/raw/master/images/slider_decibels.png
+    :target: https://github.com/kunitoki/popsicle/blob/master/examples/slider_decibels.py
+
+Slider values example (https://docs.juce.com/master/tutorial_slider_values.html)
+
+.. image:: https://github.com/kunitoki/popsicle/raw/master/images/slider_values_example.png
+    :target: https://github.com/kunitoki/popsicle/blob/master/examples/slider_values_example.py
+
 Super Simple Animated Graphics
 
 .. image:: https://github.com/kunitoki/popsicle/raw/master/images/juce_o_matic.png
