@@ -88,17 +88,20 @@ class SineWaveVoice(juce.SynthesiserVoice):
 
 
 class SynthAudioSource(juce.AudioSource):
+    synth = juce.Synthesiser()
     midiCollector = juce.MidiMessageCollector()
+    voices = []
 
     def __init__(self, keyState):
         super().__init__()
 
         self.keyboardState = keyState
 
-        self.synth = juce.Synthesiser()
-
         for _ in range(8):
-            self.synth.addVoice(SineWaveVoice())
+            voice = SineWaveVoice()
+            self.voices.append(voice)
+
+            self.synth.addVoice(voice)
 
         self.synth.addSound(SineWaveSound())
 
@@ -120,7 +123,7 @@ class SynthAudioSource(juce.AudioSource):
 
         self.keyboardState.processNextMidiBuffer(incomingMidi, bufferToFill.startSample, bufferToFill.numSamples, True)
 
-        self.synth.renderNextBlock(bufferToFill.buffer, incomingMidi, bufferToFill.startSample, bufferToFill.numSamples)
+        #self.synth.renderNextBlock(bufferToFill.buffer, incomingMidi, bufferToFill.startSample, bufferToFill.numSamples)
 
     def getMidiCollector(self):
         return self.midiCollector
