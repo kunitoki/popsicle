@@ -49,4 +49,4 @@ class MainContentComponent(juce.Component):
 
 
 if __name__ == "__main__":
-    START_JUCE_COMPONENT(MainContentComponent, name="Slider Values Example", width=600, height=90)
+    START_JUCE_COMPONENT(MainContentComponent, name="Slider Values Example")

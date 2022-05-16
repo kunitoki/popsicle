@@ -1,7 +1,6 @@
+import sys
+import gc
 import cppyy
-
-import sys as __sys
-import gc as __gc
 
 from .utils import juce_bootstrap as __juce_bootstrap
 from . import juce_events as __juce_events
@@ -56,9 +55,9 @@ def juce_set_sample_data(output, sample, value):
 def START_JUCE_APPLICATION(application_class):
     juce.initialiseJuce_GUI()
 
-    if __sys.platform in ["win32", "cygwin"]:
+    if sys.platform in ["win32", "cygwin"]:
         juce.Process.setCurrentModuleInstanceHandle()
-    elif __sys.platform in ["darwin"]:
+    elif sys.platform in ["darwin"]:
         juce.initialiseNSApplication()
 
     application = None
@@ -84,22 +83,23 @@ def START_JUCE_APPLICATION(application_class):
                 application.__del__()
             application = None
 
-        __gc.collect()
+        gc.collect()
 
         juce.shutdownJuce_GUI()
 
-        __sys.exit(result)
+        sys.exit(result)
 
 
 # Additional juce entry point for simplified examples
-def START_JUCE_COMPONENT(component_class, name: str = "Component Example", version: str = "1.0", width: int = 800, height: int = 600):
+def START_JUCE_COMPONENT(component_class, name: str = "Component Example", version: str = "1.0"):
     class MainWindow(juce.DocumentWindow):
         component = None
 
         def __init__(self):
             super().__init__(
                 juce.JUCEApplication.getInstance().getApplicationName(),
-                juce.Colours.black,
+                juce.Desktop.getInstance().getDefaultLookAndFeel()
+                    .findColour(juce.ResizableWindow.backgroundColourId),
                 juce.DocumentWindow.allButtons,
                 True)
 
@@ -107,7 +107,6 @@ def START_JUCE_COMPONENT(component_class, name: str = "Component Example", versi
 
             self.setResizable(True, True)
             self.setContentNonOwned(self.component, True)
-            self.centreWithSize(width, height)
             self.setVisible(True)
 
         def __del__(self):

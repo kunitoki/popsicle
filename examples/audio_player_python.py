@@ -185,4 +185,4 @@ class MainContentComponent(juce_multi(juce.Component, juce.ChangeListener, juce.
 
 
 if __name__ == "__main__":
-    START_JUCE_COMPONENT(MainContentComponent, name="C++ Audio Player", width=400, height=400)
+    START_JUCE_COMPONENT(MainContentComponent, name="C++ Audio Player")

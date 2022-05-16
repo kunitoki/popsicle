@@ -67,4 +67,4 @@ class MainContentComponent(juce.Component):
 
 
 if __name__ == "__main__":
-    START_JUCE_COMPONENT(MainContentComponent, name="Advanced GUI layout techniques", width=400, height=400)
+    START_JUCE_COMPONENT(MainContentComponent, name="Advanced GUI layout techniques")

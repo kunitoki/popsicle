@@ -1,16 +1,15 @@
-import cppyy as __cppyy
-
-from functools import lru_cache as __lru_cache
+import cppyy
+from functools import lru_cache
 
 from .utils import juce_bootstrap as __juce_bootstrap
 
 __all__ = []
 
-@__lru_cache(maxsize=1024)
+@lru_cache(maxsize=1024)
 def __juce_include():
-    __cppyy.include("juce_core/juce_core.h")
+    cppyy.include("juce_core/juce_core.h")
 
-    __cppyy.cppdef("""
+    cppyy.cppdef("""
     namespace popsicle::detail::XmlElement
     {
         void sortChildElements(
@@ -45,9 +44,9 @@ def __juce_include():
             klass.getChildByName.__creates__ = False
             klass.getChildByAttribute.__creates__ = False
 
-            klass.sortChildElements = __cppyy.gbl.popsicle.detail.XmlElement.sortChildElements
+            klass.sortChildElements = cppyy.gbl.popsicle.detail.XmlElement.sortChildElements
 
-    __cppyy.py.add_pythonization(__pythonize, "juce")
+    cppyy.py.add_pythonization(__pythonize, "juce")
 
 __juce_bootstrap()
 __juce_include()
