@@ -51,7 +51,7 @@ Features
 Example usage
 -------------
 
-A single 70 lines long script is better than thousand of words:
+A single 80 lines script is better than thousand of words:
 
 .. code-block:: python
 
@@ -62,6 +62,7 @@ A single 70 lines long script is better than thousand of words:
   class MainContentComponent(juce_multi(juce.Component, juce.Timer)):
       def __init__(self):
           super().__init__((), ())
+
           self.setSize(600, 400)
           self.startTimerHz(60)
 
@@ -89,10 +90,13 @@ A single 70 lines long script is better than thousand of words:
 
 
   class MainWindow(juce.DocumentWindow):
+      component = None
+
       def __init__(self):
           super().__init__(
               juce.JUCEApplication.getInstance().getApplicationName(),
-              juce.Colours.black,
+              juce.Desktop.getInstance().getDefaultLookAndFeel()
+                  .findColour(juce.ResizableWindow.backgroundColourId),,
               juce.DocumentWindow.allButtons,
               True)
 
@@ -105,13 +109,16 @@ A single 70 lines long script is better than thousand of words:
 
       def __del__(self):
           if hasattr(self, "component"):
-              del self.component
+              self.component.__del__()
+              self.component = None
 
       def closeButtonPressed(self):
           juce.JUCEApplication.getInstance().systemRequestedQuit()
 
 
   class Application(juce.JUCEApplication):
+      window = None
+
       def getApplicationName(self):
           return "JUCE-o-matic"
 
@@ -123,7 +130,8 @@ A single 70 lines long script is better than thousand of words:
 
       def shutdown(self):
           if hasattr(self, "window"):
-              del self.window
+              self.window.__del__()
+              self.window = None
 
 
   if __name__ == "__main__":
