@@ -73,7 +73,7 @@ class BuildExtension(build_ext):
                 module_name = os.path.split(module)[1]
                 if module_name.startswith("juce_"):
                     for file_path in glob.glob(os.path.join(module, "**", "*.h"), recursive=True):
-                        new_path = file_path.replace("JUCE/modules/{}/".format(module_name), "")
+                        new_path = file_path.replace(os.path.join("JUCE", "modules", module_name, ""), "")
                         new_path = os.path.join(binary_dest, module_name, new_path)
                         try:
                             os.makedirs(os.path.split(new_path)[0])
