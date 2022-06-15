@@ -11,15 +11,14 @@ from setuptools.command.install import install
 from setuptools.command.build_ext import build_ext
 from wheel.bdist_wheel import bdist_wheel, get_platform
 
-project_name = "popsicle"
 
-with open("VERSION.txt", "r") as f: version = f.read()
-with open("README.rst", "r") as f: long_description = f.read()
+project_name = "popsicle"
 
 
 class CMakeExtension(Extension):
     def __init__(self, name):
         super().__init__(name, sources=[])
+
 
 class BuildExtension(build_ext):
     def run(self):
@@ -36,7 +35,8 @@ class BuildExtension(build_ext):
         extdir = pathlib.Path(self.get_ext_fullpath(ext.name))
         extdir.mkdir(parents=True, exist_ok=True)
 
-        output_dir = str(extdir.parent.absolute())
+        output_path = extdir.parent
+        output_dir = str(output_path.absolute())
 
         config = "Debug" if self.debug else "Release"
 
@@ -45,48 +45,54 @@ class BuildExtension(build_ext):
             f"-DCMAKE_BUILD_TYPE={config}"
         ]
 
-        os.chdir(str(build_temp))
-
-        binary_dest = os.path.join(output_dir, project_name, "data")
+        binary_dest = output_path / project_name / "data"
         os.makedirs(binary_dest, exist_ok=True)
 
         try:
+            os.chdir(str(build_temp))
             self.spawn(["cmake", str(cwd)] + cmake_args)
 
-            if self.dry_run: return
+            if getattr(self, "dry_run"): return
 
             build_command = ["cmake", "--build", ".", "--config", config]
-
             if sys.platform not in ["win32", "cygwin"]:
                 build_command += ["--", f"-j{os.cpu_count()}"]
-
             self.spawn(build_command)
 
-            for f in glob.glob("popsicle_artefacts/**/*.*"):
+            for f in glob.iglob("popsicle_artefacts/**/*.*"):
                 shutil.copy(f, binary_dest)
 
-            for f in glob.glob("popsicle_artefacts/JuceLibraryCode/**/*.*"):
+            for f in glob.iglob("popsicle_artefacts/JuceLibraryCode/**/*.*"):
                 shutil.copy(f, binary_dest)
+
+            modules_base_dir = "JUCE/modules"
 
             os.chdir(str(cwd))
-            for module in glob.iglob("JUCE/modules/**"):
+            for module in glob.iglob(f"{modules_base_dir}/**"):
                 module_name = os.path.split(module)[1]
-                if module_name.startswith("juce_"):
-                    for file_path in glob.glob(os.path.join(module, "**", "*.h"), recursive=True):
-                        new_path = file_path.replace(os.path.join("JUCE", "modules", module_name, ""), "")
-                        new_path = os.path.join(binary_dest, module_name, new_path)
-                        try:
-                            os.makedirs(os.path.split(new_path)[0])
-                        except OSError:
-                            pass
-                        shutil.copy(file_path, new_path)
+                if not module_name.startswith("juce_"):
+                    continue
+
+                for file_path in glob.iglob(os.path.join(module, "**", "*.h"), recursive=True):
+                    path = pathlib.Path(file_path)
+                    new_path = path.relative_to(f"{modules_base_dir}/")
+                    new_path = binary_dest / new_path
+
+                    try:
+                        os.makedirs(new_path.parent)
+                    except OSError:
+                        pass
+
+                    shutil.copy(file_path, new_path)
 
         finally:
             os.chdir(str(cwd))
 
+
 class BinaryDistribution(Distribution):
     def has_ext_modules(self):
         return True
+
 
 class BinaryDistWheel(bdist_wheel):
     def finalize_options(self):
@@ -99,11 +105,17 @@ class BinaryDistWheel(bdist_wheel):
         bdist_wheel.finalize_options(self)
         #self.root_is_pure = True
 
+
 class InstallPlatformLibrary(install):
     def finalize_options(self):
         install.finalize_options(self)
         if self.distribution.has_ext_modules():
             self.install_lib = self.install_platlib
+
+
+with open("VERSION.txt", "r") as f: version = f.read()
+with open("README.rst", "r") as f: long_description = f.read()
+
 
 setuptools.setup(
     name=project_name,
