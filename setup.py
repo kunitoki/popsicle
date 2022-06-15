@@ -32,16 +32,13 @@ class BuildExtension(build_ext):
         build_temp = pathlib.Path(self.build_temp)
         build_temp.mkdir(parents=True, exist_ok=True)
 
-        extdir = pathlib.Path(self.get_ext_fullpath(ext.name))
+        extdir = pathlib.Path(self.get_ext_fullpath(ext.name)).absolute()
         extdir.mkdir(parents=True, exist_ok=True)
 
         output_path = extdir.parent
-        output_dir = str(output_path.absolute())
-
         config = "Debug" if self.debug else "Release"
-
         cmake_args = [
-            f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={output_dir}",
+            f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={output_path}",
             f"-DCMAKE_BUILD_TYPE={config}"
         ]
 
@@ -75,15 +72,12 @@ class BuildExtension(build_ext):
 
                 for file_path in glob.iglob(os.path.join(module, "**", "*.h"), recursive=True):
                     path = pathlib.Path(file_path)
-                    new_path = path.relative_to(f"{modules_base_dir}/")
-                    new_path = binary_dest / new_path
 
-                    try:
-                        os.makedirs(new_path.parent)
-                    except OSError:
-                        pass
+                    new_path = binary_dest / path.relative_to(f"{modules_base_dir}/")
 
-                    shutil.copy(file_path, new_path)
+                    new_path.parent.mkdir(parents=True, exist_ok=True)
+
+                    shutil.copy(path.absolute(), new_path)
 
         finally:
             os.chdir(str(cwd))
