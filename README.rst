@@ -96,7 +96,7 @@ A single 80 lines script is better than thousand of words:
           super().__init__(
               juce.JUCEApplication.getInstance().getApplicationName(),
               juce.Desktop.getInstance().getDefaultLookAndFeel()
-                  .findColour(juce.ResizableWindow.backgroundColourId),,
+                  .findColour(juce.ResizableWindow.backgroundColourId),
               juce.DocumentWindow.allButtons,
               True)
 
