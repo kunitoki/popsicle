@@ -25,6 +25,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 
 if(APPLE)
     set_target_properties(${PROJECT_NAME} PROPERTIES OSX_ARCHITECTURES "arm64;x86_64")
+    target_link_options(${PROJECT_NAME} PRIVATE "-Wl,-weak_reference_mismatches,weak")
 endif()
 
 set(POPSICLE_LTO "juce::juce_recommended_lto_flags")
@@ -37,7 +38,8 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
     JUCE_LOAD_CURL_SYMBOLS_LAZILY=1
     JUCE_ALLOW_STATIC_NULL_VARIABLES=0
     JUCE_LOG_ASSERTIONS=1
-    JUCE_STRICT_REFCOUNTEDPOINTER=1)
+    JUCE_STRICT_REFCOUNTEDPOINTER=1
+    JUCE_SILENCE_XCODE_15_LINKER_WARNING=1)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     juce::juce_analytics

@@ -11,11 +11,12 @@ cppyy.cppdef("""
 class AudioCallback : public juce::AudioIODeviceCallback
 {
     void audioDeviceIOCallback(
-        const float** inputChannelData,
+        const float* const* inputChannelData,
         int numInputChannels,
-        float** outputChannelData,
+        float* const* outputChannelData,
         int numOutputChannels,
-        int numSamples) override
+        int numSamples,
+        const juce::AudioIODeviceCallbackContext& context)
     {
         for (int channel = 0; channel < numOutputChannels; ++channel)
         {
@@ -26,11 +27,11 @@ class AudioCallback : public juce::AudioIODeviceCallback
         }
     }
 
-    void audioDeviceAboutToStart(juce::AudioIODevice* device) override
+    void audioDeviceAboutToStart(juce::AudioIODevice* device)
     {
     }
 
-    void audioDeviceStopped() override
+    void audioDeviceStopped()
     {
     }
 };
