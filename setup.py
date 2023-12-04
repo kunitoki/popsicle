@@ -132,7 +132,7 @@ setuptools.setup(
     platforms=[ "macosx", "win32", "linux" ],
     python_requires=">=3.7",
     setup_requires=[ "wheel" ],
-    install_requires=[ "cppyy>=2.3.1" ],
+    install_requires=[ "cppyy>=3.1.2" ],
     license="GPLv3",
     classifiers=[
         "Intended Audience :: Developers",

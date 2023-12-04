@@ -216,7 +216,7 @@ Install python dependencies.
 
 .. code-block:: bash
 
-  pip3 install "cppyy>=2.3.1"
+  pip3 install "cppyy>=3.1.2"
 
 Then it's possible to package a wheel and install it (currently this is only tested on macOS and Linux):
 
