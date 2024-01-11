@@ -8,15 +8,15 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -29,5 +29,4 @@ jobs:
     - name: Build Python Wheel
       shell: bash
       run: |
-        python3 setup.py clean --all
-        python3 setup.py bdist_wheel
+        python3 -m build --wheel -n

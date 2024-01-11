@@ -1,0 +1,102 @@
+name: Test Deploy
+
+on: push
+#on:
+#  release:
+#    types: [published]
+
+jobs:
+  build-wheels:
+    name: Build wheel on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    continue-on-error: false
+
+    # if: github.event_name == 'release' && github.event.action == 'published'
+
+    strategy:
+      matrix:
+        include:
+        #- { os: macos-latest, build: cp38-macosx_universal2 }
+        #- { os: macos-latest, build: cp39-macosx_universal2 }
+        #- { os: macos-latest, build: cp310-macosx_universal2 }
+        - { os: macos-latest, build: cp311-macosx_universal2 }
+        #- { os: macos-latest, build: cp312-macosx_universal2 }
+        #- { os: windows-latest, build: cp38-win_amd64 }
+        #- { os: windows-latest, build: cp39-win_amd64 }
+        #- { os: windows-latest, build: cp310-win_amd64 }
+        #- { os: windows-latest, build: cp311-win_amd64 }
+        #- { os: windows-latest, build: cp312-win_amd64 }
+        #- { os: ubuntu-latest, build: cp38-manylinux_x86_64 }
+        # - { os: ubuntu-latest, build: cp38-manylinux_aarch64 }
+        #- { os: ubuntu-latest, build: cp39-manylinux_x86_64 }
+        # - { os: ubuntu-latest, build: cp39-manylinux_aarch64 }
+        #- { os: ubuntu-latest, build: cp310-manylinux_x86_64 }
+        # - { os: ubuntu-latest, build: cp310-manylinux_aarch64 }
+        #- { os: ubuntu-latest, build: cp311-manylinux_x86_64 }
+        # - { os: ubuntu-latest, build: cp311-manylinux_aarch64 }
+        #- { os: ubuntu-latest, build: cp312-manylinux_x86_64 }
+        # - { os: ubuntu-latest, build: cp312-manylinux_aarch64 }
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-python@v3
+
+      - name: Install cibuildwheel
+        run: python -m pip install cibuildwheel==2.16.2
+
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_BUILD: ${{ matrix.build }}
+          CIBW_ARCHS: auto64
+          CIBW_ARCHS_LINUX: x86_64
+          CIBW_ARCHS_MACOS: universal2
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: pip install auditwheel-symbols && (auditwheel repair -w {dest_dir} {wheel} || auditwheel-symbols --manylinux 2014 {wheel})
+          CIBW_BEFORE_BUILD_LINUX: |
+            yum install -y \
+              zlib-devel \
+              openssl-devel \
+              freetype-devel \
+              freeglut-devel \
+              alsa-lib-devel \
+              mesa-libGL-devel \
+              xorg-x11-proto-devel \
+              xorg-x11-proto-devel \
+              libcurl-devel \
+              libpng-devel \
+              libX11-devel \
+              libXcursor-devel \
+              libXrandr-devel \
+              libXinerama-devel \
+              libXrender-devel \
+              libXcomposite-devel \
+              libXinerama-devel \
+              libXcursor-devel
+          CIBW_TEST_SKIP: "*manylinux* *pp* *-macosx_universal2:arm64"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          path: ./wheelhouse/*.whl
+
+
+  #upload-pypi:
+  #  name: "Upload wheels to PyPI"
+
+  #  needs: [build-wheels]
+  #  runs-on: ubuntu-latest
+
+  #  if: github.event_name == 'release' && github.event.action == 'published'
+
+  #  steps:
+  #    - uses: actions/download-artifact@v2
+  #      with:
+  #        name: artifact
+  #        path: dist
+
+  #    - uses: pypa/gh-action-pypi-publish@v1.4.2
+  #      with:
+  #        user: __token__
+  #        password: ${{ secrets.PYPI_DEPLOY_TOKEN }}
