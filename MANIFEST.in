@@ -1,5 +1,4 @@
-include CMakeLists.txt
-include VERSION.txt
 include LICENSE
+include README.rst
 
-global-exclude *.py[cod] __pycache__ .DS_Store
+global-exclude *.py[cod] __pycache__ .DS_Store CMakeLists.txt VERSION

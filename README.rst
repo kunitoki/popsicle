@@ -6,7 +6,7 @@
 popsicle
 ========
 
-Popsicle is a project that aims to give *JUCE* (https://juce.com/) a broader audience by allowing it to be used from python. Thanks to *cppyy* (http://cppyy.readthedocs.io/en/latest/) it exposes the JUCE framework api in a pythonic way, and the way it enables to write apps in python is very much similar to the way of writing them in C++ but without the overweight of managing project build, configurations and IDE solutions.
+Popsicle is a project that aims to give *JUCE* (https://juce.com/) a broader audience by allowing it to be used from python. Thanks to *pybind11* (https://pybind11.readthedocs.io/en/stable/) it exposes the JUCE framework api in a pythonic way, and the way it enables to write apps in python is very much similar to the way of writing them in C++ but without the overweight of managing project build, configurations and IDE solutions.
 
 |linux_builds| |macos_builds| |windows_builds| |pypi_status| |pypi_license| |pypi_version| |pypi_downloads|
 
@@ -44,8 +44,8 @@ Features
 
 - Easy and quick to iterate over a JUCE application, no need to setup a build environment.
 - The way it allows to write JUCE code is very similar to how you would write it in C++.
-- It allows to mix Python and C++, and even compile C++ code at runtime when needed.
-- It is fast, and when the speed of C++ is required, it is possible to write those parts in C++ directly.
+- Ships as wheel to be used in python scripts
+- Allows embedding in existing JUCE apps (ships as a JUCE module)
 
 -------------
 Example usage
@@ -55,13 +55,13 @@ A single 80 lines script is better than thousand of words:
 
 .. code-block:: python
 
-  from popsicle import juce_gui_basics
-  from popsicle import juce, juce_multi, START_JUCE_APPLICATION
+  import juce
 
 
-  class MainContentComponent(juce_multi(juce.Component, juce.Timer)):
+  class MainContentComponent(juce.Component, juce.Timer):
       def __init__(self):
-          super().__init__((), ())
+          juce.Component.__init__(self)
+          juce.Timer.__init__(self)
 
           self.setSize(600, 400)
           self.startTimerHz(60)
@@ -70,16 +70,17 @@ A single 80 lines script is better than thousand of words:
           self.stopTimer()
 
       def paint(self, g):
-          g.fillAll(juce.Colours.black)
+          g.fillAll(juce.Colour.fromRGBA(0, 0, 0, 255))
 
           random = juce.Random.getSystemRandom()
           rect = juce.Rectangle[int](0, 0, 20, 20)
 
           for _ in range(100):
-              g.setColour(juce.Colour(
+              g.setColour(juce.Colour.fromRGBA(
                   random.nextInt(256),
                   random.nextInt(256),
-                  random.nextInt(256)))
+                  random.nextInt(256),
+                  255))
 
               rect.setCentre(random.nextInt(self.getWidth()), random.nextInt(self.getHeight()))
               g.drawRect(rect)
@@ -95,8 +96,7 @@ A single 80 lines script is better than thousand of words:
       def __init__(self):
           super().__init__(
               juce.JUCEApplication.getInstance().getApplicationName(),
-              juce.Desktop.getInstance().getDefaultLookAndFeel()
-                  .findColour(juce.ResizableWindow.backgroundColourId),
+              juce.Colour.fromRGBA(0, 0, 0, 255), #juce.Desktop.getInstance().getDefaultLookAndFeel().findColour(juce.ResizableWindow.backgroundColourId),
               juce.DocumentWindow.allButtons,
               True)
 
@@ -108,8 +108,8 @@ A single 80 lines script is better than thousand of words:
           self.setVisible(True)
 
       def __del__(self):
-          if hasattr(self, "component"):
-              self.component.__del__()
+          if self.component:
+              del self.component
               self.component = None
 
       def closeButtonPressed(self):
@@ -129,13 +129,13 @@ A single 80 lines script is better than thousand of words:
           self.window = MainWindow()
 
       def shutdown(self):
-          if hasattr(self, "window"):
-              self.window.__del__()
+          if self.window:
+              del self.window
               self.window = None
 
 
   if __name__ == "__main__":
-      START_JUCE_APPLICATION(Application)
+      juce.START_JUCE_APPLICATION(Application)
 
 As easy as that ! You will find more example on JUCE usage in the *examples* folder.
 
@@ -198,7 +198,7 @@ Installing popsicle is as easy as pulling from pypi (osx only for now):
 
 .. code-block:: bash
 
-  pip3 install popsicle
+  pip3 install juce
 
 Make sure you have a recent *pip* if you are on BigSur intel.
 
@@ -213,12 +213,6 @@ Clone the repository recursively as JUCE is a submodule
   git clone --recursive git@github.com:kunitoki/popsicle.git
 
 Install python dependencies.
-
-.. code-block:: bash
-
-  pip3 install "cppyy>=3.1.2"
-
-Then it's possible to package a wheel and install it (currently this is only tested on macOS and Linux):
 
 .. code-block:: bash
 

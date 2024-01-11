@@ -1,4 +1,0 @@
-
-[submodule "JUCE"]
-	path = JUCE
-	url = https://github.com/kunitoki/JUCE.git

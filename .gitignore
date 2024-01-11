@@ -3,10 +3,7 @@ __pycache__/
 .vscode/
 dist/
 build/
-cxxbuild/
-repro/
-*.pyc
-.DS_Store
+*.egg-info/
 
-popsicle/data/
-popsicle.egg-info/
+.DS_Store
+*.pyc
