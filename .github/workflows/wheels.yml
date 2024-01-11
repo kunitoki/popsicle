@@ -16,11 +16,11 @@ jobs:
     strategy:
       matrix:
         include:
-        #- { os: macos-latest, build: cp38-macosx_universal2 }
-        #- { os: macos-latest, build: cp39-macosx_universal2 }
-        #- { os: macos-latest, build: cp310-macosx_universal2 }
+        - { os: macos-latest, build: cp38-macosx_universal2 }
+        - { os: macos-latest, build: cp39-macosx_universal2 }
+        - { os: macos-latest, build: cp310-macosx_universal2 }
         - { os: macos-latest, build: cp311-macosx_universal2 }
-        #- { os: macos-latest, build: cp312-macosx_universal2 }
+        - { os: macos-latest, build: cp312-macosx_universal2 }
         #- { os: windows-latest, build: cp38-win_amd64 }
         #- { os: windows-latest, build: cp39-win_amd64 }
         #- { os: windows-latest, build: cp310-win_amd64 }
@@ -82,21 +82,22 @@ jobs:
           path: ./wheelhouse/*.whl
 
 
-  #upload-pypi:
-  #  name: "Upload wheels to PyPI"
+  upload-pypi:
+    name: "Upload wheels to PyPI"
 
-  #  needs: [build-wheels]
-  #  runs-on: ubuntu-latest
+    needs: [build-wheels]
+    runs-on: ubuntu-latest
 
   #  if: github.event_name == 'release' && github.event.action == 'published'
 
-  #  steps:
-  #    - uses: actions/download-artifact@v2
-  #      with:
-  #        name: artifact
-  #        path: dist
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: artifact
+          path: dist
 
-  #    - uses: pypa/gh-action-pypi-publish@v1.4.2
-  #      with:
-  #        user: __token__
-  #        password: ${{ secrets.PYPI_DEPLOY_TOKEN }}
+      - uses: pypa/gh-action-pypi-publish@v1.4.2
+        with:
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_DEPLOY_TOKEN }}
+          repository-url: https://test.pypi.org/legacy/
