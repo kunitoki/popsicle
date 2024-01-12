@@ -1,5 +1,9 @@
 /**
- * juce_python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
+ * juce_python - Python bindings for the JUCE framework
+ *
+ * Copyright (c) 2024 - Lucio Asnaghi
+ *
+ * Licensed under the MIT License. Visit https://opensource.org/licenses/MIT for more information.
  */
 
 /*
@@ -7,11 +11,11 @@
 
   ID:                 juce_python
   vendor:             kunitoki
-  version:            1.0.0
+  version:            1.0.1
   name:               Python bindings for the JUCE framework
   description:        The python bindings to create and work on JUCE apps.
   website:            http://www.straw.com
-  license:            DUAL
+  license:            MIT
   minimumCppStandard: 17
 
   dependencies:       juce_core juce_events juce_graphics juce_gui_basics

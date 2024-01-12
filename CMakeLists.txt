@@ -1,25 +1,28 @@
 cmake_minimum_required (VERSION 3.21)
 
 set (PROJECT_NAME popsicle)
-get_filename_component (ROOT_PATH "${CMAKE_CURRENT_LIST_DIR}" ABSOLUTE)
-file (STRINGS "${ROOT_PATH}/VERSION" VERSION_NUMBER)
-project (${PROJECT_NAME} VERSION ${VERSION_NUMBER})
 
-include (FetchContent)
-set (FETCHCONTENT_UPDATES_DISCONNECTED TRUE)
+get_filename_component (ROOT_PATH "${CMAKE_CURRENT_LIST_DIR}" ABSOLUTE)
+file (STRINGS "${ROOT_PATH}/modules/juce_python/juce_python.h" JUCE_PYTHON_MODULE)
+string (REGEX REPLACE "(.*)([0-9]+\.[0-9]+\.[0-9]+)(.*)" "\\2" VERSION_NUMBER ${JUCE_PYTHON_MODULE})
+project (${PROJECT_NAME} VERSION ${VERSION_NUMBER})
 
 # Set browsable modules in IDE
 set_property (GLOBAL PROPERTY USE_FOLDERS YES)
 option (JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
 
-# Fetch juce
-FetchContent_Declare (JUCE
-    GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
-    GIT_TAG origin/master
-    GIT_SHALLOW TRUE
-    GIT_PROGRESS TRUE
-    SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/JUCE)
-FetchContent_MakeAvailable (JUCE)
+# Fetch/Include juce
+add_subdirectory (JUCE)
+
+#include (FetchContent)
+#set (FETCHCONTENT_UPDATES_DISCONNECTED TRUE)
+#FetchContent_Declare (JUCE
+#    GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
+#    GIT_TAG origin/master
+#    GIT_SHALLOW TRUE
+#    GIT_PROGRESS TRUE
+#    SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/JUCE)
+#FetchContent_MakeAvailable (JUCE)
 
 # Find python
 if ("${Python_INCLUDE_DIRS}" STREQUAL "")

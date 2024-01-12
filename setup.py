@@ -1,5 +1,6 @@
 import os
 import sys
+import re
 import pathlib
 import platform
 import glob
@@ -120,8 +121,11 @@ class InstallPlatformLibrary(install):
             self.install_lib = self.install_platlib
 
 
-with open("VERSION", "r") as f: version = f.read()
-with open("README.rst", "r") as f: long_description = f.read()
+with open("modules/juce_python/juce_python.h", "r") as f:
+    version = re.findall(r"version\:\s+(\d+\.\d+\.\d+)", f.read())[0]
+
+with open("README.rst", "r") as f:
+    long_description = f.read()
 
 cmdclass = {
     "install": InstallPlatformLibrary,

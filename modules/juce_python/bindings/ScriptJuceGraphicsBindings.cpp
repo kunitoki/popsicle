@@ -1,5 +1,9 @@
 /**
- * juce_python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
+ * juce_python - Python bindings for the JUCE framework
+ *
+ * Copyright (c) 2024 - Lucio Asnaghi
+ *
+ * Licensed under the MIT License. Visit https://opensource.org/licenses/MIT for more information.
  */
 
 #if __has_include(<juce_graphics/juce_graphics.h>)

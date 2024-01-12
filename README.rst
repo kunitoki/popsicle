@@ -110,7 +110,6 @@ A single 80 lines script is better than thousand of words:
       def __del__(self):
           if self.component:
               del self.component
-              self.component = None
 
       def closeButtonPressed(self):
           juce.JUCEApplication.getInstance().systemRequestedQuit()
@@ -131,7 +130,6 @@ A single 80 lines script is better than thousand of words:
       def shutdown(self):
           if self.window:
               del self.window
-              self.window = None
 
 
   if __name__ == "__main__":
@@ -144,46 +142,6 @@ Example Applications
 --------------------
 
 Some images of JUCE tutorials and other small apps ported to *popsicle*.
-
-Animated Component (https://docs.juce.com/master/tutorial_animation.html)
-
-.. image:: https://github.com/kunitoki/popsicle/raw/master/images/animated_component.png
-    :target: https://github.com/kunitoki/popsicle/blob/master/examples/animated_component.py
-
-Audio Player with waveforms (https://docs.juce.com/master/tutorial_audio_thumbnail.html)
-
-.. image:: https://github.com/kunitoki/popsicle/raw/master/images/audio_player_waveform.png
-    :target: https://github.com/kunitoki/popsicle/blob/master/examples/audio_player_wave_cpp.py
-
-Slider decibels (https://docs.juce.com/master/tutorial_synth_db_level_control.html)
-
-.. image:: https://github.com/kunitoki/popsicle/raw/master/images/slider_decibels.png
-    :target: https://github.com/kunitoki/popsicle/blob/master/examples/slider_decibels.py
-
-Slider values example (https://docs.juce.com/master/tutorial_slider_values.html)
-
-.. image:: https://github.com/kunitoki/popsicle/raw/master/images/slider_values_example.png
-    :target: https://github.com/kunitoki/popsicle/blob/master/examples/slider_values_example.py
-
-Wavetable oscillator (https://docs.juce.com/master/tutorial_wavetable_synth.html)
-
-.. image:: https://github.com/kunitoki/popsicle/raw/master/images/wavetable_oscillator.png
-    :target: https://github.com/kunitoki/popsicle/blob/master/examples/wavetable_oscillator.py
-
-Responsive GUI layouts using FlexBox and Grid (https://docs.juce.com/master/tutorial_flex_box_grid.html)
-
-.. image:: https://github.com/kunitoki/popsicle/raw/master/images/layout_flexgrid.png
-    :target: https://github.com/kunitoki/popsicle/blob/master/examples/layout_flexgrid.py
-
-Advanced GUI layout techniques (https://docs.juce.com/master/tutorial_rectangle_advanced.html)
-
-.. image:: https://github.com/kunitoki/popsicle/raw/master/images/layout_rectangles.png
-    :target: https://github.com/kunitoki/popsicle/blob/master/examples/layout_rectangles.py
-
-Table listbox (https://docs.juce.com/master/tutorial_table_list_box.html)
-
-.. image:: https://github.com/kunitoki/popsicle/raw/master/images/table_list_box.png
-    :target: https://github.com/kunitoki/popsicle/blob/master/examples/table_list_box.py
 
 Super Simple Animated Graphics
 
@@ -198,15 +156,15 @@ Installing popsicle is as easy as pulling from pypi (osx only for now):
 
 .. code-block:: bash
 
-  pip3 install juce
+  pip3 install popsicle
 
-Make sure you have a recent *pip* if you are on BigSur intel.
+Make sure you have a recent *pip*.
 
 -----------------
 Build From Source
 -----------------
 
-Clone the repository recursively as JUCE is a submodule
+Clone the repository recursively as JUCE is a submodule.
 
 .. code-block:: bash
 
@@ -216,17 +174,8 @@ Install python dependencies.
 
 .. code-block:: bash
 
-  # Cleanup the temporary folders
-  python3 setup.py clean --all
-
   # Build the binary distribution
-  python3 setup.py bdist_wheel
+  python -m build --wheel
 
   # Install the local wheel
   pip3 install dist/popsicle-*.whl
-
-Eventually uploading to PyPI:
-
-.. code-block:: bash
-
-  python3 -m twine upload --repository popsicle dist/popsicle-*.whl
