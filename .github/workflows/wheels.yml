@@ -88,16 +88,18 @@ jobs:
     needs: [build-wheels]
     runs-on: ubuntu-latest
 
-  #  if: github.event_name == 'release' && github.event.action == 'published'
+    #if: github.event_name == 'release' && github.event.action == 'published'
+    #if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
 
     steps:
       - uses: actions/download-artifact@v4
         with:
-          pattern: juce-*
+          pattern: ./wheelhouse/*.whl
+          path: dist
           merge-multiple: true
 
       - name: Display structure of downloaded files
-        run: ls -R
+        run: ls -R dist
 
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
