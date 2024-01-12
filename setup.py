@@ -64,12 +64,13 @@ class BuildExtension(build_ext):
             self.spawn(build_command)
 
             if sys.platform in ["win32", "cygwin"]:
-                extension = ".pyd"
+                extensions = [".pyd", ".lib"]
             else:
-                extension = ".so"
+                extensions = [".so"]
 
-            for f in glob.iglob(f"{project_name}_artefacts/**/*{extension}", recursive=True):
-                shutil.copy(f, output_path / f"{project_name}{extension}")
+            for extension in extensions:
+                for f in glob.iglob(f"{project_name}_artefacts/**/*{extension}", recursive=True):
+                    shutil.copy(f, output_path / f"{project_name}{extension}")
 
         finally:
             os.chdir(str(cwd))
@@ -87,9 +88,9 @@ class BuildExtension(build_ext):
             srcdir = vars['srcdir']
 
         for extension in [".a", ".dylib", ".lib", ".so", ".pyd"]:
-            for match in glob.iglob(f"{srcdir}/**/*python*{extension}", recursive=True):
-                if "site-packages" not in match:
-                    return match
+            for m in glob.iglob(f"{srcdir}/**/*python*{extension}", recursive=True):
+                if "site-packages" not in m:
+                    return m
 
         print("cannot find static library to be linked")
         exit(-1)
