@@ -1098,10 +1098,15 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("isSymbolicLink", &File::isSymbolicLink)
         .def ("getLinkedTarget", &File::getLinkedTarget)
         .def ("getNativeLinkedTarget", &File::getNativeLinkedTarget)
+#if JUCE_WINDOWS
+        .def ("createShortcut", &File::createShortcut)
+        .def ("isShortcut", &File::isShortcut)
+#elif JUCE_MAC
     // .def ("getMacOSType", &File::getMacOSType)
         .def ("isBundle", &File::isBundle)
         .def ("addToDock", &File::addToDock)
         .def_static ("getContainerForSecurityApplicationGroupIdentifier", &File::getContainerForSecurityApplicationGroupIdentifier)
+#endif
     ;
 
     // ============================================================================================ juce::URL
