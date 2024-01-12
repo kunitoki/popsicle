@@ -11,7 +11,7 @@ set_property (GLOBAL PROPERTY USE_FOLDERS YES)
 option (JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
 
 # Fetch juce
-add_subdirectory (JUCE)
+add_subdirectory (${ROOT_PATH}/JUCE JUCE)
 
 #include (FetchContent)
 #set (FETCHCONTENT_UPDATES_DISCONNECTED TRUE)
@@ -50,7 +50,8 @@ if (APPLE)
     set_target_properties(${TARGET_NAME} PROPERTIES OSX_ARCHITECTURES "arm64;x86_64")
     target_link_options(${TARGET_NAME} PRIVATE "-Wl,-weak_reference_mismatches,weak")
 
-    set (LTO_CONFIGURATION "juce::juce_recommended_lto_flags")
+    #set (LTO_CONFIGURATION "juce::juce_recommended_lto_flags")
+    set (LTO_CONFIGURATION "")
 else()
     set (LTO_CONFIGURATION "")
 endif()

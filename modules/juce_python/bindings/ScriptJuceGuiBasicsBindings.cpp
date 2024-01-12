@@ -585,6 +585,50 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def_readwrite ("verticalFrequencyHz", &Displays::Display::verticalFrequencyHz)
     ;
 
+    // ============================================================================================ juce::LookAndFeel
+
+    struct PyLookAndFeel : LookAndFeel
+    {
+        using LookAndFeel::LookAndFeel;
+
+        //void drawSpinningWaitAnimation(Graphics& g, const Colour& colour, int x, int y, int w, int h) override
+        //{
+        //    PYBIND11_OVERRIDE_PURE(void, LookAndFeel, drawSpinningWaitAnimation, g, colour, x, y, w, h);
+        //}
+
+        //void getMouseCursorFor(Component& c) override
+        //{
+        //    PYBIND11_OVERRIDE(MouseCursor, LookAndFeel, getMouseCursorFor, c);
+        //}
+        
+        void playAlertSound() override
+        {
+            PYBIND11_OVERRIDE(void, LookAndFeel, playAlertSound);
+        }
+    };
+
+    py::class_<LookAndFeel, PyLookAndFeel> (m, "LookAndFeel")
+    //.def (py::init<>())
+        .def_static ("getDefaultLookAndFeel", &LookAndFeel::getDefaultLookAndFeel, py::return_value_policy::reference)
+        .def_static ("setDefaultLookAndFeel", &LookAndFeel::setDefaultLookAndFeel)
+        .def ("findColour", &LookAndFeel::findColour)
+        .def ("setColour", &LookAndFeel::setColour)
+        .def ("isColourSpecified", &LookAndFeel::isColourSpecified)
+    //.def ("getTypefaceForFont", &LookAndFeel::getTypefaceForFont)
+    //.def ("setDefaultSansSerifTypeface", &LookAndFeel::setDefaultSansSerifTypeface)
+    //.def ("setDefaultSansSerifTypefaceName", &LookAndFeel::setDefaultSansSerifTypefaceName)
+        .def ("setUsingNativeAlertWindows", &LookAndFeel::setUsingNativeAlertWindows)
+        .def ("isUsingNativeAlertWindows", &LookAndFeel::isUsingNativeAlertWindows)
+        .def ("drawSpinningWaitAnimation", &LookAndFeel::drawSpinningWaitAnimation)
+        .def ("getTickShape", &LookAndFeel::getTickShape)
+        .def ("getCrossShape", &LookAndFeel::getCrossShape)
+    //.def ("createDropShadowerForComponent", &LookAndFeel::createDropShadowerForComponent)
+    //.def ("createFocusOutlineForComponent", &LookAndFeel::createFocusOutlineForComponent)
+        .def ("getMouseCursorFor", &LookAndFeel::getMouseCursorFor)
+    //.def ("createGraphicsContext", &LookAndFeel::createGraphicsContext)
+        .def ("playAlertSound", &LookAndFeel::playAlertSound)
+    ;
+
     // ============================================================================================ juce::Desktop
 
     py::class_<Desktop, std::unique_ptr<Desktop, py::nodelete>> classDesktop (m, "Desktop");
@@ -1206,6 +1250,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     // ============================================================================================ juce::TopLevelWindow
 
     py::class_<TopLevelWindow, Component> classTopLevelWindow (m, "TopLevelWindow");
+
     classTopLevelWindow
         .def (py::init<const String&, bool>())
         .def ("isActiveWindow", &TopLevelWindow::isActiveWindow)
@@ -1223,6 +1268,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     // ============================================================================================ juce::ResizableWindow
 
     py::class_<ResizableWindow, TopLevelWindow> classResizableWindow (m, "ResizableWindow");
+
     classResizableWindow
         .def (py::init<const String&, bool>())
         .def (py::init<const String&, Colour, bool>())
@@ -1251,6 +1297,8 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     //.def ("getBorderThickness", &ResizableWindow::getBorderThickness)
     //.def ("getContentComponentBorder", &ResizableWindow::getContentComponentBorder)
     ;
+
+    classResizableWindow.attr ("backgroundColourId") = py::int_(static_cast<int> (ResizableWindow::backgroundColourId));
 
     // ============================================================================================ juce::DocumentWindow
 
@@ -1302,7 +1350,8 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("getMinimiseButton", &DocumentWindow::getMinimiseButton, py::return_value_policy::reference)
         .def ("getMaximiseButton", &DocumentWindow::getMaximiseButton, py::return_value_policy::reference)
     ;
-
+    
+    classDocumentWindow.attr ("textColourId") = py::int_(static_cast<int> (DocumentWindow::textColourId));
 }
 
 } // namespace popsicle::Bindings

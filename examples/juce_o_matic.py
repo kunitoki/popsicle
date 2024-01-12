@@ -14,7 +14,7 @@ class MainContentComponent(juce.Component, juce.Timer):
 		self.startTimerHz(60)
 
 	def paint(self, g):
-		g.fillAll(juce.Colour.fromRGBA(0, 0, 0, 255))
+		g.fillAll(juce.Colours.black)
 
 		random = juce.Random.getSystemRandom()
 		rect = juce.Rectangle[int](0, 0, 20, 20)
@@ -48,7 +48,7 @@ class MainWindow(juce.DocumentWindow):
 	def __init__(self):
 		super().__init__(
 			juce.JUCEApplication.getInstance().getApplicationName(),
-			juce.Colour(0, 0, 0, 255),
+			juce.Desktop.getInstance().getDefaultLookAndFeel().findColour(juce.ResizableWindow.backgroundColourId),
 			juce.DocumentWindow.allButtons,
 			True)
 
@@ -89,7 +89,8 @@ class Application(juce.JUCEApplication):
 	def shutdown(self):
 		print("shutdown")
 
-		del self.window
+		if self.window:
+			del self.window
 
 	def systemRequestedQuit(self):
 		print("systemRequestedQuit")
