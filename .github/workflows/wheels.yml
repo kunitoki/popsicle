@@ -94,7 +94,6 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          pattern: "**/*.whl"
           path: dist
           merge-multiple: true
 
