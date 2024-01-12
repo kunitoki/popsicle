@@ -77,7 +77,7 @@ jobs:
               libXcursor-devel
           CIBW_TEST_SKIP: "*manylinux* *pp* *-macosx_universal2:arm64"
 
-      - uses: actions/upload-artifact@v4
+      - uses: kittaakos/upload-artifact-as-is@v0
         with:
           path: ./wheelhouse/*.whl
 
@@ -93,6 +93,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
+          pattern: juce-*
           merge-multiple: true
 
       - name: Display structure of downloaded files
