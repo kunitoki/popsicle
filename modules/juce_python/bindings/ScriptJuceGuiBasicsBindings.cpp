@@ -18,10 +18,12 @@
 #define VC_EXTRALEAN
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
+#define NOGDI
 #include <windows.h>
-#undef NOMINMAX
-#undef WIN32_LEAN_AND_MEAN
 #undef VC_EXTRALEAN
+#undef WIN32_LEAN_AND_MEAN
+#undef NOMINMAX
+#undef NOGDI
 #endif
 
 #include <functional>
@@ -62,30 +64,24 @@ namespace juce {
  extern void initialiseNSApplication();
 #endif
 
-extern const char* const* juce_argv;
-extern int juce_argc;
+#if ! JUCE_WINDOWS
+ extern const char* const* juce_argv;
+ extern int juce_argc;
+#endif
 
 } // namespace juce
 
 //=================================================================================================
 
 #if JUCE_WINDOWS
-BOOL APIENTRY DllMain(HANDLE moduleHandle, DWORD reasonForCall, LPVOID reserved)
+BOOL APIENTRY DllMain(HANDLE instance, DWORD reason, LPVOID reserved)
 {
-	switch (reasonForCall)
-    {
-		case DLL_PROCESS_ATTACH:
-			juce::Process::setCurrentModuleInstanceHandle (moduleHandle);
-			break;
+    juce::ignoreUnused (reserved);
 
-		case DLL_PROCESS_DETACH:
-            if (reserved != nullptr)
-                juce::Process::setCurrentModuleInstanceHandle (nullptr);
-			break;
-        
-        default:
-            break;
-    }
+    if (reason == DLL_PROCESS_ATTACH)
+        juce::Process::setCurrentModuleInstanceHandle (instance);
+
+    return true;
 }
 #endif
 
@@ -125,6 +121,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
             sys.attr ("exit") (returnValue);
         };
 
+#if ! JUCE_WINDOWS
         StringArray arguments;
         for (auto arg : sys.attr ("argv"))
             arguments.add (arg.cast<String>());
@@ -135,6 +132,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
 
         juce_argv = argv.getRawDataPointer();
         juce_argc = argv.size();
+#endif
 
         auto pyApplication = applicationType(); // TODO - error checking (python)
 

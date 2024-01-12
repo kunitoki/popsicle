@@ -13,8 +13,13 @@
 #else
 #include <windows.h>
 #include <dbghelp.h>
+
 #pragma comment (lib, "dbghelp.lib")
-extern char* __unDName (char*, const char*, int, void*, void*, int);
+
+using malloc_func_t = void* (*)(size_t);
+using free_func_t = void (*)(void*);
+
+extern "C" char* __unDName (char*, const char*, int, malloc_func_t, free_func_t, unsigned short int);
 #endif
 
 namespace popsicle::Helpers {
@@ -28,12 +33,14 @@ juce::String demangleClassName (juce::StringRef className)
 #if __clang__ || GNUC
     int status = -1;
     char* demangledName = abi::__cxa_demangle (name.toUTF8(), nullptr, nullptr, &status);
-    name = demangledName;
+    name = juce::String::fromUTF8 (demangledName);
     std::free (demangledName);
+
 #else
     char demangledName [1024] = { 0 };
     __unDName (demangledName, name.toUTF8() + 1, juce::numElementsInArray (demangledName), malloc, free, 0x2800);
-    name = demangledName;
+    name = juce::String::fromUTF8 (demangledName);
+
 #endif
 
     return name;
