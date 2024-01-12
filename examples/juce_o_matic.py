@@ -1,6 +1,7 @@
-import juce_init
-import juce
 import sys
+
+import juce_init
+import popsicle as juce
 
 
 class MainContentComponent(juce.Component, juce.Timer):

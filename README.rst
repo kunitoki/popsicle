@@ -55,7 +55,7 @@ A single 80 lines script is better than thousand of words:
 
 .. code-block:: python
 
-  import juce
+  import popsicle as juce
 
 
   class MainContentComponent(juce.Component, juce.Timer):

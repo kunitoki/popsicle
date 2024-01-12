@@ -1,5 +1,5 @@
 /**
- * juce python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
+ * juce_python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #if __has_include(<juce_graphics/juce_graphics.h>)
@@ -21,7 +21,7 @@
 #include <tuple>
 #include <variant>
 
-namespace jucepy::Bindings {
+namespace popsicle::Bindings {
 
 // ============================================================================================
 
@@ -41,7 +41,7 @@ void registerPoint (pybind11::module_& m)
         using T = Class<ValueType>;
 
         String className;
-        className << "Point[" << jucepy::Helpers::demangleClassName (typeid (Types).name()) << "]";
+        className << "Point[" << popsicle::Helpers::demangleClassName (typeid (Types).name()) << "]";
 
         auto class_ = py::class_<T> (scope, className.toRawUTF8())
             .def (py::init<>())
@@ -119,7 +119,7 @@ void registerLine (pybind11::module_& m)
         using T = Class<ValueType>;
 
         String className;
-        className << "Line[" << jucepy::Helpers::demangleClassName (typeid (Types).name()) << "]";
+        className << "Line[" << popsicle::Helpers::demangleClassName (typeid (Types).name()) << "]";
 
         auto class_ = py::class_<T> (scope, className.toRawUTF8())
             .def (py::init<>())
@@ -187,7 +187,7 @@ void registerRectangle (pybind11::module_& m)
         using T = Class<ValueType>;
 
         String className;
-        className << "Rectangle[" << jucepy::Helpers::demangleClassName (typeid (Types).name()) << "]";
+        className << "Rectangle[" << popsicle::Helpers::demangleClassName (typeid (Types).name()) << "]";
 
         auto class_ = py::class_<T> (scope, className.toRawUTF8())
             .def (py::init<>())
@@ -298,7 +298,7 @@ void registerRectangleList (pybind11::module_& m)
         using T = Class<ValueType>;
 
         String className;
-        className << "RectangleList[" << jucepy::Helpers::demangleClassName (typeid (Types).name()) << "]";
+        className << "RectangleList[" << popsicle::Helpers::demangleClassName (typeid (Types).name()) << "]";
 
         auto class_ = py::class_<T> (scope, className.toRawUTF8())
             .def (py::init<>())
@@ -362,7 +362,7 @@ void registerBorderSize (pybind11::module_& m)
         using T = Class<ValueType>;
 
         String className;
-        className << "BorderSize[" << jucepy::Helpers::demangleClassName (typeid (Types).name()) << "]";
+        className << "BorderSize[" << popsicle::Helpers::demangleClassName (typeid (Types).name()) << "]";
 
         auto class_ = py::class_<T> (scope, className.toRawUTF8())
             .def (py::init<>())
@@ -1044,6 +1044,6 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
     ;
 }
 
-} // namespace jucepy::Bindings
+} // namespace popsicle::Bindings
 
 #endif

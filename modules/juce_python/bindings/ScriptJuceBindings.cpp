@@ -1,5 +1,5 @@
 /**
- * juce python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
+ * juce_python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #include "../utilities/PyBind11Includes.h"
@@ -11,26 +11,26 @@
 
 //=================================================================================================
 #if JUCE_PYTHON_EMBEDDED_INTERPRETER
-PYBIND11_EMBEDDED_MODULE(juce, m)
+PYBIND11_EMBEDDED_MODULE(popsicle, m)
 #else
-PYBIND11_MODULE(juce, m)
+PYBIND11_MODULE(popsicle, m)
 #endif
 {
     // Register juce_core bindings
-    jucepy::Bindings::registerJuceCoreBindings (m);
+    popsicle::Bindings::registerJuceCoreBindings (m);
 
 #if __has_include(<juce_events/juce_events.h>)
     // Register juce_events bindings
-    jucepy::Bindings::registerJuceEventsBindings (m);
+    popsicle::Bindings::registerJuceEventsBindings (m);
 #endif
 
 #if __has_include(<juce_graphics/juce_graphics.h>)
     // Register juce_graphics bindings
-    jucepy::Bindings::registerJuceGraphicsBindings (m);
+    popsicle::Bindings::registerJuceGraphicsBindings (m);
 #endif
 
     // Register juce_gui_basics bindings
 #if __has_include(<juce_gui_basics/juce_gui_basics.h>)
-    jucepy::Bindings::registerJuceGuiBasicsBindings (m);
+    popsicle::Bindings::registerJuceGuiBasicsBindings (m);
 #endif
 }

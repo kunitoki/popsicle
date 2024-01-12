@@ -14,7 +14,7 @@ from setuptools.command.build_ext import build_ext
 from wheel.bdist_wheel import bdist_wheel, get_platform
 
 
-project_name = "juce"
+project_name = "popsicle"
 
 
 class CMakeExtension(Extension):

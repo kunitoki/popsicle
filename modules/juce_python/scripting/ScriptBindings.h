@@ -1,5 +1,5 @@
 /**
- * juce python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
+ * juce_python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #pragma once
@@ -14,7 +14,7 @@
 #include <typeinfo>
 #include <unordered_map>
 
-namespace jucepy {
+namespace popsicle {
 
 //=================================================================================================
 
@@ -107,6 +107,6 @@ const void* ComponentType (const juce::Component* src, const std::type_info*& ty
     return nullptr;
 }
 
-} // namespace jucepy
+} // namespace popsicle
 
 #endif

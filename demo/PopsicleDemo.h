@@ -1,5 +1,5 @@
 /**
- * popsicle - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
+ * juce_python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #pragma once
@@ -18,8 +18,10 @@ public:
     void paint (juce::Graphics& g) override;
     void resized() override;
 
+    juce::String text;
+
 private:
-    jucepy::ScriptEngine engine;
+    popsicle::ScriptEngine engine;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PopsicleDemo)
 };

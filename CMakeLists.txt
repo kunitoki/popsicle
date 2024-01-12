@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.21)
 
-set (PROJECT_NAME juce)
+set (PROJECT_NAME popsicle)
 get_filename_component (ROOT_PATH "${CMAKE_CURRENT_LIST_DIR}" ABSOLUTE)
 file (STRINGS "${ROOT_PATH}/VERSION" VERSION_NUMBER)
 project (${PROJECT_NAME} VERSION ${VERSION_NUMBER})
@@ -50,12 +50,14 @@ if (APPLE)
     set_target_properties (${PROJECT_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
     set_target_properties (${PROJECT_NAME} PROPERTIES SUFFIX ".so")
     target_link_options (${PROJECT_NAME} PRIVATE "-Wl,-weak_reference_mismatches,weak")
+    set (LTO_CONFIGURATION "juce::juce_recommended_lto_flags")
 elseif (WIN32)
     target_compile_definitions (${PROJECT_NAME} PUBLIC $<$<CONFIG:Debug>:Py_DEBUG>)
     set_target_properties (${PROJECT_NAME} PROPERTIES SUFFIX ".pyd")
     if (CMAKE_BUILD_TYPE STREQUAL "Debug")
         set_target_properties (${PROJECT_NAME} PROPERTIES OUTPUT_NAME "${PROJECT_NAME}_d")
     endif()
+    set (LTO_CONFIGURATION "")
 endif()
 
 target_include_directories (${PROJECT_NAME} PRIVATE "${Python_INCLUDE_DIRS}")
@@ -99,7 +101,8 @@ target_link_libraries (${PROJECT_NAME} PRIVATE
     juce::juce_recommended_config_flags
     juce::juce_recommended_warning_flags
     popsicle::juce_python
-    popsicle::juce_python_recommended_warning_flags)
+    popsicle::juce_python_recommended_warning_flags
+    ${LTO_CONFIGURATION})
 
 _juce_initialise_target (${PROJECT_NAME} VERSION "${VERSION_NUMBER}")
 _juce_set_output_name (${PROJECT_NAME} $<TARGET_PROPERTY:${PROJECT_NAME},JUCE_PRODUCT_NAME>)

@@ -1,13 +1,13 @@
 
 /**
- * juce python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
+ * juce_python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #pragma once
 
 #include "PyBind11Includes.h"
 
-namespace jucepy::Helpers {
+namespace popsicle::Helpers {
 
 //=================================================================================================
 
@@ -26,4 +26,4 @@ struct CppToPython<float>
     using type = pybind11::float_;
 };
 
-} // namespace jucepy::Helpers
+} // namespace popsicle::Helpers

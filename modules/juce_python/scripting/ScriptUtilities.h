@@ -1,5 +1,5 @@
 /**
- * juce python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
+ * juce_python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #pragma once
@@ -8,7 +8,7 @@
 
 #include <optional>
 
-namespace jucepy {
+namespace popsicle {
 
 /**
  * @brief
@@ -26,4 +26,4 @@ std::optional<T> python_cast (const pybind11::object& value)
     }
 }
 
-} // namespace jucepy
+} // namespace popsicle

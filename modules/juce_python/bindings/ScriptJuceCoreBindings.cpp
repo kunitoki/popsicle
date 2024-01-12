@@ -1,5 +1,5 @@
 /**
- * juce python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
+ * juce_python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #include "ScriptJuceCoreBindings.h"
@@ -354,7 +354,7 @@ handle type_caster<juce::NamedValueSet>::cast (const juce::NamedValueSet& src, r
 
 }} // namespace PYBIND11_NAMESPACE::detail
 
-namespace jucepy::Bindings {
+namespace popsicle::Bindings {
 
 // ============================================================================================
 
@@ -374,7 +374,7 @@ void registerRange (pybind11::module_& m)
         using T = Class<ValueType>;
 
         String className;
-        className << "Range[" << jucepy::Helpers::demangleClassName (typeid (Types).name()) << "]";
+        className << "Range[" << popsicle::Helpers::demangleClassName (typeid (Types).name()) << "]";
 
         auto class_ = py::class_<T> (scope, className.toRawUTF8())
             .def (py::init<>())
@@ -1311,4 +1311,4 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     ;
 }
 
-} // namespace jucepy::Bindings
+} // namespace popsicle::Bindings

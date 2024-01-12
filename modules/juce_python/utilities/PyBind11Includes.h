@@ -1,6 +1,6 @@
 
 /**
- * juce python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
+ * juce_python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #if JUCE_PYTHON_USE_EXTERNAL_PYBIND11

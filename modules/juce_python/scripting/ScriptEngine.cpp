@@ -1,5 +1,5 @@
 /**
- * juce python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
+ * juce_python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #include "ScriptEngine.h"
@@ -8,7 +8,7 @@
 
 #include <regex>
 
-namespace jucepy {
+namespace popsicle {
 
 namespace py = pybind11;
 
@@ -135,4 +135,4 @@ juce::Result ScriptEngine::runScriptInternal (const juce::String& code, py::dict
 #endif
 }
 
-} // namespace jucepy
+} // namespace popsicle

@@ -1,5 +1,5 @@
 /**
- * juce python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
+ * juce_python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #if __has_include(<juce_gui_basics/juce_gui_basics.h>)
@@ -12,7 +12,7 @@
 #include <string_view>
 #include <tuple>
 
-namespace jucepy::Bindings {
+namespace popsicle::Bindings {
 
 //=================================================================================================
 
@@ -38,6 +38,6 @@ void clearComponentTypes()
     map.typeMap.clear();
 }
 
-} // namespace jucepy::Bindings
+} // namespace popsicle::Bindings
 
 #endif

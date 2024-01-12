@@ -1,5 +1,5 @@
 /**
- * juce python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
+ * juce_python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #pragma once
@@ -12,10 +12,10 @@
 
 //=================================================================================================
 
-namespace jucepy::Bindings {
+namespace popsicle::Bindings {
 
 void registerJuceEventsBindings (pybind11::module_& m);
 
-} // namespace jucepy::Bindings
+} // namespace popsicle::Bindings
 
 #endif

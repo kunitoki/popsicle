@@ -1,5 +1,5 @@
 /**
- * juce python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
+ * juce_python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #if __has_include(<juce_gui_basics/juce_gui_basics.h>)
@@ -27,8 +27,8 @@ struct polymorphic_type_hook<juce::Component>
         if (src == nullptr)
             return src;
 
-        auto& map = jucepy::Bindings::getComponentTypeMap();
-        auto demangledName = jucepy::Helpers::demangleClassName (typeid(*src).name());
+        auto& map = popsicle::Bindings::getComponentTypeMap();
+        auto demangledName = popsicle::Helpers::demangleClassName (typeid(*src).name());
 
         auto it = map.typeMap.find (demangledName);
         if (it != map.typeMap.end())
@@ -55,7 +55,7 @@ extern int juce_argc;
 
 //=================================================================================================
 
-namespace jucepy::Bindings {
+namespace popsicle::Bindings {
 
 void registerJuceGuiBasicsBindings (pybind11::module_& m)
 {
@@ -1301,6 +1301,6 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
 
 }
 
-} // namespace jucepy::Bindings
+} // namespace popsicle::Bindings
 
 #endif

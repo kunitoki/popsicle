@@ -1,5 +1,5 @@
 /**
- * juce python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
+ * juce_python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #pragma once
@@ -8,7 +8,7 @@
 
 #include <functional>
 
-namespace jucepy::Helpers {
+namespace popsicle::Helpers {
 
 //=================================================================================================
 
@@ -23,4 +23,4 @@ namespace jucepy::Helpers {
  */
 juce::String demangleClassName (juce::StringRef className);
 
-} // namespace jucepy::Helpers
+} // namespace popsicle::Helpers

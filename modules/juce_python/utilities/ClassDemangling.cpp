@@ -1,5 +1,5 @@
 /**
- * juce python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
+ * juce_python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #include "ClassDemangling.h"
@@ -13,7 +13,7 @@
 extern char* __unDName (char*, const char*, int, void*, void*, int);
 #endif
 
-namespace jucepy::Helpers {
+namespace popsicle::Helpers {
 
 //=================================================================================================
 
@@ -35,4 +35,4 @@ juce::String demangleClassName (juce::StringRef className)
     return name;
 }
 
-} // namespace jucepy::Helpers
+} // namespace popsicle::Helpers

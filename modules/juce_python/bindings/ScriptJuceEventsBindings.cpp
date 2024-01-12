@@ -1,5 +1,5 @@
 /**
- * juce python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
+ * juce_python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #if __has_include(<juce_events/juce_events.h>)
@@ -20,7 +20,7 @@
 
 //=================================================================================================
 
-namespace jucepy::Bindings {
+namespace popsicle::Bindings {
 
 void registerJuceEventsBindings (pybind11::module_& m)
 {
@@ -134,6 +134,6 @@ void registerJuceEventsBindings (pybind11::module_& m)
     ;
 }
 
-} // namespace jucepy::Bindings
+} // namespace popsicle::Bindings
 
 #endif
