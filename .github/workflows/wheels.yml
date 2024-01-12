@@ -61,11 +61,9 @@ jobs:
             yum install -y zlib-devel openssl-devel freetype-devel freeglut-devel alsa-lib-devel mesa-libGL-devel xorg-x11-proto-devel \
               xorg-x11-proto-devel libcurl-devel libpng-devel libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel \
               libXrender-devel libXcomposite-devel libXinerama-devel libXcursor-devel
-          CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
-            pip install auditwheel-symbols && (auditwheel repair -w {dest_dir} {wheel} || auditwheel-symbols --manylinux 2014 {wheel})
-          CIBW_BEFORE_BUILD_WINDOWS: |
-            pip install --use-pep517 .
-          CIBW_TEST_SKIP: "*manylinux* *pp* *-macosx_universal2:arm64 *-win_arm64"
+          #CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
+          #  pip install auditwheel-symbols && (auditwheel repair -w {dest_dir} {wheel} || auditwheel-symbols --manylinux 2014 {wheel})
+          CIBW_TEST_SKIP: "*manylinux* *-macosx_universal2:arm64 *-win_arm64"
           CIBW_BUILD_VERBOSITY: 2
 
       - name: Upload all the dists
