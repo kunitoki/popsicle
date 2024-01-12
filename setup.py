@@ -60,8 +60,13 @@ class BuildExtension(build_ext):
                 build_command += ["--", f"-j{os.cpu_count()}"]
             self.spawn(build_command)
 
-            for f in glob.iglob(f"{project_name}_artefacts/**/*.so"):
-                shutil.copy(f, output_path / f"{project_name}.so")
+            if sys.platform in ["win32", "cygwin"]:
+                extension = ".pyd"
+            else:
+                extension = ".so"
+
+            for f in glob.iglob(f"{project_name}_artefacts/**/*{extension}", recursive=True):
+                shutil.copy(f, output_path / f"{project_name}{extension}")
 
         finally:
             os.chdir(str(cwd))
@@ -78,10 +83,8 @@ class BuildExtension(build_ext):
         elif 'srcdir' in vars:
             srcdir = vars['srcdir']
 
-        extensions = [".a", ".dylib", ".lib", ".so"]
-        for extension in extensions:
-            matches = list(glob.glob(f"{srcdir}/**/*python*{extension}", recursive=True))
-            for match in matches:
+        for extension in [".a", ".dylib", ".lib", ".so", ".pyd"]:
+            for match in glob.iglob(f"{srcdir}/**/*python*{extension}", recursive=True):
                 if "site-packages" not in match:
                     return match
 
