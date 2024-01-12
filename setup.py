@@ -48,6 +48,9 @@ class BuildExtension(build_ext):
             f"-DPython_INCLUDE_DIRS={self.get_includes_path()}",
             f"-DPython_LIBRARY_DIRS={self.get_lib_path()}"
         ]
+        if sys.platform == "win32":
+            cmake_args.extend([f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE={output_path}",
+                               f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG={output_path}"])
 
         try:
             os.chdir(str(build_temp))
@@ -137,9 +140,7 @@ cmdclass = {
 
 if platform.system() == 'Darwin':
     os.environ["_PYTHON_HOST_PLATFORM"] = "macosx-10.15-universal2"
-
-#if platform.system() == 'Darwin':
-#    cmdclass['bdist_wheel'] = BinaryDistWheel
+    # cmdclass['bdist_wheel'] = BinaryDistWheel
 
 setuptools.setup(
     name=project_name,
