@@ -44,8 +44,8 @@ Features
 
 - Easy and quick to iterate over a JUCE application, no need to setup a build environment.
 - The way it allows to write JUCE code is very similar to how you would write it in C++.
-- Ships as wheel to be used in python scripts
-- Allows embedding in existing JUCE apps (ships as a JUCE module)
+- Ships as wheel to be used in python scripts.
+- Allows embedding in existing JUCE apps (ships as a JUCE module).
 
 -------------
 Example usage
@@ -70,7 +70,7 @@ A single 80 lines script is better than thousand of words:
           self.stopTimer()
 
       def paint(self, g):
-          g.fillAll(juce.Colour.fromRGBA(0, 0, 0, 255))
+          g.fillAll(juce.Colours.black)
 
           random = juce.Random.getSystemRandom()
           rect = juce.Rectangle[int](0, 0, 20, 20)
@@ -96,7 +96,7 @@ A single 80 lines script is better than thousand of words:
       def __init__(self):
           super().__init__(
               juce.JUCEApplication.getInstance().getApplicationName(),
-              juce.Colour.fromRGBA(0, 0, 0, 255), #juce.Desktop.getInstance().getDefaultLookAndFeel().findColour(juce.ResizableWindow.backgroundColourId),
+              juce.Desktop.getInstance().getDefaultLookAndFeel().findColour(juce.ResizableWindow.backgroundColourId),
               juce.DocumentWindow.allButtons,
               True)
 
