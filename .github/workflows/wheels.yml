@@ -8,7 +8,7 @@ concurrency:
 
 jobs:
   build-wheels:
-    name: Build Python ${{matrix.python}} 🐍 distribution 📦 wheels on ${{ matrix.os }}
+    name: Build ${{matrix.python}} Wheels On ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     continue-on-error: false
 
@@ -54,32 +54,18 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_ARCHS: all
+          CIBW_ARCHS: auto64
           CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
           CIBW_MANYLINUX_I686_IMAGE: manylinux2014
-          CIBW_REPAIR_WHEEL_COMMAND_LINUX: pip install auditwheel-symbols && (auditwheel repair -w {dest_dir} {wheel} || auditwheel-symbols --manylinux 2014 {wheel})
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
+            pip install auditwheel-symbols && (auditwheel repair -w {dest_dir} {wheel} || auditwheel-symbols --manylinux 2014 {wheel})
           CIBW_BEFORE_BUILD_LINUX: |
-            yum install -y \
-              zlib-devel \
-              openssl-devel \
-              freetype-devel \
-              freeglut-devel \
-              alsa-lib-devel \
-              mesa-libGL-devel \
-              xorg-x11-proto-devel \
-              xorg-x11-proto-devel \
-              libcurl-devel \
-              libpng-devel \
-              libX11-devel \
-              libXcursor-devel \
-              libXrandr-devel \
-              libXinerama-devel \
-              libXrender-devel \
-              libXcomposite-devel \
-              libXinerama-devel \
-              libXcursor-devel
-          CIBW_TEST_SKIP: "*manylinux* *pp* *-macosx_universal2:arm64"
+            yum install -y zlib-devel openssl-devel freetype-devel freeglut-devel alsa-lib-devel mesa-libGL-devel xorg-x11-proto-devel \
+              xorg-x11-proto-devel libcurl-devel libpng-devel libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel \
+              libXrender-devel libXcomposite-devel libXinerama-devel libXcursor-devel
+          CIBW_TEST_SKIP: "*manylinux* *pp* *-macosx_universal2:arm64 *-win_arm64"
+          CIBW_BUILD_VERBOSITY: 2
 
       - name: Upload all the dists
         uses: actions/upload-artifact@v3
@@ -88,7 +74,7 @@ jobs:
           path: ./wheelhouse/*.whl
 
   upload-test-pypi:
-    name: Publish Python 🐍 distribution 📦 to Test PyPI
+    name: Publish Wheels To Test PyPI
     needs: [build-wheels]
     runs-on: ubuntu-latest
     permissions:
@@ -110,7 +96,7 @@ jobs:
           repository-url: https://test.pypi.org/legacy/
 
   upload-pypi:
-    name: Publish Python 🐍 distribution 📦 to PyPI
+    name: Publish Wheels To PyPI
     needs: [upload-test-pypi]
     runs-on: ubuntu-latest
     permissions:
@@ -130,7 +116,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
 
   github-release:
-    name: Sign the Python 🐍 distribution 📦 with Sigstore and upload them to GitHub Release
+    name: Sign And Upload Github Release
     needs: [upload-pypi]
     runs-on: ubuntu-latest
     permissions:
