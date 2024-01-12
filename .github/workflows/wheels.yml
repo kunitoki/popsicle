@@ -8,7 +8,7 @@ concurrency:
 
 jobs:
   build-wheels:
-    name: Build wheel on ${{ matrix.os }}
+    name: Build Python ${{matrix.python}} 🐍 distribution 📦 wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     continue-on-error: false
 
@@ -16,13 +16,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-        - { os: macos-latest, python: 38, platform_id: macosx_universal2 }
-        - { os: macos-latest, python: 39, platform_id: macosx_universal2 }
-        - { os: macos-latest, python: 310, platform_id: macosx_universal2 }
-        - { os: macos-latest, python: 311, platform_id: macosx_universal2 }
-        - { os: macos-latest, python: 312, platform_id: macosx_universal2 }
-        #- { os: windows-latest, python: 38, platform_id: win_amd64 }
-        #- { os: windows-latest, python: 39, platform_id: win_amd64 }
+        #- { os: macos-latest, python: 38, platform_id: macosx_universal2 }
+        #- { os: macos-latest, python: 39, platform_id: macosx_universal2 }
+        #- { os: macos-latest, python: 310, platform_id: macosx_universal2 }
+        #- { os: macos-latest, python: 311, platform_id: macosx_universal2 }
+        #- { os: macos-latest, python: 312, platform_id: macosx_universal2 }
+        - { os: windows-latest, python: 38, platform_id: win_amd64 }
+        - { os: windows-latest, python: 39, platform_id: win_amd64 }
         #- { os: windows-latest, python: 310, platform_id: win_amd64 }
         #- { os: windows-latest, python: 311, platform_id: win_amd64 }
         #- { os: windows-latest, python: 312, platform_id: win_amd64 }
@@ -38,11 +38,13 @@ jobs:
         # - { os: ubuntu-latest, python: 312, platform_id: manylinux_aarch64 }
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout the repository
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - uses: actions/setup-python@v3
+      - name: Setup and install python
+        uses: actions/setup-python@v3
         with:
           python-version: "3.10"
 
@@ -79,49 +81,83 @@ jobs:
               libXcursor-devel
           CIBW_TEST_SKIP: "*manylinux* *pp* *-macosx_universal2:arm64"
 
-      - uses: actions/upload-artifact@v3
+      - name: Upload all the dists
+        uses: actions/upload-artifact@v3
         with:
           name: python-package-distributions
           path: ./wheelhouse/*.whl
 
   upload-test-pypi:
-    name: "Upload wheels to Test PyPI"
-
+    name: Publish Python 🐍 distribution 📦 to Test PyPI
     needs: [build-wheels]
     runs-on: ubuntu-latest
-
-    if: startsWith(github.ref, 'refs/tags')
-
     permissions:
       id-token: write
 
+    #if: startsWith(github.ref, 'refs/tags')
+
     steps:
-      - uses: actions/download-artifact@v3
+      - name: Download all the dists
+        uses: actions/download-artifact@v3
         with:
           name: python-package-distributions
           path: dist/
           merge-multiple: true
 
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Publish distribution to Test PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
 
   upload-pypi:
-    name: "Upload wheels to PyPI"
-
+    name: Publish Python 🐍 distribution 📦 to PyPI
     needs: [upload-test-pypi]
     runs-on: ubuntu-latest
-
-    if: startsWith(github.ref, 'refs/tags')
-
     permissions:
       id-token: write
 
+    if: startsWith(github.ref, 'refs/tags')
+
     steps:
-      - uses: actions/download-artifact@v3
+      - name: Download all the dists
+        uses: actions/download-artifact@v3
         with:
           name: python-package-distributions
           path: dist/
           merge-multiple: true
 
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  github-release:
+    name: Sign the Python 🐍 distribution 📦 with Sigstore and upload them to GitHub Release
+    needs: [upload-pypi]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+
+    if: startsWith(github.ref, 'refs/tags')
+
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v3
+        with:
+          name: python-package-distributions
+          path: dist/
+          merge-multiple: true
+
+      - name: Sign the dists with Sigstore
+        uses: sigstore/gh-action-sigstore-python@v1.2.3
+        with:
+          inputs: ./dist/*.whl
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: gh release create '${{ github.ref_name }}' --repo '${{ github.repository }}' --notes ""
+
+      - name: Upload artifact signatures to GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: gh release upload '${{ github.ref_name }}' dist/** --repo '${{ github.repository }}'
