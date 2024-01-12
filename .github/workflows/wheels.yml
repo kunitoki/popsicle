@@ -86,7 +86,8 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          path: wheelhouse/*.whl
+          name: python-package-distributions
+          path: ./wheelhouse/*.whl
 
   upload-pypi:
     name: "Upload wheels to PyPI"
@@ -100,7 +101,8 @@ jobs:
     steps:
       - uses: actions/download-artifact@v3
         with:
-          path: dist
+          name: python-package-distributions
+          path: dist/
           merge-multiple: true
 
       - uses: pypa/gh-action-pypi-publish@release/v1
