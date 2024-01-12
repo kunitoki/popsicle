@@ -14,6 +14,16 @@
 #include "../utilities/PyBind11Includes.h"
 #undef JUCE_PYTHON_INCLUDE_PYBIND11_OPERATORS
 
+#if JUCE_WINDOWS
+#define VC_EXTRALEAN
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
+#undef NOMINMAX
+#undef WIN32_LEAN_AND_MEAN
+#undef VC_EXTRALEAN
+#endif
+
 #include <functional>
 #include <string_view>
 #include <typeinfo>
@@ -59,6 +69,26 @@ extern int juce_argc;
 
 //=================================================================================================
 
+#if JUCE_WINDOWS
+BOOL APIENTRY DllMain(HANDLE moduleHandle, DWORD reasonForCall, LPVOID reserved)
+{
+	switch (reasonForCall)
+    {
+		case DLL_PROCESS_ATTACH:
+			juce::Process::setCurrentModuleInstanceHandle (moduleHandle);
+			break;
+
+		case DLL_PROCESS_DETACH:
+            if (reserved != nullptr)
+                juce::Process::setCurrentModuleInstanceHandle (nullptr);
+			break;
+        
+        default:
+            break;
+    }
+}
+#endif
+
 namespace popsicle::Bindings {
 
 void registerJuceGuiBasicsBindings (pybind11::module_& m)
@@ -67,7 +97,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
 
     namespace py = pybind11;
 
-#if 1 // ! JUCE_PYTHON_EMBEDDED_INTERPRETER
+#if ! JUCE_PYTHON_EMBEDDED_INTERPRETER
 
     // ============================================================================================ START_JUCE_APPLICATION
 
@@ -83,8 +113,6 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
 
 #if JUCE_MAC
         initialiseNSApplication();
-#elif JUCE_WINDOWS
-		Process::setCurrentModuleInstanceHandle();
 #endif
 
         JUCEApplicationBase* application = nullptr;
