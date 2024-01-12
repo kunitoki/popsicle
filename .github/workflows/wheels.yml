@@ -21,9 +21,9 @@ jobs:
         #- { os: macos-latest, python: 310, platform_id: macosx_universal2 }
         #- { os: macos-latest, python: 311, platform_id: macosx_universal2 }
         #- { os: macos-latest, python: 312, platform_id: macosx_universal2 }
-        - { os: windows-latest, python: 38, platform_id: win_amd64 }
+        #- { os: windows-latest, python: 38, platform_id: win_amd64 }
         - { os: windows-latest, python: 39, platform_id: win_amd64 }
-        #- { os: windows-latest, python: 310, platform_id: win_amd64 }
+        - { os: windows-latest, python: 310, platform_id: win_amd64 }
         #- { os: windows-latest, python: 311, platform_id: win_amd64 }
         #- { os: windows-latest, python: 312, platform_id: win_amd64 }
         #- { os: ubuntu-latest, python: 38, platform_id: manylinux_x86_64 }
@@ -57,13 +57,14 @@ jobs:
           CIBW_ARCHS: auto64
           CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-          CIBW_MANYLINUX_I686_IMAGE: manylinux2014
-          CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
-            pip install auditwheel-symbols && (auditwheel repair -w {dest_dir} {wheel} || auditwheel-symbols --manylinux 2014 {wheel})
           CIBW_BEFORE_BUILD_LINUX: |
             yum install -y zlib-devel openssl-devel freetype-devel freeglut-devel alsa-lib-devel mesa-libGL-devel xorg-x11-proto-devel \
               xorg-x11-proto-devel libcurl-devel libpng-devel libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel \
               libXrender-devel libXcomposite-devel libXinerama-devel libXcursor-devel
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
+            pip install auditwheel-symbols && (auditwheel repair -w {dest_dir} {wheel} || auditwheel-symbols --manylinux 2014 {wheel})
+          CIBW_BEFORE_BUILD_WINDOWS: |
+            pip install --use-pep517 .
           CIBW_TEST_SKIP: "*manylinux* *pp* *-macosx_universal2:arm64 *-win_arm64"
           CIBW_BUILD_VERBOSITY: 2
 
