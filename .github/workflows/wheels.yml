@@ -23,24 +23,24 @@ jobs:
         include:
         - { os: macos-latest, python: 38, platform_id: macosx_universal2 }
         - { os: macos-latest, python: 39, platform_id: macosx_universal2 }
-        #- { os: macos-latest, build: cp310-macosx_universal2 }
-        #- { os: macos-latest, build: cp311-macosx_universal2 }
-        #- { os: macos-latest, build: cp312-macosx_universal2 }
-        #- { os: windows-latest, build: cp38-win_amd64 }
-        #- { os: windows-latest, build: cp39-win_amd64 }
-        #- { os: windows-latest, build: cp310-win_amd64 }
-        #- { os: windows-latest, build: cp311-win_amd64 }
-        #- { os: windows-latest, build: cp312-win_amd64 }
-        #- { os: ubuntu-latest, build: cp38-manylinux_x86_64 }
-        # - { os: ubuntu-latest, build: cp38-manylinux_aarch64 }
-        #- { os: ubuntu-latest, build: cp39-manylinux_x86_64 }
-        # - { os: ubuntu-latest, build: cp39-manylinux_aarch64 }
-        #- { os: ubuntu-latest, build: cp310-manylinux_x86_64 }
-        # - { os: ubuntu-latest, build: cp310-manylinux_aarch64 }
-        #- { os: ubuntu-latest, build: cp311-manylinux_x86_64 }
-        # - { os: ubuntu-latest, build: cp311-manylinux_aarch64 }
-        #- { os: ubuntu-latest, build: cp312-manylinux_x86_64 }
-        # - { os: ubuntu-latest, build: cp312-manylinux_aarch64 }
+        - { os: macos-latest, python: 310, platform_id: macosx_universal2 }
+        - { os: macos-latest, python: 311, platform_id: macosx_universal2 }
+        - { os: macos-latest, python: 312, platform_id: macosx_universal2 }
+        #- { os: windows-latest, python: 38, platform_id: win_amd64 }
+        #- { os: windows-latest, python: 39, platform_id: win_amd64 }
+        #- { os: windows-latest, python: 310, platform_id: win_amd64 }
+        #- { os: windows-latest, python: 311, platform_id: win_amd64 }
+        #- { os: windows-latest, python: 312, platform_id: win_amd64 }
+        #- { os: ubuntu-latest, python: 38, platform_id: manylinux_x86_64 }
+        # - { os: ubuntu-latest, python: 38, platform_id: manylinux_aarch64 }
+        #- { os: ubuntu-latest, python: 39, platform_id: manylinux_x86_64 }
+        # - { os: ubuntu-latest, python: 39, platform_id: manylinux_aarch64 }
+        #- { os: ubuntu-latest, python: 310, platform_id: manylinux_x86_64 }
+        # - { os: ubuntu-latest, python: 310, platform_id: manylinux_aarch64 }
+        #- { os: ubuntu-latest, python: 311, platform_id: manylinux_x86_64 }
+        # - { os: ubuntu-latest, python: 311, platform_id: manylinux_aarch64 }
+        #- { os: ubuntu-latest, python: 312, platform_id: manylinux_x86_64 }
+        # - { os: ubuntu-latest, python: 312, platform_id: manylinux_aarch64 }
 
     steps:
       - uses: actions/checkout@v4
@@ -98,6 +98,13 @@ jobs:
     #if: github.event_name == 'release' && github.event.action == 'published'
     #if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
 
+    environment:
+      name: pypi
+      url: https://test.pypi.org/p/popsicle
+
+    permissions:
+      id-token: write
+
     steps:
       - uses: actions/download-artifact@v3
         with:
@@ -107,6 +114,5 @@ jobs:
 
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: __token__
-          password: ${{ secrets.TEST_PYPI_DEPLOY_TOKEN }}
           repository-url: https://test.pypi.org/legacy/
+
