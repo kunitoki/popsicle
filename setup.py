@@ -73,31 +73,45 @@ class BuildExtension(build_ext):
     def get_python_path(self):
         vars = sysconfig.get_config_vars()
         log.info(f"vars={vars}")
+
         if 'LIBPL' in vars and 'LIBRARY' in vars:
             path = os.path.join(vars['LIBPL'], vars['LIBRARY'])
-            log.info(f"path={path}")
             if os.path.exists(path):
                 return path
 
         if 'LIBDEST' in vars:
             path = vars['LIBDEST']
-            log.info(f"path={path}")
-            for m in glob.iglob(f"{path}/**", recursive=True):
-                log.info(m)
+            if sys.platform not in ["win32", "cygwin"]:
+                path = os.path.split(path)[0]
+                path = os.path.split(path)[0]
 
+            path = self.glob_python_library(path)
+            if path and os.path.exists(path):
+                return path
+
+        srcdir = None
         if 'SCRIPTDIR' in vars:
             srcdir = vars['SCRIPTDIR']
         elif 'srcdir' in vars:
             srcdir = vars['srcdir']
-        log.info(f"srcdir={srcdir}")
 
-        for extension in [".a", ".lib", ".so", ".dylib", ".dll", ".pyd"]:
-            for m in glob.iglob(f"{srcdir}/**/*python*{extension}", recursive=True):
-                if "site-packages" not in m:
-                    return m
+        if srcdir:
+            path = self.glob_python_library(srcdir)
+            if path and os.path.exists(path):
+                return path
 
         log.error("cannot find static library to be linked")
         exit(-1)
+
+    def glob_python_library(self, path):
+        log.info(path)
+
+        for extension in [".a", ".lib", ".so", ".dylib", ".dll", ".pyd"]:
+            for m in glob.iglob(f"{path}/**/*python*{extension}", recursive=True):
+                log.info(m)
+                if "site-packages" not in m:
+                    return m
+        return None
 
     def get_includes_path(self):
         include_dir = sysconfig.get_config_var('CONFINCLUDEPY')
