@@ -16,21 +16,16 @@ jobs:
       fail-fast: false
       matrix:
         include:
-        - { os: macos-latest, python: 310, platform_id: macosx_universal2 }
-        #- { os: macos-latest, python: 311, platform_id: macosx_universal2 }
-        #- { os: macos-latest, python: 312, platform_id: macosx_universal2 }
-
-        - { os: windows-latest, python: 310, platform_id: win_amd64 }
-        #- { os: windows-latest, python: 311, platform_id: win_amd64 }
-        #- { os: windows-latest, python: 312, platform_id: win_amd64 }
-
-        #- { os: ubuntu-latest, python: 310, platform_id: manylinux_x86_64 }
-        #- { os: ubuntu-latest, python: 311, platform_id: manylinux_x86_64 }
-        #- { os: ubuntu-latest, python: 312, platform_id: manylinux_x86_64 }
-
-        #- { os: ubuntu-latest, python: 310, platform_id: manylinux_aarch64 }
-        #- { os: ubuntu-latest, python: 311, platform_id: manylinux_aarch64 }
-        #- { os: ubuntu-latest, python: 312, platform_id: manylinux_aarch64 }
+        - { os: macos-latest, python: 311, platform_id: macosx_universal2, cibw_archs: universal2 }
+        - { os: macos-latest, python: 312, platform_id: macosx_universal2, cibw_archs: universal2 }
+        - { os: windows-latest, python: 311, platform_id: win_amd64, cibw_archs: AMD64 }
+        - { os: windows-latest, python: 312, platform_id: win_amd64, cibw_archs: AMD64 }
+        - { os: windows-latest, python: 311, platform_id: win_arm64, cibw_archs: ARM64 }
+        - { os: windows-latest, python: 312, platform_id: win_arm64, cibw_archs: ARM64 }
+        - { os: ubuntu-latest, python: 311, platform_id: manylinux_x86_64, cibw_archs: x86_64 }
+        - { os: ubuntu-latest, python: 312, platform_id: manylinux_x86_64, cibw_archs: x86_64 }
+        - { os: ubuntu-latest, python: 311, platform_id: manylinux_aarch64, cibw_archs: aarch64 }
+        - { os: ubuntu-latest, python: 312, platform_id: manylinux_aarch64, cibw_archs: aarch64 }
 
     steps:
       - name: Checkout the repository
@@ -38,15 +33,21 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Set up QEMU
+        if: matrix.cibw_archs == 'aarch64'
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: arm64
+
       - name: Setup and install python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: "3.11"
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.16.2
         env:
-          CIBW_ARCHS: all
+          CIBW_ARCHS: ${{matrix.cibw_archs}}
           CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
           CIBW_MANYLINUX_I686_IMAGE: manylinux2014
@@ -56,7 +57,7 @@ jobs:
               libXrender-devel libXcomposite-devel libXinerama-devel libXcursor-devel
           #CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
           #  pip install auditwheel-symbols && (auditwheel repair -w {dest_dir} {wheel} || auditwheel-symbols --manylinux 2014 {wheel})
-          CIBW_TEST_SKIP: "*-manylinux* *-macosx_universal2:arm64 *-win_arm64"
+          CIBW_TEST_SKIP: "*-manylinux_aarch64 *-macosx_universal2:arm64 *-win_arm64"
           CIBW_BUILD_VERBOSITY: 3
 
       - name: Upload all the dists

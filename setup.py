@@ -79,24 +79,24 @@ class BuildExtension(build_ext):
             if os.path.exists(path):
                 return path
 
-        if 'LIBDEST' in vars:
-            path = vars['LIBDEST']
-            if sys.platform in ["win32", "cygwin"]:
-                path = os.path.split(path)[0]
-                path = os.path.split(path)[0]
-
-            path = self.glob_python_library(path)
-            if path and os.path.exists(path):
-                return path
-
-        srcdir = None
         if 'SCRIPTDIR' in vars:
             srcdir = vars['SCRIPTDIR']
         elif 'srcdir' in vars:
             srcdir = vars['srcdir']
+        else:
+            srcdir = None
 
         if srcdir:
             path = self.glob_python_library(srcdir)
+            if path and os.path.exists(path):
+                return path
+
+        if 'LIBDEST' in vars:
+            path = vars['LIBDEST']
+            if sys.platform in ["win32", "cygwin"]:
+                path = os.path.split(os.path.split(path)[0])[0]
+
+            path = self.glob_python_library(path)
             if path and os.path.exists(path):
                 return path
 
@@ -104,11 +104,8 @@ class BuildExtension(build_ext):
         exit(-1)
 
     def glob_python_library(self, path):
-        log.info(path)
-
         for extension in [".a", ".lib", ".so", ".dylib", ".dll", ".pyd"]:
             for m in glob.iglob(f"{path}/**/*python*{extension}", recursive=True):
-                log.info(m)
                 if "site-packages" not in m:
                     return m
         return None
