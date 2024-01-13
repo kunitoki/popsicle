@@ -24,12 +24,7 @@ class CMakeExtension(Extension):
 
 
 class BuildExtension(build_ext):
-    def run(self):
-        for ext in self.extensions:
-            self.build_cmake(ext)
-        super().run()
-
-    def build_cmake(self, ext):
+    def build_extension(self, ext):
         cwd = pathlib.Path().absolute()
 
         build_temp = pathlib.Path(self.build_temp)
@@ -43,14 +38,12 @@ class BuildExtension(build_ext):
 
         config = "Debug" if self.debug else "Release"
         cmake_args = [
-            f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={output_path}",
             f"-DCMAKE_BUILD_TYPE={config}",
+            f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={output_path}",
+            f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{config.upper()}={output_path}",
             f"-DPython_INCLUDE_DIRS={self.get_includes_path()}",
             f"-DPython_LIBRARY_DIRS={self.get_lib_path()}"
         ]
-        if sys.platform == "win32":
-            cmake_args.extend([f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE={output_path}",
-                               f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG={output_path}"])
 
         try:
             os.chdir(str(build_temp))
@@ -64,7 +57,7 @@ class BuildExtension(build_ext):
             self.spawn(build_command)
 
             if sys.platform in ["win32", "cygwin"]:
-                extensions = [".pyd", ".lib"]
+                extensions = [".pyd"]
             else:
                 extensions = [".so"]
 
@@ -105,43 +98,16 @@ class BuildExtension(build_ext):
         return os.path.dirname(self.get_python_path())
 
 
-class BinaryDistribution(Distribution):
-    def has_ext_modules(self):
-        return True
-
-
-#class BinaryDistWheel(bdist_wheel):
-#    def finalize_options(self):
-#        bdist_wheel.finalize_options(self)
-#        self.universal = True
-#
-#    def get_tag(self):
-#        python, abi, plat = bdist_wheel.get_tag(self)
-#        plat = 'macosx_10_15_universal2'
-#        return python, abi, plat
-
-
-class InstallPlatformLibrary(install):
-    def finalize_options(self):
-        install.finalize_options(self)
-        if self.distribution.has_ext_modules():
-            self.install_lib = self.install_platlib
-
-
 with open("modules/juce_python/juce_python.h", "r") as f:
     version = re.findall(r"version\:\s+(\d+\.\d+\.\d+)", f.read())[0]
 
 with open("README.rst", "r") as f:
     long_description = f.read()
 
-cmdclass = {
-    "install": InstallPlatformLibrary,
-    "build_ext": BuildExtension
-}
 
 if platform.system() == 'Darwin':
     os.environ["_PYTHON_HOST_PLATFORM"] = "macosx-10.15-universal2"
-    # cmdclass['bdist_wheel'] = BinaryDistWheel
+
 
 setuptools.setup(
     name=project_name,
@@ -154,8 +120,7 @@ setuptools.setup(
     url="https://github.com/kunitoki/popsicle",
     packages=setuptools.find_packages(".", exclude=["demo", "examples", "JUCE", "modules", "scripts"]),
     include_package_data=True,
-    distclass=BinaryDistribution,
-    cmdclass=cmdclass,
+    cmdclass={"build_ext": BuildExtension},
     ext_modules=[CMakeExtension(project_name)],
     zip_safe=False,
     platforms=["macosx", "win32", "linux"],

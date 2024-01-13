@@ -49,7 +49,6 @@ set_target_properties (${TARGET_NAME} PROPERTIES CXX_STANDARD 17)
 if (APPLE)
     set_target_properties(${TARGET_NAME} PROPERTIES OSX_ARCHITECTURES "arm64;x86_64")
     target_link_options(${TARGET_NAME} PRIVATE "-Wl,-weak_reference_mismatches,weak")
-
     #set (LTO_CONFIGURATION "juce::juce_recommended_lto_flags")
     set (LTO_CONFIGURATION "")
 else()
