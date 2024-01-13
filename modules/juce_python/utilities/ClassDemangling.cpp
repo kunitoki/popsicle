@@ -8,7 +8,10 @@
 
 #include "ClassDemangling.h"
 
-#if __clang__ || GNUC
+#include <cstddef>
+#include <ciso646>
+
+#if defined(_LIBCPP_VERSION) || defined(__GLIBCXX__) || defined(__GLIBCPP__)
 #include <cxxabi.h>
 #else
 #include <windows.h>
