@@ -16,6 +16,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         -Wno-shadow-field-in-constructor
         -Wno-shadow-field
         -Wno-shadow-uncaptured-local
+        -Wno-shadow
         -Wno-self-assign-overloaded
         -Wno-gnu-zero-variadic-macro-arguments
         -Wno-float-equal)

@@ -33,7 +33,7 @@ juce::String demangleClassName (juce::StringRef className)
 {
     juce::String name = className;
 
-#if __clang__ || GNUC
+#if defined(_LIBCPP_VERSION) || defined(__GLIBCXX__) || defined(__GLIBCPP__)
     int status = -1;
     char* demangledName = abi::__cxa_demangle (name.toUTF8(), nullptr, nullptr, &status);
     name = juce::String::fromUTF8 (demangledName);
