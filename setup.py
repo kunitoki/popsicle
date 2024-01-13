@@ -91,10 +91,7 @@ class BuildExtension(build_ext):
             srcdir = vars['srcdir']
         log.info(f"srcdir={srcdir}")
 
-        for extension in [".a", ".dylib", ".lib", ".so", ".pyd", ".dll"]:
-            for m in glob.iglob(f"{srcdir}/**", recursive=True):
-                log.info(m)
-
+        for extension in [".a", ".lib", ".so", ".dylib", ".dll", ".pyd"]:
             for m in glob.iglob(f"{srcdir}/**/*python*{extension}", recursive=True):
                 if "site-packages" not in m:
                     return m
