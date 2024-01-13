@@ -79,6 +79,12 @@ class BuildExtension(build_ext):
             if os.path.exists(path):
                 return path
 
+        if 'BINLIBDEST' in vars:
+            path = vars['BINLIBDEST']
+            log.info(f"path={path}")
+            for m in glob.iglob(f"{path}/**", recursive=True):
+                log.info(m)
+
         if 'SCRIPTDIR' in vars:
             srcdir = vars['SCRIPTDIR']
         elif 'srcdir' in vars:
