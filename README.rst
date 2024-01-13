@@ -83,7 +83,7 @@ A single 80 lines script is better than thousand of words:
                   255))
 
               rect.setCentre(random.nextInt(self.getWidth()), random.nextInt(self.getHeight()))
-              g.drawRect(rect)
+              g.drawRect(rect, 1)
 
       def timerCallback(self):
           if self.isVisible():

@@ -8,7 +8,7 @@ concurrency:
 
 jobs:
   build-wheels:
-    name: Build ${{matrix.python}} Wheels On ${{ matrix.os }}
+    name: Build cp${{matrix.python}}-${{ matrix.platform_id }}
     runs-on: ${{ matrix.os }}
     continue-on-error: false
 
@@ -78,7 +78,7 @@ jobs:
     permissions:
       id-token: write
 
-    #if: startsWith(github.ref, 'refs/tags')
+    if: startsWith(github.ref, 'refs/tags')
 
     steps:
       - name: Download all the dists
