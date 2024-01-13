@@ -16,25 +16,28 @@ jobs:
       fail-fast: false
       matrix:
         include:
-        #- { os: macos-latest, python: 38, platform_id: macosx_universal2 }
-        #- { os: macos-latest, python: 39, platform_id: macosx_universal2 }
+        - { os: macos-latest, python: 38, platform_id: macosx_universal2 }
+        - { os: macos-latest, python: 39, platform_id: macosx_universal2 }
         #- { os: macos-latest, python: 310, platform_id: macosx_universal2 }
         #- { os: macos-latest, python: 311, platform_id: macosx_universal2 }
         #- { os: macos-latest, python: 312, platform_id: macosx_universal2 }
+
         #- { os: windows-latest, python: 38, platform_id: win_amd64 }
         - { os: windows-latest, python: 39, platform_id: win_amd64 }
         - { os: windows-latest, python: 310, platform_id: win_amd64 }
         #- { os: windows-latest, python: 311, platform_id: win_amd64 }
         #- { os: windows-latest, python: 312, platform_id: win_amd64 }
-        #- { os: ubuntu-latest, python: 38, platform_id: manylinux_x86_64 }
-        # - { os: ubuntu-latest, python: 38, platform_id: manylinux_aarch64 }
-        #- { os: ubuntu-latest, python: 39, platform_id: manylinux_x86_64 }
-        # - { os: ubuntu-latest, python: 39, platform_id: manylinux_aarch64 }
-        #- { os: ubuntu-latest, python: 310, platform_id: manylinux_x86_64 }
-        # - { os: ubuntu-latest, python: 310, platform_id: manylinux_aarch64 }
+
+        - { os: ubuntu-latest, python: 38, platform_id: manylinux_x86_64 }
+        - { os: ubuntu-latest, python: 39, platform_id: manylinux_x86_64 }
         #- { os: ubuntu-latest, python: 311, platform_id: manylinux_x86_64 }
-        # - { os: ubuntu-latest, python: 311, platform_id: manylinux_aarch64 }
+        #- { os: ubuntu-latest, python: 310, platform_id: manylinux_x86_64 }
         #- { os: ubuntu-latest, python: 312, platform_id: manylinux_x86_64 }
+
+        # - { os: ubuntu-latest, python: 38, platform_id: manylinux_aarch64 }
+        # - { os: ubuntu-latest, python: 39, platform_id: manylinux_aarch64 }
+        # - { os: ubuntu-latest, python: 310, platform_id: manylinux_aarch64 }
+        # - { os: ubuntu-latest, python: 311, platform_id: manylinux_aarch64 }
         # - { os: ubuntu-latest, python: 312, platform_id: manylinux_aarch64 }
 
     steps:
