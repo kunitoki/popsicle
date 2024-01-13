@@ -9,6 +9,8 @@
 #if __has_include(<juce_gui_basics/juce_gui_basics.h>)
 
 #include "ScriptJuceGuiBasicsBindings.h"
+#include "../scripting/ScriptBindings.h"
+#include "../utilities/ClassDemangling.h"
 
 #define JUCE_PYTHON_INCLUDE_PYBIND11_OPERATORS
 #include "../utilities/PyBind11Includes.h"
@@ -626,7 +628,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         //{
         //    PYBIND11_OVERRIDE(MouseCursor, LookAndFeel, getMouseCursorFor, c);
         //}
-        
+
         void playAlertSound() override
         {
             PYBIND11_OVERRIDE(void, LookAndFeel, playAlertSound);
@@ -1376,7 +1378,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("getMinimiseButton", &DocumentWindow::getMinimiseButton, py::return_value_policy::reference)
         .def ("getMaximiseButton", &DocumentWindow::getMaximiseButton, py::return_value_policy::reference)
     ;
-    
+
     classDocumentWindow.attr ("textColourId") = py::int_(static_cast<int> (DocumentWindow::textColourId));
 }
 
