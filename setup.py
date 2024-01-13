@@ -72,8 +72,10 @@ class BuildExtension(build_ext):
 
     def get_python_path(self):
         vars = sysconfig.get_config_vars()
+        log.info(f"vars={vars}")
         if 'LIBPL' in vars and 'LIBRARY' in vars:
             path = os.path.join(vars['LIBPL'], vars['LIBRARY'])
+            log.info(f"path={path}")
             if os.path.exists(path):
                 return path
 
@@ -81,8 +83,12 @@ class BuildExtension(build_ext):
             srcdir = vars['SCRIPTDIR']
         elif 'srcdir' in vars:
             srcdir = vars['srcdir']
+        log.info(f"srcdir={srcdir}")
 
-        for extension in [".a", ".dylib", ".lib", ".so", ".pyd"]:
+        for extension in [".a", ".dylib", ".lib", ".so", ".pyd", ".dll"]:
+            for m in glob.iglob(f"{srcdir}/**", recursive=True):
+                log.info(m)
+
             for m in glob.iglob(f"{srcdir}/**/*python*{extension}", recursive=True):
                 if "site-packages" not in m:
                     return m
