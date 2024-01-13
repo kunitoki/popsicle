@@ -81,7 +81,7 @@ class BuildExtension(build_ext):
 
         if 'LIBDEST' in vars:
             path = vars['LIBDEST']
-            if sys.platform not in ["win32", "cygwin"]:
+            if sys.platform in ["win32", "cygwin"]:
                 path = os.path.split(path)[0]
                 path = os.path.split(path)[0]
 
