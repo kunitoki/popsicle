@@ -7,12 +7,10 @@ import glob
 import shutil
 import setuptools
 
+from distutils import log
 from distutils import sysconfig
 from setuptools import Extension
-from setuptools.dist import Distribution
-from setuptools.command.install import install
 from setuptools.command.build_ext import build_ext
-from wheel.bdist_wheel import bdist_wheel, get_platform
 
 
 project_name = "popsicle"
@@ -25,6 +23,8 @@ class CMakeExtension(Extension):
 
 class BuildExtension(build_ext):
     def build_extension(self, ext):
+        log.info("entering build extension: cmake")
+
         cwd = pathlib.Path().absolute()
 
         build_temp = pathlib.Path(self.build_temp)
@@ -45,9 +45,16 @@ class BuildExtension(build_ext):
             f"-DPython_LIBRARY_DIRS={self.get_lib_path()}"
         ]
 
+        if platform.system() == 'Darwin':
+            cmake_args += [
+                "-DCMAKE_OSX_ARCHITECTURES:STRING=arm64;x86_64",
+                "-DCMAKE_OSX_DEPLOYMENT_TARGET:STRING=10.15"
+            ]
+
         try:
             os.chdir(str(build_temp))
-            self.spawn(["cmake", str(cwd)] + cmake_args)
+            make_command = ["cmake", str(cwd)] + cmake_args
+            self.spawn(make_command)
 
             if getattr(self, "dry_run"): return
 
@@ -56,12 +63,7 @@ class BuildExtension(build_ext):
                 build_command += ["--", f"-j{os.cpu_count()}"]
             self.spawn(build_command)
 
-            if sys.platform in ["win32", "cygwin"]:
-                extensions = [".pyd"]
-            else:
-                extensions = [".so"]
-
-            for extension in extensions:
+            for extension in [".pyd"] if sys.platform in ["win32", "cygwin"] else [".so"]:
                 for f in glob.iglob(f"{project_name}_artefacts/**/*{extension}", recursive=True):
                     shutil.copy(f, output_path / f"{project_name}{extension}")
 
@@ -85,7 +87,7 @@ class BuildExtension(build_ext):
                 if "site-packages" not in m:
                     return m
 
-        print("cannot find static library to be linked")
+        log.error("cannot find static library to be linked")
         exit(-1)
 
     def get_includes_path(self):
@@ -103,10 +105,6 @@ with open("modules/juce_python/juce_python.h", "r") as f:
 
 with open("README.rst", "r") as f:
     long_description = f.read()
-
-
-if platform.system() == 'Darwin':
-    os.environ["_PYTHON_HOST_PLATFORM"] = "macosx-10.15-universal2"
 
 
 setuptools.setup(

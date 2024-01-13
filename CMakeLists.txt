@@ -7,11 +7,18 @@ file (STRINGS "${ROOT_PATH}/modules/juce_python/juce_python.h" JUCE_PYTHON_MODUL
 string (REGEX REPLACE "(.*)([0-9]+\.[0-9]+\.[0-9]+)(.*)" "\\2" VERSION_NUMBER ${JUCE_PYTHON_MODULE})
 project (${PROJECT_NAME} VERSION ${VERSION_NUMBER})
 
-# Set browsable modules in IDE
+# Find python
+if ("${Python_INCLUDE_DIRS}" STREQUAL "")
+    set (Python_ROOT_DIR "/Library/Frameworks/Python.framework/Versions/Current")
+    set (Python_USE_STATIC_LIBS TRUE)
+    find_package (Python REQUIRED Development)
+else()
+    message(STATUS "${PROJECT_NAME} - Using python includes (provided): ${Python_INCLUDE_DIRS}")
+endif()
+
+# Fetch/Include juce (set browsable modules in IDE)
 set_property (GLOBAL PROPERTY USE_FOLDERS YES)
 option (JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
-
-# Fetch/Include juce
 add_subdirectory (JUCE)
 
 #include (FetchContent)
@@ -24,21 +31,11 @@ add_subdirectory (JUCE)
 #    SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/JUCE)
 #FetchContent_MakeAvailable (JUCE)
 
-# Find python
-if ("${Python_INCLUDE_DIRS}" STREQUAL "")
-    set (Python_ROOT_DIR "/Library/Frameworks/Python.framework/Versions/Current")
-    set (Python_USE_STATIC_LIBS TRUE)
-    find_package (Python REQUIRED Development)
-else()
-    message(STATUS "${PROJECT_NAME} - Using python includes (provided): ${Python_INCLUDE_DIRS}")
-endif()
+# Add the internal modules
+add_subdirectory (modules)
 
-# Add the modules
-get_filename_component (MODULES_PATH "${ROOT_PATH}/modules" ABSOLUTE)
-add_subdirectory (${MODULES_PATH} ./modules)
-
-# Configure the library
-add_library (${PROJECT_NAME} SHARED)
+# Configure the wheel library
+add_library (${PROJECT_NAME} MODULE)
 set_target_properties (${PROJECT_NAME} PROPERTIES JUCE_TARGET_KIND_STRING "App")
 set_target_properties (${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 set_target_properties (${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET "hidden")
@@ -48,8 +45,6 @@ set_target_properties (${PROJECT_NAME} PROPERTIES OUTPUT_NAME "${PROJECT_NAME}")
 set_target_properties (${PROJECT_NAME} PROPERTIES PREFIX "")
 
 if (APPLE)
-    set_target_properties (${PROJECT_NAME} PROPERTIES OSX_ARCHITECTURES "arm64;x86_64")
-    set_target_properties (${PROJECT_NAME} PROPERTIES OSX_DEPLOYMENT_TARGET "10.15")
     set_target_properties (${PROJECT_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
     set_target_properties (${PROJECT_NAME} PROPERTIES SUFFIX ".so")
     target_link_options (${PROJECT_NAME} PRIVATE "-Wl,-weak_reference_mismatches,weak")
@@ -65,7 +60,6 @@ elseif (WIN32)
 endif()
 
 target_include_directories (${PROJECT_NAME} PRIVATE "${Python_INCLUDE_DIRS}")
-
 if (NOT "${Python_LIBRARY_DIRS}" STREQUAL "")
     target_link_directories (${PROJECT_NAME} PRIVATE "${Python_LIBRARY_DIRS}")
 endif()
@@ -110,7 +104,3 @@ target_link_libraries (${PROJECT_NAME} PRIVATE
 
 _juce_initialise_target (${PROJECT_NAME} VERSION "${VERSION_NUMBER}")
 _juce_set_output_name (${PROJECT_NAME} $<TARGET_PROPERTY:${PROJECT_NAME},JUCE_PRODUCT_NAME>)
-
-#if (lto_supported)
-#    set_property(TARGET ${PROJECT_NAME} PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
-#endif()
