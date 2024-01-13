@@ -218,7 +218,7 @@ handle type_caster<juce::var>::cast (const juce::var& src, return_value_policy p
         return PyLong_FromLong (static_cast<int> (src));
 
     else if (src.isInt64())
-        return PyLong_FromLongLong (static_cast<int64_t> (src));
+        return PyLong_FromLongLong (static_cast<juce::int64> (src));
 
     else if (src.isDouble())
         return PyFloat_FromDouble (static_cast<double> (src));

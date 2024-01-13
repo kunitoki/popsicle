@@ -8,17 +8,16 @@ elseif((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQU
         -Wno-shadow-field-in-constructor
         -Wno-shadow-field
         -Wno-shadow-uncaptured-local
+        -Wno-shadow
         -Wno-self-assign-overloaded
+        -Wno-zero-as-null-pointer-constant
         -Wno-gnu-zero-variadic-macro-arguments
         -Wno-float-equal)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(juce_python_recommended_warning_flags INTERFACE
-        -Wno-shadow-field-in-constructor
-        -Wno-shadow-field
-        -Wno-shadow-uncaptured-local
         -Wno-shadow
-        -Wno-self-assign-overloaded
-        -Wno-gnu-zero-variadic-macro-arguments
+        -Wno-zero-as-null-pointer-constant
+        -Wno-redundant-decls
         -Wno-float-equal)
 endif()
 
