@@ -137,6 +137,81 @@ A single 80 lines script is better than thousand of words:
 
 As easy as that ! You will find more example on JUCE usage in the *examples* folder.
 
+-----------------
+Supported Modules
+-----------------
+
+.. list-table:: Title
+   :widths: 40 10 50
+   :header-rows: 1
+
+   * - Module
+     - Support
+     - Notes
+   * - juce_analytics
+     - ⛔️
+     -
+   * - juce_audio_basics
+     - ⛔️
+     - Planned
+   * - juce_audio_devices
+     - ⛔️
+     - Planned
+   * - juce_audio_formats
+     - ⛔️
+     - Planned
+   * - juce_audio_plugin_client
+     - ⛔️
+     - Not planned
+   * - juce_audio_processors
+     - ⛔️
+     - Planned
+   * - juce_audio_utils
+     - ⛔️
+     - Planned
+   * - juce_box2d
+     - ⛔️
+     - Planned
+   * - juce_core
+     - ✅
+     - Most Funcionality Available
+   * - juce_cryptography
+     - ⛔️
+     - Planned
+   * - juce_data_structures
+     - ✅
+     - Ready
+   * - juce_dsp
+     - ⛔️
+     - Planned
+   * - juce_events
+     - ✅
+     - Ready
+   * - juce_graphics
+     - ✅
+     - In Progress
+   * - juce_gui_basics
+     - ✅
+     - In Progress, Basic Support Available
+   * - juce_gui_extra
+     - ⛔️
+     - Planned
+   * - juce_midi_ci
+     - ⛔️
+     - Not Planned
+   * - juce_opengl
+     - ⛔️
+     - Planned
+   * - juce_osc
+     - ⛔️
+     - Not Planned
+   * - juce_product_unlocking
+     - ⛔️
+     - Not Planned
+   * - juce_video
+     - ⛔️
+     - Not planned
+
 --------------------
 Example Applications
 --------------------
