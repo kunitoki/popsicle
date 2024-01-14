@@ -21,9 +21,56 @@
 #include <typeinfo>
 #include <tuple>
 
+namespace popsicle::Bindings {
+
 //=================================================================================================
 
-namespace popsicle::Bindings {
+template <template <class> class Class, class... Types>
+void registerCachedValue (pybind11::module_& m)
+{
+    using namespace juce;
+
+    namespace py = pybind11;
+
+    py::dict type;
+
+    ([&]
+    {
+        using ValueType = Types;
+        using T = Class<ValueType>;
+
+        String className;
+        className << "CachedValue[" << popsicle::Helpers::demangleClassName (typeid (Types).name()) << "]";
+
+        auto class_ = py::class_<T> (m, className.toRawUTF8())
+            .def (py::init<>())
+            .def (py::init<ValueTree&, const Identifier&, UndoManager*>())
+            .def (py::init<ValueTree&, const Identifier&, UndoManager*, const ValueType&>())
+            .def ("get", &T::get)
+            .def (py::self == py::self)
+            .def (py::self != py::self)
+            .def ("getPropertyAsValue", &T::getPropertyAsValue)
+            .def ("isUsingDefault", &T::isUsingDefault)
+            .def ("getDefault", &T::getDefault)
+            .def ("setValue", &T::setValue)
+            .def ("resetToDefault", py::overload_cast<> (&T::resetToDefault))
+            .def ("resetToDefault", py::overload_cast<UndoManager*> (&T::resetToDefault))
+            .def ("setDefault", &T::setDefault)
+            .def ("referTo", py::overload_cast<ValueTree&, const Identifier&, UndoManager*> (&T::referTo))
+            .def ("referTo", py::overload_cast<ValueTree&, const Identifier&, UndoManager*, const ValueType&> (&T::referTo))
+            .def ("forceUpdateOfCachedValue", &T::forceUpdateOfCachedValue)
+            .def ("getValueTree", &T::getValueTree, py::return_value_policy::reference)
+            .def ("getPropertyID", &T::getPropertyID, py::return_value_policy::reference)
+            .def ("getUndoManager", &T::getUndoManager, py::return_value_policy::reference)
+        ;
+
+        type[py::type::of (typename Helpers::CppToPython<Types>::type{})] = class_;
+
+        return true;
+    }() && ...);
+
+    m.add_object ("CachedValue", type);
+}
 
 void registerJuceDataStructuresBindings (pybind11::module_& m)
 {
@@ -37,22 +84,22 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
     {
         bool perform() override
         {
-            PYBIND11_OVERRIDE_PURE(bool, UndoableAction, perform);
+            PYBIND11_OVERRIDE_PURE (bool, UndoableAction, perform);
         }
 
         bool undo() override
         {
-            PYBIND11_OVERRIDE_PURE(bool, UndoableAction, undo);
+            PYBIND11_OVERRIDE_PURE (bool, UndoableAction, undo);
         }
 
         int getSizeInUnits() override
         {
-            PYBIND11_OVERRIDE(int, UndoableAction, getSizeInUnits);
+            PYBIND11_OVERRIDE (int, UndoableAction, getSizeInUnits);
         }
 
         UndoableAction* createCoalescedAction (UndoableAction* nextAction) override
         {
-            PYBIND11_OVERRIDE(UndoableAction*, UndoableAction, createCoalescedAction, nextAction);
+            PYBIND11_OVERRIDE (UndoableAction*, UndoableAction, createCoalescedAction, nextAction);
         }
     };
 
@@ -103,12 +150,12 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
     
         var getValue () const override
         {
-            PYBIND11_OVERRIDE_PURE(var, Value::ValueSource, getValue);
+            PYBIND11_OVERRIDE_PURE (var, Value::ValueSource, getValue);
         }
 
         void setValue (const var& newValue) override
         {
-            PYBIND11_OVERRIDE_PURE(void, Value::ValueSource, setValue, newValue);
+            PYBIND11_OVERRIDE_PURE (void, Value::ValueSource, setValue, newValue);
         }
     };
 
@@ -116,9 +163,9 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
     {
         using Value::Listener::Listener;
     
-        void valueChanged(Value& value) override
+        void valueChanged (Value& value) override
         {
-            PYBIND11_OVERRIDE_PURE(void, Value::Listener, valueChanged, value);
+            PYBIND11_OVERRIDE_PURE (void, Value::Listener, valueChanged, value);
         }
     };
 
@@ -133,7 +180,6 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
         .def ("getValue", &Value::getValue)
         .def ("toString", &Value::toString)
         .def ("setValue", &Value::setValue)
-    //.def ("asVar", &Value::operator var)
         .def ("referTo", &Value::referTo)
         .def ("refersToSameSourceAs", &Value::refersToSameSourceAs)
         .def (py::self == py::self)
@@ -141,6 +187,8 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
         .def ("addListener", &Value::addListener)
         .def ("removeListener", &Value::removeListener)
         .def ("getValueSource", &Value::getValueSource, py::return_value_policy::reference)
+        // Custom
+        .def ("asVar", [](const Value& self) { return static_cast<var> (self); })
     ;
 
     classValueValueSource
@@ -161,34 +209,53 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
     {
         using ValueTree::Listener::Listener;
     
-        void valueTreePropertyChanged(ValueTree& treeWhosePropertyHasChanged, const Identifier& property) override
+        void valueTreePropertyChanged (ValueTree& treeWhosePropertyHasChanged, const Identifier& property) override
         {
-            PYBIND11_OVERRIDE(void, ValueTree::Listener, valueTreePropertyChanged, treeWhosePropertyHasChanged, property);
+            PYBIND11_OVERRIDE (void, ValueTree::Listener, valueTreePropertyChanged, treeWhosePropertyHasChanged, property);
         }
 
-        void valueTreeChildAdded(ValueTree& parentTree, ValueTree& childWhichHasBeenAdded) override
+        void valueTreeChildAdded (ValueTree& parentTree, ValueTree& childWhichHasBeenAdded) override
         {
-            PYBIND11_OVERRIDE(void, ValueTree::Listener, valueTreeChildAdded, parentTree, childWhichHasBeenAdded);
+            PYBIND11_OVERRIDE (void, ValueTree::Listener, valueTreeChildAdded, parentTree, childWhichHasBeenAdded);
         }
 
-        void valueTreeChildRemoved(ValueTree& parentTree, ValueTree& childWhichHasBeenRemoved, int indexFromWhichChildWasRemoved) override
+        void valueTreeChildRemoved (ValueTree& parentTree, ValueTree& childWhichHasBeenRemoved, int indexFromWhichChildWasRemoved) override
         {
-            PYBIND11_OVERRIDE(void, ValueTree::Listener, valueTreeChildRemoved, parentTree, childWhichHasBeenRemoved, indexFromWhichChildWasRemoved);
+            PYBIND11_OVERRIDE (void, ValueTree::Listener, valueTreeChildRemoved, parentTree, childWhichHasBeenRemoved, indexFromWhichChildWasRemoved);
         }
 
-        void valueTreeChildOrderChanged(ValueTree& parentTreeWhoseChildrenHaveMoved, int oldIndex, int newIndex) override
+        void valueTreeChildOrderChanged (ValueTree& parentTreeWhoseChildrenHaveMoved, int oldIndex, int newIndex) override
         {
-            PYBIND11_OVERRIDE(void, ValueTree::Listener, valueTreeChildOrderChanged, parentTreeWhoseChildrenHaveMoved, oldIndex, newIndex);
+            PYBIND11_OVERRIDE (void, ValueTree::Listener, valueTreeChildOrderChanged, parentTreeWhoseChildrenHaveMoved, oldIndex, newIndex);
         }
 
-        void valueTreeParentChanged(ValueTree& treeWhoseParentHasChanged) override
+        void valueTreeParentChanged (ValueTree& treeWhoseParentHasChanged) override
         {
-            PYBIND11_OVERRIDE(void, ValueTree::Listener, valueTreeParentChanged, treeWhoseParentHasChanged);
+            PYBIND11_OVERRIDE (void, ValueTree::Listener, valueTreeParentChanged, treeWhoseParentHasChanged);
         }
 
-        void valueTreeRedirected(ValueTree& treeWhichHasBeenChanged) override
+        void valueTreeRedirected (ValueTree& treeWhichHasBeenChanged) override
         {
-            PYBIND11_OVERRIDE(void, ValueTree::Listener, valueTreeRedirected, treeWhichHasBeenChanged);
+            PYBIND11_OVERRIDE (void, ValueTree::Listener, valueTreeRedirected, treeWhichHasBeenChanged);
+        }
+    };
+
+    struct PyValueTreeComparator
+    {
+        PyValueTreeComparator() = default;
+    
+        int compareElements (const ValueTree& first, const ValueTree& second)
+        {
+            py::gil_scoped_acquire gil;
+
+            if (py::function override_ = py::get_override (static_cast<PyValueTreeComparator*> (this), "compareElements"); override_)
+            {
+                auto result = override_ (first, second);
+
+                return result.cast<int>();
+            }
+        
+            py::pybind11_fail("Tried to call pure virtual function \"ValueTreeComparator::compareElements\"");
         }
     };
 
@@ -207,8 +274,8 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
         .def ("copyPropertiesAndChildrenFrom", &ValueTree::copyPropertiesAndChildrenFrom)
         .def ("getType", &ValueTree::getType)
         .def ("hasType", &ValueTree::hasType)
-        .def ("getProperty", py::overload_cast<const Identifier&> (&ValueTree::getProperty, py::const_))
-        .def ("getProperty", py::overload_cast<const Identifier&, const var&> (&ValueTree::getProperty, py::const_))
+        .def ("getProperty", py::overload_cast<const Identifier&> (&ValueTree::getProperty, py::const_), py::return_value_policy::reference)
+        .def ("getProperty", py::overload_cast<const Identifier&, const var&> (&ValueTree::getProperty, py::const_), py::return_value_policy::reference)
         .def ("getPropertyPointer", &ValueTree::getPropertyPointer, py::return_value_policy::reference)
         .def ("setProperty", &ValueTree::setProperty)
         .def ("hasProperty", &ValueTree::hasProperty)
@@ -238,8 +305,16 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
         .def ("toXmlString", &ValueTree::toXmlString)
         .def ("writeToStream", &ValueTree::writeToStream)
         .def_static ("readFromStream", &ValueTree::readFromStream)
-    //.def_static ("readFromData", &ValueTree::readFromData)
-    //.def_static ("readFromGZIPData", &ValueTree::readFromGZIPData)
+        .def_static ("readFromData", [](const py::buffer& data)
+        {
+            py::buffer_info info = data.request();
+            return ValueTree::readFromData (info.ptr, static_cast<size_t> (info.size));
+        })
+        .def_static ("readFromGZIPData", [](const py::buffer& data)
+        {
+            py::buffer_info info = data.request();
+            return ValueTree::readFromGZIPData (info.ptr, static_cast<size_t> (info.size));
+        })
         .def ("addListener", &ValueTree::addListener)
         .def ("removeListener", &ValueTree::removeListener)
         .def ("setPropertyExcludingListener", &ValueTree::setPropertyExcludingListener)
@@ -248,81 +323,120 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
         .def ("getReferenceCount", &ValueTree::getReferenceCount)
     ;
 
-#if 0
+    // ============================================================================================ juce::CachedValue
 
-py::class_<ValueTreeSynchroniser, Listener> classValueTreeSynchroniser (m, "ValueTreeSynchroniser");
-classValueTreeSynchroniser
-    .def ("stateChanged", &ValueTreeSynchroniser::stateChanged)
-    .def ("sendFullSyncCallback", &ValueTreeSynchroniser::sendFullSyncCallback)
-    .def_static ("applyChange", &ValueTreeSynchroniser::applyChange)
-    .def ("getRoot", &ValueTreeSynchroniser::getRoot)
-;
+    registerCachedValue<CachedValue, bool, int, float, String> (m);
 
-py::class_<ValueTreePropertyWithDefault, Listener> classValueTreePropertyWithDefault (m, "ValueTreePropertyWithDefault");
-classValueTreePropertyWithDefault
-    .def ("get", &ValueTreePropertyWithDefault::get)
-    .def ("getPropertyAsValue", &ValueTreePropertyWithDefault::getPropertyAsValue)
-    .def ("getDefault", &ValueTreePropertyWithDefault::getDefault)
-    .def ("setDefault", &ValueTreePropertyWithDefault::setDefault)
-    .def ("isUsingDefault", &ValueTreePropertyWithDefault::isUsingDefault)
-    .def ("resetToDefault", &ValueTreePropertyWithDefault::resetToDefault)
-    // .def ("operator=", py::overload_cast<const int &>(&ValueTreePropertyWithDefault::operator=))
-    // .def ("operator=", py::overload_cast<const ValueTreePropertyWithDefault &>(&ValueTreePropertyWithDefault::operator=))
-    .def ("setValue", &ValueTreePropertyWithDefault::setValue)
-    .def ("referTo", py::overload_cast<ValueTree, const int &, UndoManager *>(&ValueTreePropertyWithDefault::referTo))
-    .def ("referTo", py::overload_cast<ValueTree, const int &, UndoManager *, int>(&ValueTreePropertyWithDefault::referTo))
-    .def ("referTo", py::overload_cast<ValueTree, const int &, UndoManager *, int, int>(&ValueTreePropertyWithDefault::referTo))
-    .def ("getValueTree", &ValueTreePropertyWithDefault::getValueTree)
-    .def ("getPropertyID", &ValueTreePropertyWithDefault::getPropertyID)
-    .def ("getUndoManager", &ValueTreePropertyWithDefault::getUndoManager)
-;
+    // ============================================================================================ juce::ValueTreeSynchroniser
 
-py::class_<ValueTreePropertyWithDefault::SynchronousValueSource> classValueTreePropertyWithDefaultSynchronousValueSource (classValueTreePropertyWithDefault, "SynchronousValueSource");
-classValueTreePropertyWithDefaultSynchronousValueSource
-    .def ("getValue", &ValueTreePropertyWithDefault::SynchronousValueSource::getValue)
-    .def ("setValue", &ValueTreePropertyWithDefault::SynchronousValueSource::setValue)
-;
+    struct PyValueTreeSynchroniser : public ValueTreeSynchroniser
+    {
+        using ValueTreeSynchroniser::ValueTreeSynchroniser;
+    
+        void stateChanged (const void* encodedChange, size_t encodedChangeSize) override
+        {
+            py::gil_scoped_acquire gil;
 
+            if (py::function override_ = py::get_override (static_cast<ValueTreeSynchroniser*> (this), "stateChanged"); override_)
+            {
+                auto change = py::memoryview::from_memory (encodedChange, static_cast<ssize_t> (encodedChangeSize));
 
-py::class_<PropertiesFile> classPropertiesFile (m, "PropertiesFile");
-classPropertiesFile
-    .def ("isValidFile", &PropertiesFile::isValidFile)
-    .def ("saveIfNeeded", &PropertiesFile::saveIfNeeded)
-    .def ("save", &PropertiesFile::save)
-    .def ("needsToBeSaved", &PropertiesFile::needsToBeSaved)
-    .def ("setNeedsToBeSaved", &PropertiesFile::setNeedsToBeSaved)
-    .def ("reload", &PropertiesFile::reload)
-    .def ("getFile", &PropertiesFile::getFile)
-;
+                override_ (change, encodedChangeSize);
+                
+                return;
+            }
+        
+            py::pybind11_fail("Tried to call pure virtual function \"ValueTreeSynchroniser::stateChanged\"");
+        }
+    };
 
+    py::class_<ValueTreeSynchroniser, PyValueTreeSynchroniser> classValueTreeSynchroniser (m, "ValueTreeSynchroniser");
+    
+    classValueTreeSynchroniser
+        .def (py::init<const ValueTree&>())
+        .def ("stateChanged", &ValueTreeSynchroniser::stateChanged)
+        .def ("sendFullSyncCallback", &ValueTreeSynchroniser::sendFullSyncCallback)
+    //.def_static ("applyChange", &ValueTreeSynchroniser::applyChange)
+        .def ("getRoot", &ValueTreeSynchroniser::getRoot, py::return_value_policy::reference)
+    ;
 
-py::class_<PropertiesFile::Options> classPropertiesFileOptions (classPropertiesFile, "Options");
-classPropertiesFileOptions
-    .def ("getDefaultFile", &PropertiesFile::Options::getDefaultFile)
-;
+    // ============================================================================================ juce::ValueTreeSynchroniser
 
-Options >  int   applicationName
-Options >  int   filenameSuffix
-Options >  int   folderName
-Options >  int   osxLibrarySubFolder
-Options >  bool   commonToAllUsers
-Options >  bool   ignoreCaseOfKeyNames
-Options >  bool   doNotSave
-Options >  int   millisecondsBeforeSaving
-Options >  StorageFormat   storageFormat
-Options >  int *   processLock
+    py::class_<ValueTreePropertyWithDefault> classValueTreePropertyWithDefault (m, "ValueTreePropertyWithDefault");
+    
+    classValueTreePropertyWithDefault
+        .def (py::init<>())
+        .def (py::init<ValueTree&, const Identifier&, UndoManager*>())
+        .def (py::init<ValueTree&, const Identifier&, UndoManager*, var>())
+        .def (py::init<ValueTree&, const Identifier&, UndoManager*, var, StringRef>())
+        .def ("get", &ValueTreePropertyWithDefault::get)
+        .def ("getPropertyAsValue", &ValueTreePropertyWithDefault::getPropertyAsValue)
+        .def ("getDefault", &ValueTreePropertyWithDefault::getDefault)
+        .def ("setDefault", &ValueTreePropertyWithDefault::setDefault)
+        .def ("isUsingDefault", &ValueTreePropertyWithDefault::isUsingDefault)
+        .def ("resetToDefault", &ValueTreePropertyWithDefault::resetToDefault)
+        .def_readwrite ("onDefaultChange", &ValueTreePropertyWithDefault::onDefaultChange)
+        .def ("setValue", &ValueTreePropertyWithDefault::setValue)
+        .def ("referTo", py::overload_cast<ValueTree, const Identifier&, UndoManager*> (&ValueTreePropertyWithDefault::referTo))
+        .def ("referTo", py::overload_cast<ValueTree, const Identifier&, UndoManager*, var> (&ValueTreePropertyWithDefault::referTo))
+        .def ("referTo", py::overload_cast<ValueTree, const Identifier&, UndoManager*, var, StringRef> (&ValueTreePropertyWithDefault::referTo))
+        .def ("getValueTree", &ValueTreePropertyWithDefault::getValueTree, py::return_value_policy::reference)
+        .def ("getPropertyID", &ValueTreePropertyWithDefault::getPropertyID, py::return_value_policy::reference)
+        .def ("getUndoManager", &ValueTreePropertyWithDefault::getUndoManager, py::return_value_policy::reference)
+    ;
 
-py::class_<ApplicationProperties> classApplicationProperties (m, "ApplicationProperties");
-classApplicationProperties
-    .def ("setStorageParameters", &ApplicationProperties::setStorageParameters)
-    .def ("getStorageParameters", &ApplicationProperties::getStorageParameters)
-    .def ("getUserSettings", &ApplicationProperties::getUserSettings)
-    .def ("getCommonSettings", &ApplicationProperties::getCommonSettings)
-    .def ("saveIfNeeded", &ApplicationProperties::saveIfNeeded)
-    .def ("closeFiles", &ApplicationProperties::closeFiles)
-;
+    // ============================================================================================ juce::PropertiesFile
 
-#endif
+    py::class_<PropertiesFile> classPropertiesFile (m, "PropertiesFile");
+    
+    py::enum_<PropertiesFile::StorageFormat> (classPropertiesFile, "StorageFormat")
+        .value ("storeAsBinary", PropertiesFile::StorageFormat::storeAsBinary)
+        .value ("storeAsCompressedBinary", PropertiesFile::StorageFormat::storeAsCompressedBinary)
+        .value ("storeAsXML", PropertiesFile::StorageFormat::storeAsXML)
+        .export_values();
+
+    py::class_<PropertiesFile::Options> classPropertiesFileOptions (classPropertiesFile, "Options");
+
+    classPropertiesFileOptions
+        .def (py::init<>())
+        .def_readwrite ("applicationName", &PropertiesFile::Options::applicationName)
+        .def_readwrite ("filenameSuffix", &PropertiesFile::Options::filenameSuffix)
+        .def_readwrite ("folderName", &PropertiesFile::Options::folderName)
+        .def_readwrite ("osxLibrarySubFolder", &PropertiesFile::Options::osxLibrarySubFolder)
+        .def_readwrite ("commonToAllUsers", &PropertiesFile::Options::commonToAllUsers)
+        .def_readwrite ("ignoreCaseOfKeyNames", &PropertiesFile::Options::ignoreCaseOfKeyNames)
+        .def_readwrite ("doNotSave", &PropertiesFile::Options::doNotSave)
+        .def_readwrite ("millisecondsBeforeSaving", &PropertiesFile::Options::millisecondsBeforeSaving)
+        .def_readwrite ("storageFormat", &PropertiesFile::Options::storageFormat)
+        .def_readwrite ("processLock", &PropertiesFile::Options::processLock)
+        .def ("getDefaultFile", &PropertiesFile::Options::getDefaultFile)
+    ;
+
+    classPropertiesFile
+        .def (py::init<const PropertiesFile::Options&>())
+        .def (py::init<const File&, const PropertiesFile::Options&>())
+        .def ("isValidFile", &PropertiesFile::isValidFile)
+        .def ("saveIfNeeded", &PropertiesFile::saveIfNeeded)
+        .def ("save", &PropertiesFile::save)
+        .def ("needsToBeSaved", &PropertiesFile::needsToBeSaved)
+        .def ("setNeedsToBeSaved", &PropertiesFile::setNeedsToBeSaved)
+        .def ("reload", &PropertiesFile::reload)
+        .def ("getFile", &PropertiesFile::getFile)
+    ;
+
+    // ============================================================================================ juce::ApplicationProperties
+
+    py::class_<ApplicationProperties> classApplicationProperties (m, "ApplicationProperties");
+
+    classApplicationProperties
+        .def (py::init<>())
+        .def ("setStorageParameters", &ApplicationProperties::setStorageParameters)
+        .def ("getStorageParameters", &ApplicationProperties::getStorageParameters)
+        .def ("getUserSettings", &ApplicationProperties::getUserSettings, py::return_value_policy::reference)
+        .def ("getCommonSettings", &ApplicationProperties::getCommonSettings, py::return_value_policy::reference)
+        .def ("saveIfNeeded", &ApplicationProperties::saveIfNeeded)
+        .def ("closeFiles", &ApplicationProperties::closeFiles)
+    ;
 }
 
 } // namespace popsicle::Bindings

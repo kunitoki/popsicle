@@ -101,6 +101,8 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
 
     m.def ("START_JUCE_APPLICATION", [](py::handle applicationType)
     {
+        py::scoped_ostream_redirect output;
+    
         if (! applicationType)
             throw py::value_error("Argument must be a JUCEApplication subclass");
 
