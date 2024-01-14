@@ -1,7 +1,7 @@
 /**
  * juce_python - Python bindings for the JUCE framework
  *
- * Copyright (c) 2024 - Lucio Asnaghi
+ * Copyright (c) 2024 - kunitoki <kunitoki@gmail.com>
  *
  * Licensed under the MIT License. Visit https://opensource.org/licenses/MIT for more information.
  */
@@ -102,7 +102,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     m.def ("START_JUCE_APPLICATION", [](py::handle applicationType)
     {
         py::scoped_ostream_redirect output;
-    
+
         if (! applicationType)
             throw py::value_error("Argument must be a JUCEApplication subclass");
 

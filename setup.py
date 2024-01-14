@@ -4,7 +4,6 @@ import re
 import pathlib
 import platform
 import glob
-import shutil
 import setuptools
 
 from distutils import log
@@ -115,10 +114,10 @@ class BuildExtension(build_ext):
         return os.path.dirname(self.get_python_path())
 
 
-with open("modules/juce_python/juce_python.h", "r") as f:
+with open("modules/juce_python/juce_python.h", mode="r", encoding="utf-8") as f:
     version = re.findall(r"version\:\s+(\d+\.\d+\.\d+)", f.read())[0]
 
-with open("README.rst", "r") as f:
+with open("README.rst", mode="r") as f:
     long_description = f.read()
 
 
@@ -129,7 +128,7 @@ if platform.system() == 'Darwin':
 setuptools.setup(
     name=project_name,
     version=version,
-    author="Lucio 'kRAkEn/gORe' Asnaghi",
+    author="kunitoki",
     author_email="kunitoki@gmail.com",
     description=f"{project_name} is JUCE Python Bindings on top of pybind11",
     long_description=long_description,

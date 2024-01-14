@@ -1,7 +1,7 @@
 /**
  * juce_python - Python bindings for the JUCE framework
  *
- * Copyright (c) 2024 - Lucio Asnaghi
+ * Copyright (c) 2024 - kunitoki <kunitoki@gmail.com>
  *
  * Licensed under the MIT License. Visit https://opensource.org/licenses/MIT for more information.
  */
@@ -145,7 +145,7 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
     struct PyValueValueSource : public Value::ValueSource
     {
         using Value::ValueSource::ValueSource;
-    
+
         var getValue () const override
         {
             PYBIND11_OVERRIDE_PURE (var, Value::ValueSource, getValue);
@@ -160,7 +160,7 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
     struct PyValueListener : public Value::Listener
     {
         using Value::Listener::Listener;
-    
+
         void valueChanged (Value& value) override
         {
             PYBIND11_OVERRIDE_PURE (void, Value::Listener, valueChanged, value);
@@ -206,7 +206,7 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
     struct PyValueTreeListener : public ValueTree::Listener
     {
         using ValueTree::Listener::Listener;
-    
+
         void valueTreePropertyChanged (ValueTree& treeWhosePropertyHasChanged, const Identifier& property) override
         {
             PYBIND11_OVERRIDE (void, ValueTree::Listener, valueTreePropertyChanged, treeWhosePropertyHasChanged, property);
@@ -241,7 +241,7 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
     struct PyValueTreeComparator
     {
         PyValueTreeComparator() = default;
-    
+
         int compareElements (const ValueTree& first, const ValueTree& second)
         {
             py::gil_scoped_acquire gil;
@@ -252,7 +252,7 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
 
                 return result.cast<int>();
             }
-        
+
             py::pybind11_fail("Tried to call pure virtual function \"ValueTree::Comparator::compareElements\"");
         }
     };
@@ -335,7 +335,7 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
     struct PyValueTreeSynchroniser : public ValueTreeSynchroniser
     {
         using ValueTreeSynchroniser::ValueTreeSynchroniser;
-    
+
         void stateChanged (const void* encodedChange, size_t encodedChangeSize) override
         {
             py::gil_scoped_acquire gil;
@@ -345,16 +345,16 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
                 auto change = py::memoryview::from_memory (encodedChange, static_cast<ssize_t> (encodedChangeSize));
 
                 override_ (change, encodedChangeSize);
-                
+
                 return;
             }
-        
+
             py::pybind11_fail("Tried to call pure virtual function \"ValueTreeSynchroniser::stateChanged\"");
         }
     };
 
     py::class_<ValueTreeSynchroniser, PyValueTreeSynchroniser> classValueTreeSynchroniser (m, "ValueTreeSynchroniser");
-    
+
     classValueTreeSynchroniser
         .def (py::init<const ValueTree&>())
         .def ("stateChanged", &ValueTreeSynchroniser::stateChanged)
@@ -362,7 +362,7 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
         .def_static ("applyChange", [](ValueTree* root, const py::buffer& data, UndoManager* undoManager)
         {
             jassert (root != nullptr); // TODO
-       
+
             py::buffer_info info = data.request();
 
             return ValueTreeSynchroniser::applyChange (*root, info.ptr, static_cast<size_t> (info.size), undoManager);
@@ -373,7 +373,7 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
     // ============================================================================================ juce::ValueTreeSynchroniser
 
     py::class_<ValueTreePropertyWithDefault> classValueTreePropertyWithDefault (m, "ValueTreePropertyWithDefault");
-    
+
     classValueTreePropertyWithDefault
         .def (py::init<>())
         .def (py::init<ValueTree&, const Identifier&, UndoManager*>())
@@ -398,7 +398,7 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
     // ============================================================================================ juce::PropertiesFile
 
     py::class_<PropertiesFile> classPropertiesFile (m, "PropertiesFile");
-    
+
     py::enum_<PropertiesFile::StorageFormat> (classPropertiesFile, "StorageFormat")
         .value ("storeAsBinary", PropertiesFile::StorageFormat::storeAsBinary)
         .value ("storeAsCompressedBinary", PropertiesFile::StorageFormat::storeAsCompressedBinary)
