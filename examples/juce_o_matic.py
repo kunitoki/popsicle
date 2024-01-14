@@ -48,7 +48,8 @@ class MainWindow(juce.DocumentWindow):
 	def __init__(self):
 		super().__init__(
 			juce.JUCEApplication.getInstance().getApplicationName(),
-			juce.Desktop.getInstance().getDefaultLookAndFeel().findColour(juce.ResizableWindow.backgroundColourId),
+			juce.Desktop.getInstance().getDefaultLookAndFeel()
+				.findColour(juce.ResizableWindow.backgroundColourId),
 			juce.DocumentWindow.allButtons,
 			True)
 

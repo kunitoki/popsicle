@@ -141,7 +141,7 @@ As easy as that ! You will find more example on JUCE usage in the *examples* fol
 Supported Modules
 -----------------
 
-.. list-table:: Title
+.. list-table:: List of popsicle supported JUCE modules
    :widths: 40 10 50
    :header-rows: 1
 
@@ -150,7 +150,7 @@ Supported Modules
      - Notes
    * - juce_analytics
      - ⛔️
-     -
+     - Not Planned
    * - juce_audio_basics
      - ⛔️
      - Planned
