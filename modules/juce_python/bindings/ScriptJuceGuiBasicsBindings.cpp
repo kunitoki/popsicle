@@ -13,8 +13,8 @@
 #include "../utilities/ClassDemangling.h"
 
 #define JUCE_PYTHON_INCLUDE_PYBIND11_OPERATORS
+#define JUCE_PYTHON_INCLUDE_PYBIND11_IOSTREAM
 #include "../utilities/PyBind11Includes.h"
-#undef JUCE_PYTHON_INCLUDE_PYBIND11_OPERATORS
 
 #if JUCE_WINDOWS
 #define VC_EXTRALEAN

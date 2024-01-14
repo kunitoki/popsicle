@@ -12,7 +12,6 @@
 
 #define JUCE_PYTHON_INCLUDE_PYBIND11_OPERATORS
 #include "../utilities/PyBind11Includes.h"
-#undef JUCE_PYTHON_INCLUDE_PYBIND11_OPERATORS
 
 namespace PYBIND11_NAMESPACE {
 namespace detail {

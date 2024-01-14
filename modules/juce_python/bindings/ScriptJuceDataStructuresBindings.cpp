@@ -13,8 +13,6 @@
 #define JUCE_PYTHON_INCLUDE_PYBIND11_OPERATORS
 #define JUCE_PYTHON_INCLUDE_PYBIND11_FUNCTIONAL
 #include "../utilities/PyBind11Includes.h"
-#undef JUCE_PYTHON_INCLUDE_PYBIND11_OPERATORS
-#undef JUCE_PYTHON_INCLUDE_PYBIND11_FUNCTIONAL
 
 #include <functional>
 #include <string_view>
@@ -255,12 +253,17 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
                 return result.cast<int>();
             }
         
-            py::pybind11_fail("Tried to call pure virtual function \"ValueTreeComparator::compareElements\"");
+            py::pybind11_fail("Tried to call pure virtual function \"ValueTree::Comparator::compareElements\"");
         }
     };
 
     py::class_<ValueTree> classValueTree (m, "ValueTree");
     py::class_<ValueTree::Listener, PyValueTreeListener> classValueTreeListener (classValueTree, "Listener");
+    py::class_<PyValueTreeComparator> classValueTreeComparator (classValueTree, "Comparator");
+
+    classValueTreeListener.def (py::init<>());
+
+    classValueTreeComparator.def (py::init<>());
 
     classValueTree
         .def (py::init<>())
@@ -319,7 +322,7 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
         .def ("removeListener", &ValueTree::removeListener)
         .def ("setPropertyExcludingListener", &ValueTree::setPropertyExcludingListener)
         .def ("sendPropertyChangeMessage", &ValueTree::sendPropertyChangeMessage)
-    //.def ("sort", &ValueTree::sort)
+        .def ("sort", &ValueTree::template sort<PyValueTreeComparator>)
         .def ("getReferenceCount", &ValueTree::getReferenceCount)
     ;
 
@@ -356,7 +359,14 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
         .def (py::init<const ValueTree&>())
         .def ("stateChanged", &ValueTreeSynchroniser::stateChanged)
         .def ("sendFullSyncCallback", &ValueTreeSynchroniser::sendFullSyncCallback)
-    //.def_static ("applyChange", &ValueTreeSynchroniser::applyChange)
+        .def_static ("applyChange", [](ValueTree* root, const py::buffer& data, UndoManager* undoManager)
+        {
+            jassert (root != nullptr); // TODO
+       
+            py::buffer_info info = data.request();
+
+            return ValueTreeSynchroniser::applyChange (*root, info.ptr, static_cast<size_t> (info.size), undoManager);
+        })
         .def ("getRoot", &ValueTreeSynchroniser::getRoot, py::return_value_policy::reference)
     ;
 

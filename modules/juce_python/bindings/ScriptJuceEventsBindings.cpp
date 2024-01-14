@@ -13,8 +13,6 @@
 #define JUCE_PYTHON_INCLUDE_PYBIND11_OPERATORS
 #define JUCE_PYTHON_INCLUDE_PYBIND11_FUNCTIONAL
 #include "../utilities/PyBind11Includes.h"
-#undef JUCE_PYTHON_INCLUDE_PYBIND11_OPERATORS
-#undef JUCE_PYTHON_INCLUDE_PYBIND11_FUNCTIONAL
 
 #include <functional>
 #include <string_view>

@@ -15,8 +15,6 @@
 #define JUCE_PYTHON_INCLUDE_PYBIND11_OPERATORS
 #define JUCE_PYTHON_INCLUDE_PYBIND11_STL
 #include "../utilities/PyBind11Includes.h"
-#undef JUCE_PYTHON_INCLUDE_PYBIND11_OPERATORS
-#undef JUCE_PYTHON_INCLUDE_PYBIND11_STL
 
 #include "../pybind11/operators.h"
 
