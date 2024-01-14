@@ -117,7 +117,7 @@ class BuildExtension(build_ext):
 with open("modules/juce_python/juce_python.h", mode="r", encoding="utf-8") as f:
     version = re.findall(r"version\:\s+(\d+\.\d+\.\d+)", f.read())[0]
 
-with open("README.rst", mode="r") as f:
+with open("README.rst", mode="r", encoding="utf-8") as f:
     long_description = f.read()
 
 
