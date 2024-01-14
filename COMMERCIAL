@@ -1,0 +1,69 @@
+COMMERCIAL LICENSE AGREEMENT
+
+This Commercial License Agreement (the "Agreement") is entered into by and between popsicle, a corporation ("Licensor"), and the entity or individual licensing the Software ("Licensee"). This Agreement is effective as of the date of acceptance by Licensee.
+
+
+1. DEFINITIONS
+
+1.1 "Software" refers to the popsicle library, including any updates, modifications, or enhancements provided by Licensor.
+
+1.2 "Closed Source App" refers to an application that is not distributed with its source code.
+
+1.3 "Embedded" refers to the integration of the Software into a Closed Source App.
+
+1.4 "JUCE" refers to the JUCE framework developed by Raw Material Software Limited.
+
+
+2. LICENSE GRANT
+
+2.1 Open Source Use: The Software is provided under the terms of the MIT License for non-commercial and open-source projects.
+
+2.2 Commercial Use - Closed Source App:
+
+   2.2.1 Embedding: If the Software is embedded in a Closed Source App, Licensee must obtain a commercial license.
+
+   2.2.2 License Fee: Licensee agrees to pay the applicable license fee specified by Licensor for each Closed Source App that embeds the Software.
+
+   2.2.3 JUCE License: In case the Software is embedded in a Closed Source App, Licensee must also have a valid JUCE license from Raw Material Software Limited.
+
+
+3. RESTRICTIONS
+
+3.1 Licensee may not sublicense, assign, or transfer their rights under this Agreement without the express written consent of Licensor.
+
+3.2 Licensee may not use the Software in any mission-critical or life-safety systems, where the failure of the Software could lead to personal injury, death, or significant damage to property.
+
+3.3 Licensee may not remove or alter any copyright, trademark, or other proprietary notices present in the Software or its documentation.
+
+3.4 Licensee may not use the Software for any illegal, unethical, or malicious purposes, including but not limited to activities that infringe on intellectual property rights, engage in unauthorized access, or violate applicable laws and regulations.
+
+3.5 Licensee may not use the Software in connection with any projects or applications that promote or engage in illegal or discriminatory activities, or that violate human rights.
+
+3.6 Licensee may not use the Software in any way that would violate the terms of use or policies of any third-party platforms, app stores, or distribution channels through which the Closed Source App is made available.
+
+3.7 Licensee shall not attempt to circumvent any licensing mechanisms, security features, or access controls implemented in the Software.
+
+
+4. SUPPORT AND UPDATES
+
+Licensor may provide support and updates for the Software as specified in a separate support agreement, if applicable.
+
+
+5. DISCLAIMER OF WARRANTY
+
+THE SOFTWARE IS PROVIDED "AS IS," WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. LICENSOR DISCLAIMS ALL WARRANTIES, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+
+6. LIMITATION OF LIABILITY
+
+IN NO EVENT SHALL LICENSOR BE LIABLE FOR ANY CONSEQUENTIAL, INCIDENTAL, INDIRECT, SPECIAL, OR PUNITIVE DAMAGES, INCLUDING WITHOUT LIMITATION, DAMAGES FOR LOSS OF PROFITS, LOSS OF BUSINESS, OR DOWN TIME, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+
+7. GOVERNING LAW
+
+This Agreement shall be governed by and construed in accordance with the laws.
+
+
+8. ACCEPTANCE
+
+By using, downloading, or installing the Software, Licensee agrees to be bound by the terms and conditions of this Agreement.
