@@ -2,20 +2,15 @@
     :alt: popsicle
     :target: https://github.com/kunitoki/popsicle
 
-|linux_builds| |macos_builds| |windows_builds| |pypi_status| |pypi_license| |pypi_downloads|
+|linux_builds| |macos_builds| |windows_builds| |pypi_version| |pypi_downloads|
 
-|pypi_version| |commercial_license|
+|pypi_status| |pypi_license| |commercial_license|
 
 ========
 popsicle
 ========
 
 Popsicle is a project that aims to give *JUCE* (https://juce.com/) a broader audience by allowing it to be used from python. Thanks to *pybind11* (https://pybind11.readthedocs.io/en/stable/) it exposes the JUCE framework api in a pythonic way, and the way it enables to write apps in python is very much similar to the way of writing them in C++ but without the overweight of managing project build, configurations and IDE solutions. it also allow embedding in exitsting JUCE apps and expose scripting to them via an embedded python interpreter.
-
-It comes in two licensed flavours:
-
-- When used from python using the PyPi provided wheels or embedded in an OSS application*: **MIT License**
-- When embedded in a closed source JUCE application: **Commercial License**
 
 --------
 Features
@@ -202,6 +197,15 @@ Super Simple Animated Graphics
 
 .. image:: https://github.com/kunitoki/popsicle/raw/master/images/juce_o_matic.png
     :target: https://github.com/kunitoki/popsicle/blob/master/examples/juce_o_matic.py
+
+---------
+Licensing
+---------
+
+It comes in two licensed flavours:
+
+- **MIT License**: When used from python using the PyPi provided wheels or embedded in an OSS application
+- **Commercial License**: When embedded in a closed source application
 
 ------------
 Installation
