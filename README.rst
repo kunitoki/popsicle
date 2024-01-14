@@ -6,7 +6,11 @@
 popsicle
 ========
 
-Popsicle is a project that aims to give *JUCE* (https://juce.com/) a broader audience by allowing it to be used from python. Thanks to *pybind11* (https://pybind11.readthedocs.io/en/stable/) it exposes the JUCE framework api in a pythonic way, and the way it enables to write apps in python is very much similar to the way of writing them in C++ but without the overweight of managing project build, configurations and IDE solutions.
+Popsicle is a project that aims to give *JUCE* (https://juce.com/) a broader audience by allowing it to be used from python. Thanks to *pybind11* (https://pybind11.readthedocs.io/en/stable/) it exposes the JUCE framework api in a pythonic way, and the way it enables to write apps in python is very much similar to the way of writing them in C++ but without the overweight of managing project build, configurations and IDE solutions. it also allow embedding in exitsting JUCE apps and expose scripting to them via an embedded python interpreter.
+
+It comes in two licensed flavours:
+- *When used from python using the PyPi provided wheels or embedded in an OSS application*: MIT License
+- *When embedded in a closed source JUCE application*: Commercial License
 
 |linux_builds| |macos_builds| |windows_builds| |pypi_status| |pypi_license| |pypi_version| |pypi_downloads|
 
@@ -22,8 +26,12 @@ Popsicle is a project that aims to give *JUCE* (https://juce.com/) a broader aud
     :alt: Windows Builds Status
     :target: https://github.com/kunitoki/popsicle/actions
 
+.. |commercial_license| image:: https://img.shields.io/badge/license-Commercial-blue
+    :alt: Commercial License
+    :target: https://github.com/kunitoki/popsicle/blob/master/COMMERCIAL
+
 .. |pypi_license| image:: https://img.shields.io/pypi/l/popsicle
-    :alt: PyPI - License
+    :alt: PyPI - Open Source License
     :target: https://github.com/kunitoki/popsicle/blob/master/LICENSE
 
 .. |pypi_status| image:: https://img.shields.io/pypi/status/popsicle
