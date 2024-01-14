@@ -37,7 +37,6 @@ void registerPoint (pybind11::module_& m)
     namespace py = pybind11;
 
     py::dict type;
-    py::object scope;
 
     ([&]
     {
@@ -47,7 +46,7 @@ void registerPoint (pybind11::module_& m)
         String className;
         className << "Point[" << popsicle::Helpers::demangleClassName (typeid (Types).name()) << "]";
 
-        auto class_ = py::class_<T> (scope, className.toRawUTF8())
+        auto class_ = py::class_<T> (m, className.toRawUTF8())
             .def (py::init<>())
             .def (py::init<ValueType, ValueType>())
             .def (py::self == py::self)
@@ -115,7 +114,6 @@ void registerLine (pybind11::module_& m)
     namespace py = pybind11;
 
     py::dict type;
-    py::object scope;
 
     ([&]
     {
@@ -125,7 +123,7 @@ void registerLine (pybind11::module_& m)
         String className;
         className << "Line[" << popsicle::Helpers::demangleClassName (typeid (Types).name()) << "]";
 
-        auto class_ = py::class_<T> (scope, className.toRawUTF8())
+        auto class_ = py::class_<T> (m, className.toRawUTF8())
             .def (py::init<>())
             .def ("getStartX", &T::getStartX)
             .def ("getStartY", &T::getStartY)
@@ -183,7 +181,6 @@ void registerRectangle (pybind11::module_& m)
     namespace py = pybind11;
 
     py::dict type;
-    py::object scope;
 
     ([&]
     {
@@ -193,7 +190,7 @@ void registerRectangle (pybind11::module_& m)
         String className;
         className << "Rectangle[" << popsicle::Helpers::demangleClassName (typeid (Types).name()) << "]";
 
-        auto class_ = py::class_<T> (scope, className.toRawUTF8())
+        auto class_ = py::class_<T> (m, className.toRawUTF8())
             .def (py::init<>())
             .def (py::init<ValueType, ValueType>())
             .def (py::init<ValueType, ValueType, ValueType, ValueType>())
@@ -294,7 +291,6 @@ void registerRectangleList (pybind11::module_& m)
     namespace py = pybind11;
 
     py::dict type;
-    py::object scope;
 
     ([&]
     {
@@ -304,7 +300,7 @@ void registerRectangleList (pybind11::module_& m)
         String className;
         className << "RectangleList[" << popsicle::Helpers::demangleClassName (typeid (Types).name()) << "]";
 
-        auto class_ = py::class_<T> (scope, className.toRawUTF8())
+        auto class_ = py::class_<T> (m, className.toRawUTF8())
             .def (py::init<>())
             .def (py::init<Rectangle<ValueType>>())
             .def ("isEmpty", &T::isEmpty)
@@ -358,7 +354,6 @@ void registerBorderSize (pybind11::module_& m)
     namespace py = pybind11;
 
     py::dict type;
-    py::object scope;
 
     ([&]
     {
@@ -368,7 +363,7 @@ void registerBorderSize (pybind11::module_& m)
         String className;
         className << "BorderSize[" << popsicle::Helpers::demangleClassName (typeid (Types).name()) << "]";
 
-        auto class_ = py::class_<T> (scope, className.toRawUTF8())
+        auto class_ = py::class_<T> (m, className.toRawUTF8())
             .def (py::init<>())
             .def (py::init<ValueType>())
             .def (py::init<ValueType, ValueType, ValueType, ValueType>())

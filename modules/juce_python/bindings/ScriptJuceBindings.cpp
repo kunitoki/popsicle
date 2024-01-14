@@ -10,6 +10,7 @@
 
 #include "ScriptJuceCoreBindings.h"
 #include "ScriptJuceEventsBindings.h"
+#include "ScriptJuceDataStructuresBindings.h"
 #include "ScriptJuceGraphicsBindings.h"
 #include "ScriptJuceGuiBasicsBindings.h"
 
@@ -26,6 +27,11 @@ PYBIND11_MODULE(popsicle, m)
 #if __has_include(<juce_events/juce_events.h>)
     // Register juce_events bindings
     popsicle::Bindings::registerJuceEventsBindings (m);
+#endif
+
+#if __has_include(<juce_data_structures/juce_data_structures.h>)
+    // Register juce_data_structures bindings
+    popsicle::Bindings::registerJuceDataStructuresBindings (m);
 #endif
 
 #if __has_include(<juce_graphics/juce_graphics.h>)

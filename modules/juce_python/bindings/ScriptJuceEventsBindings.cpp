@@ -8,7 +8,6 @@
 
 #if __has_include(<juce_events/juce_events.h>)
 
-#include "ScriptJuceGuiBasicsBindings.h"
 #include "ScriptJuceEventsBindings.h"
 
 #define JUCE_PYTHON_INCLUDE_PYBIND11_OPERATORS

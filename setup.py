@@ -63,16 +63,11 @@ class BuildExtension(build_ext):
                 build_command += ["--", f"-j{os.cpu_count()}"]
             self.spawn(build_command)
 
-            for extension in [".pyd"] if sys.platform in ["win32", "cygwin"] else [".so"]:
-                for f in glob.iglob(f"{project_name}_artefacts/**/*{extension}", recursive=True):
-                    shutil.copy(f, output_path / f"{project_name}{extension}")
-
         finally:
             os.chdir(str(cwd))
 
     def get_python_path(self):
         vars = sysconfig.get_config_vars()
-        log.info(f"vars={vars}")
 
         if 'LIBPL' in vars and 'LIBRARY' in vars:
             path = os.path.join(vars['LIBPL'], vars['LIBRARY'])
@@ -125,6 +120,10 @@ with open("modules/juce_python/juce_python.h", "r") as f:
 
 with open("README.rst", "r") as f:
     long_description = f.read()
+
+
+if platform.system() == 'Darwin':
+    os.environ["_PYTHON_HOST_PLATFORM"] = "macosx-10.15-universal2"
 
 
 setuptools.setup(
