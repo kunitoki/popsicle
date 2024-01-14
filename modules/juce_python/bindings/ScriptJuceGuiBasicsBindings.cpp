@@ -1027,7 +1027,9 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("getChildComponent", &Component::getChildComponent, py::return_value_policy::reference)
         .def ("getIndexOfChildComponent", &Component::getIndexOfChildComponent)
         .def ("findChildWithID", &Component::findChildWithID, py::return_value_policy::reference)
+        .def ("addChildComponent", [](Component* self, Component* toAdd) { self->addChildComponent (toAdd); })
         .def ("addChildComponent", py::overload_cast<Component*, int> (&Component::addChildComponent))
+        .def ("addAndMakeVisible", [](Component* self, Component* toAdd) { self->addAndMakeVisible (toAdd); })
         .def ("addAndMakeVisible", py::overload_cast<Component*, int> (&Component::addAndMakeVisible))
         .def ("addChildAndSetID", &Component::addChildAndSetID)
         .def ("removeChildComponent", py::overload_cast<Component*> (&Component::removeChildComponent))
@@ -1181,28 +1183,126 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
 
     // ============================================================================================ juce::Button
 
-    py::class_<Button, Component> (m, "Button")
+    struct PyButton : Button
+    {
+        using Button::Button;
+    
+        void triggerClick() override
+        {
+            PYBIND11_OVERRIDE(void, Button, triggerClick);
+        }
+        
+        void clicked() override
+        {
+            PYBIND11_OVERRIDE(void, Button, clicked);
+        }
+
+        void clicked (const ModifierKeys& modifiers)
+        {
+            PYBIND11_OVERRIDE(void, Button, clicked, modifiers);
+        }
+
+        void paintButton (Graphics& g, bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override
+        {
+            {
+                py::gil_scoped_acquire gil;
+
+                if (py::function override_ = py::get_override (static_cast<Button*> (this), "paintButton"); override_)
+                {
+                    override_ (std::addressof (g), shouldDrawButtonAsHighlighted, shouldDrawButtonAsDown);
+                    return;
+                }
+            }
+            
+            py::pybind11_fail("Tried to call pure virtual function \"Button::paintButton\"");
+        }
+
+        void buttonStateChanged() override
+        {
+            PYBIND11_OVERRIDE(void, Button, buttonStateChanged);
+        }
+    };
+    
+    struct PyButtonListener : Button::Listener
+    {
+        using Button::Listener::Listener;
+        
+        void buttonClicked (Button* button) override
+        {
+            PYBIND11_OVERRIDE_PURE(void, Button::Listener, buttonClicked, button);
+        }
+
+        void buttonStateChanged (Button* button) override
+        {
+            PYBIND11_OVERRIDE(void, Button::Listener, buttonStateChanged, button);
+        }
+    };
+
+    py::class_<Button, Component, PyButton> classButton (m, "Button");
+    
+    py::enum_<Button::ConnectedEdgeFlags> (classButton, "ConnectedEdgeFlags")
+        .value ("ConnectedOnLeft", Button::ConnectedEdgeFlags::ConnectedOnLeft)
+        .value ("ConnectedOnRight", Button::ConnectedEdgeFlags::ConnectedOnRight)
+        .value ("ConnectedOnTop", Button::ConnectedEdgeFlags::ConnectedOnTop)
+        .value ("ConnectedOnBottom", Button::ConnectedEdgeFlags::ConnectedOnBottom)
+        .export_values();
+
+    py::enum_<Button::ButtonState> (classButton, "ButtonState")
+        .value ("buttonNormal", Button::ButtonState::buttonNormal)
+        .value ("buttonOver", Button::ButtonState::buttonOver)
+        .value ("buttonDown", Button::ButtonState::buttonDown)
+        .export_values();
+
+    py::class_<Button::Listener, PyButtonListener> classButtonListener (classButton, "Listener");
+
+    classButtonListener
+        .def ("buttonClicked", &Button::Listener::buttonClicked)
+        .def ("buttonStateChanged", &Button::Listener::buttonStateChanged)
+    ;
+
+    classButton
+        .def ("setButtonText", &Button::setButtonText)
         .def ("getButtonText", &Button::getButtonText)
         .def ("isDown", &Button::isDown)
         .def ("isOver", &Button::isOver)
+        .def ("setToggleable", &Button::setToggleable)
         .def ("isToggleable", &Button::isToggleable)
+        .def ("setToggleState", py::overload_cast<bool, NotificationType> (&Button::setToggleState))
         .def ("getToggleState", &Button::getToggleState)
-    //.def ("getToggleStateValue", &Button::getToggleStateValue)
+        .def ("getToggleStateValue", &Button::getToggleStateValue, py::return_value_policy::reference)
+        .def ("setClickingTogglesState", &Button::setClickingTogglesState)
         .def ("getClickingTogglesState", &Button::getClickingTogglesState)
+        .def ("setRadioGroupId", &Button::setRadioGroupId)
         .def ("getRadioGroupId", &Button::getRadioGroupId)
+        .def ("addListener", &Button::addListener)
+        .def ("removeListener", &Button::removeListener)
+        .def_readwrite ("onClick", &Button::onClick)
+        .def_readwrite ("onStateChange", &Button::onStateChange)
         .def ("triggerClick", &Button::triggerClick)
+    //.def ("setCommandToTrigger", &Button::setCommandToTrigger)
         .def ("getCommandID", &Button::getCommandID)
+        .def ("addShortcut", &Button::addShortcut)
+        .def ("clearShortcuts", &Button::clearShortcuts)
+        .def ("isRegisteredForShortcut", &Button::isRegisteredForShortcut)
+        .def ("setRepeatSpeed", &Button::setRepeatSpeed)
+        .def ("setTriggeredOnMouseDown", &Button::setTriggeredOnMouseDown)
         .def ("getTriggeredOnMouseDown", &Button::getTriggeredOnMouseDown)
         .def ("getMillisecondsSinceButtonDown", &Button::getMillisecondsSinceButtonDown)
+        .def ("setConnectedEdges", &Button::setConnectedEdges)
         .def ("getConnectedEdgeFlags", &Button::getConnectedEdgeFlags)
         .def ("isConnectedOnLeft", &Button::isConnectedOnLeft)
         .def ("isConnectedOnRight", &Button::isConnectedOnRight)
         .def ("isConnectedOnTop", &Button::isConnectedOnTop)
         .def ("isConnectedOnBottom", &Button::isConnectedOnBottom)
-    //.def ("getState", &Button::getState)
+        .def ("setState", &Button::setState)
+        .def ("getState", &Button::getState)
     ;
 
+    // ============================================================================================ juce::ArrowButton
+
     py::class_<ArrowButton, Button> (m, "ArrowButton");
+
+    // ============================================================================================ juce::DrawableButton
 
     py::class_<DrawableButton, Button> (m, "DrawableButton")
     //.def ("getStyle", &DrawableButton::getStyle)
@@ -1214,10 +1314,14 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("getImageBounds", &DrawableButton::getImageBounds)
     ;
 
+    // ============================================================================================ juce::HyperlinkButton
+
     py::class_<HyperlinkButton, Button> (m, "HyperlinkButton")
     //.def ("getURL", &HyperlinkButton::getURL)
     //.def ("getJustificationType", &HyperlinkButton::getJustificationType)
     ;
+
+    // ============================================================================================ juce::ImageButton
 
     py::class_<ImageButton, Button> (m, "ImageButton")
         .def ("getNormalImage", &ImageButton::getNormalImage)
@@ -1225,13 +1329,42 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("getDownImage", &ImageButton::getDownImage)
     ;
 
+    // ============================================================================================ juce::ShapeButton
+
     py::class_<ShapeButton, Button> (m, "ShapeButton");
 
-    py::class_<TextButton, Button> (m, "TextButton")
+    // ============================================================================================ juce::TextButton
+
+    py::class_<TextButton, Button> classTextButton (m, "TextButton");
+    
+    classTextButton
+        .def (py::init<>())
+        .def (py::init<const String&>())
+        .def (py::init<const String&, const String&>())
+        .def ("changeWidthToFitText", py::overload_cast<> (&TextButton::changeWidthToFitText))
+        .def ("changeWidthToFitText", py::overload_cast<int> (&TextButton::changeWidthToFitText))
         .def ("getBestWidthForHeight", &TextButton::getBestWidthForHeight)
     ;
 
-    py::class_<ToggleButton, Button> (m, "ToggleButton");
+    classTextButton.attr ("buttonColourId") = py::int_(static_cast<int> (TextButton::buttonColourId));
+    classTextButton.attr ("buttonOnColourId") = py::int_(static_cast<int> (TextButton::buttonOnColourId));
+    classTextButton.attr ("textColourOffId") = py::int_(static_cast<int> (TextButton::textColourOffId));
+    classTextButton.attr ("textColourOnId") = py::int_(static_cast<int> (TextButton::textColourOnId));
+
+    // ============================================================================================ juce::ToggleButton
+
+    py::class_<ToggleButton, Button> classToggleButton (m, "ToggleButton");
+
+    classToggleButton
+        .def (py::init<>())
+        .def (py::init<const String&>())
+        .def ("changeWidthToFitText", &ToggleButton::changeWidthToFitText)
+    //.def ("createAccessibilityHandler", &ToggleButton::createAccessibilityHandler)
+    ;
+
+    classToggleButton.attr ("textColourId") = py::int_(static_cast<int> (ToggleButton::textColourId));
+    classToggleButton.attr ("tickColourId") = py::int_(static_cast<int> (ToggleButton::tickColourId));
+    classToggleButton.attr ("tickDisabledColourId") = py::int_(static_cast<int> (ToggleButton::tickDisabledColourId));
 
     // ============================================================================================ juce::Slider
 

@@ -29,6 +29,15 @@ void registerJuceEventsBindings (pybind11::module_& m)
 
     namespace py = pybind11;
 
+    // ============================================================================================ juce::NotificationType
+
+    py::enum_<NotificationType> (m, "ButtonState")
+        .value ("dontSendNotification", NotificationType::dontSendNotification)
+        .value ("sendNotification", NotificationType::sendNotification)
+        .value ("sendNotificationSync", NotificationType::sendNotificationSync)
+        .value ("sendNotificationAsync", NotificationType::sendNotificationAsync)
+        .export_values();
+
     // ============================================================================================ juce::ActionListener
 
     struct PyActionListener : public ActionListener
