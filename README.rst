@@ -2,6 +2,10 @@
     :alt: popsicle
     :target: https://github.com/kunitoki/popsicle
 
+|linux_builds| |macos_builds| |windows_builds| |pypi_status| |pypi_license| |pypi_downloads|
+
+|pypi_version| |commercial_license|
+
 ========
 popsicle
 ========
@@ -9,42 +13,9 @@ popsicle
 Popsicle is a project that aims to give *JUCE* (https://juce.com/) a broader audience by allowing it to be used from python. Thanks to *pybind11* (https://pybind11.readthedocs.io/en/stable/) it exposes the JUCE framework api in a pythonic way, and the way it enables to write apps in python is very much similar to the way of writing them in C++ but without the overweight of managing project build, configurations and IDE solutions. it also allow embedding in exitsting JUCE apps and expose scripting to them via an embedded python interpreter.
 
 It comes in two licensed flavours:
-- *When used from python using the PyPi provided wheels or embedded in an OSS application*: MIT License
-- *When embedded in a closed source JUCE application*: Commercial License
 
-|linux_builds| |macos_builds| |windows_builds| |pypi_status| |pypi_license| |pypi_version| |pypi_downloads|
-
-.. |linux_builds| image:: https://github.com/kunitoki/popsicle/workflows/Linux%20Builds/badge.svg
-    :alt: Linux Builds Status
-    :target: https://github.com/kunitoki/popsicle/actions
-
-.. |macos_builds| image:: https://github.com/kunitoki/popsicle/workflows/macOS%20Builds/badge.svg
-    :alt: macOS Builds Status
-    :target: https://github.com/kunitoki/popsicle/actions
-
-.. |windows_builds| image:: https://github.com/kunitoki/popsicle/workflows/Windows%20Builds/badge.svg
-    :alt: Windows Builds Status
-    :target: https://github.com/kunitoki/popsicle/actions
-
-.. |commercial_license| image:: https://img.shields.io/badge/license-Commercial-blue
-    :alt: Commercial License
-    :target: https://github.com/kunitoki/popsicle/blob/master/COMMERCIAL
-
-.. |pypi_license| image:: https://img.shields.io/pypi/l/popsicle
-    :alt: PyPI - Open Source License
-    :target: https://github.com/kunitoki/popsicle/blob/master/LICENSE
-
-.. |pypi_status| image:: https://img.shields.io/pypi/status/popsicle
-    :alt: PyPI - Status
-    :target: https://pypi.org/project/popsicle/
-
-.. |pypi_version| image:: https://img.shields.io/pypi/pyversions/popsicle
-    :alt: PyPI - Python Version
-    :target: https://pypi.org/project/popsicle/
-
-.. |pypi_downloads| image:: https://img.shields.io/pypi/dm/popsicle
-    :alt: PyPI - Downloads
-    :target: https://pypi.org/project/popsicle/
+- When used from python using the PyPi provided wheels or embedded in an OSS application*: **MIT License**
+- When embedded in a closed source JUCE application: **Commercial License**
 
 --------
 Features
@@ -56,7 +27,7 @@ Features
 - Allows embedding in existing JUCE apps (ships as a JUCE module).
 
 -------------
-Example usage
+Example Usage
 -------------
 
 A single 80 lines script is better than thousand of words:
@@ -263,3 +234,36 @@ Install python dependencies.
 
   # Install the local wheel
   pip3 install dist/popsicle-*.whl
+
+
+.. |linux_builds| image:: https://github.com/kunitoki/popsicle/workflows/Linux%20Builds/badge.svg
+    :alt: Linux Builds Status
+    :target: https://github.com/kunitoki/popsicle/actions
+
+.. |macos_builds| image:: https://github.com/kunitoki/popsicle/workflows/macOS%20Builds/badge.svg
+    :alt: macOS Builds Status
+    :target: https://github.com/kunitoki/popsicle/actions
+
+.. |windows_builds| image:: https://github.com/kunitoki/popsicle/workflows/Windows%20Builds/badge.svg
+    :alt: Windows Builds Status
+    :target: https://github.com/kunitoki/popsicle/actions
+
+.. |commercial_license| image:: https://img.shields.io/badge/license-Commercial-blue
+    :alt: Commercial License
+    :target: https://github.com/kunitoki/popsicle/blob/master/COMMERCIAL
+
+.. |pypi_license| image:: https://img.shields.io/pypi/l/popsicle
+    :alt: PyPI - Open Source License
+    :target: https://github.com/kunitoki/popsicle/blob/master/LICENSE
+
+.. |pypi_status| image:: https://img.shields.io/pypi/status/popsicle
+    :alt: PyPI - Status
+    :target: https://pypi.org/project/popsicle/
+
+.. |pypi_version| image:: https://img.shields.io/pypi/pyversions/popsicle
+    :alt: PyPI - Python Version
+    :target: https://pypi.org/project/popsicle/
+
+.. |pypi_downloads| image:: https://img.shields.io/pypi/dm/popsicle
+    :alt: PyPI - Downloads
+    :target: https://pypi.org/project/popsicle/
