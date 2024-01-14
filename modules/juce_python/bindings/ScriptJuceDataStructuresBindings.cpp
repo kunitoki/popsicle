@@ -108,7 +108,7 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
 
         void setValue (const var& newValue) override
         {
-            PYBIND11_OVERRIDE_PURE(var, Value::ValueSource, setValue, newValue);
+            PYBIND11_OVERRIDE_PURE(void, Value::ValueSource, setValue, newValue);
         }
     };
 
