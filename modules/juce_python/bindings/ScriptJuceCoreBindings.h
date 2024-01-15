@@ -63,6 +63,17 @@ private:
 //=================================================================================================
 
 template <>
+struct type_caster<juce::NewLine>
+{
+public:
+    PYBIND11_TYPE_CASTER (juce::NewLine, const_name ("NewLine"));
+
+    static handle cast (const juce::NewLine& src, return_value_policy policy, handle parent);
+};
+
+//=================================================================================================
+
+template <>
 struct type_caster<juce::Identifier>
 {
 public:

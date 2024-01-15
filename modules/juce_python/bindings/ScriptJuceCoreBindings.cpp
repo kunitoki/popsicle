@@ -120,6 +120,17 @@ bool type_caster<juce::String>::load_raw (handle src)
 
 //=================================================================================================
 
+handle type_caster<juce::NewLine>::cast (const juce::NewLine& src, return_value_policy policy, handle parent)
+{
+    juce::ignoreUnused (policy, parent);
+    
+    const juce::String newLineString = src;
+
+    return PyUnicode_FromStringAndSize (newLineString.toRawUTF8(), static_cast<Py_ssize_t> (newLineString.getNumBytesAsUTF8()));
+}
+
+//=================================================================================================
+
 bool type_caster<juce::Identifier>::load (handle src, bool)
 {
     PyObject* source = src.ptr();
@@ -638,7 +649,11 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def_static ("repeatedString", &String::repeatedString)
         .def ("paddedLeft", &String::paddedLeft)
         .def ("paddedRight", &String::paddedRight)
-    //.def_static ("createStringFromData", &String::createStringFromData)
+        .def_static ("createStringFromData", [](py::buffer data)
+        {
+            auto info = data.request();
+            return String::createStringFromData (info.ptr, static_cast<size_t> (info.size));
+        })
     //.def ("begin", &String::begin)
     //.def ("end", &String::end)
         .def ("getIntValue", &String::getIntValue)
@@ -681,6 +696,16 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("getReferenceCount", &String::getReferenceCount)
     ;
 
+    // ============================================================================================ juce::NewLine
+
+    py::class_<NewLine> classNewLine (m, "NewLine");
+
+    classNewLine
+        .def ("getDefault", &NewLine::getDefault)
+    ;
+
+    m.add_object ("newLine", py::cast (newLine));
+
     // ============================================================================================ juce::Base64
 
     py::class_<Base64> classBase64 (m, "Base64");
@@ -688,7 +713,11 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     classBase64
         .def_static ("convertToBase64", &Base64::convertToBase64)
         .def_static ("convertFromBase64", &Base64::convertFromBase64)
-    //.def_static ("toBase64", static_cast<String (*)(const void *, int)> (&Base64::toBase64))
+        .def_static ("toBase64", [](py::buffer data)
+        {
+            auto info = data.request();
+            return Base64::toBase64 (info.ptr, static_cast<size_t> (info.size));
+        })
         .def_static ("toBase64", static_cast<String (*)(const String &)> (&Base64::toBase64))
     ;
 
@@ -702,8 +731,6 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("wasOk", &Result::wasOk)
         .def ("failed", &Result::failed)
         .def ("getErrorMessage", &Result::getErrorMessage)
-    // .def ("operator=", py::overload_cast<const Result &> (&Result::operator=))
-    // .def ("operator=", py::overload_cast<Result &&> (&Result::operator=))
         .def (py::self == py::self)
         .def (py::self != py::self)
         .def (!py::self)
@@ -712,6 +739,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     // ============================================================================================ juce::Uuid
 
     py::class_<Uuid> classUuid (m, "Uuid");
+
     classUuid
         .def (py::init<>())
         .def ("isNull", &Uuid::isNull)
@@ -739,6 +767,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     // ============================================================================================ juce::RelativeTime
 
     py::class_<RelativeTime> classRelativeTime (m, "RelativeTime");
+
     classRelativeTime
         .def (py::init<>())
     //.def_static ("milliseconds", static_cast<RelativeTime (*)(int)> (&RelativeTime::milliseconds))
@@ -765,6 +794,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     // ============================================================================================ juce::Time
 
     py::class_<Time> classTime (m, "Time");
+
     classTime
     //.def (py::self = Time())
         .def_static ("getCurrentTime", &Time::getCurrentTime)
@@ -814,23 +844,30 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     // ============================================================================================ juce::MemoryBlock
 
     py::class_<MemoryBlock> classMemoryBlock (m, "MemoryBlock");
+
     classMemoryBlock
         .def (py::init<>())
         .def (py::init<const size_t, bool>())
         .def (py::init<const MemoryBlock&>())
-    //.def (py::init<const void*, size_t>())
+        .def (py::init ([](py::buffer data)
+        {
+            auto info = data.request();
+            return MemoryBlock (info.ptr, static_cast<size_t> (info.size));
+        }))
         .def (py::self == py::self)
         .def (py::self != py::self)
-        .def ("matches", &MemoryBlock::matches)
+        .def ("matches", Helpers::makeVoidPointerAndSizeCallable<MemoryBlock> (&MemoryBlock::matches))
         .def ("getData", py::overload_cast<> (&MemoryBlock::getData))
         .def ("getData", py::overload_cast<> (&MemoryBlock::getData, py::const_))
+        .def ("__getitem__", [](const MemoryBlock& self, int index) { return self[index]; })
+        .def ("__setitem__", [](MemoryBlock* self, int index, char value) { self->operator[](index) = value; })
         .def ("isEmpty", &MemoryBlock::isEmpty)
         .def ("getSize", &MemoryBlock::getSize)
         .def ("setSize", &MemoryBlock::setSize)
         .def ("ensureSize", &MemoryBlock::ensureSize)
         .def ("reset", &MemoryBlock::reset)
         .def ("fillWith", &MemoryBlock::fillWith)
-        .def ("append", &MemoryBlock::append)
+        .def ("append", Helpers::makeVoidPointerAndSizeCallable<MemoryBlock> (&MemoryBlock::append))
         .def ("replaceAll", &MemoryBlock::replaceAll)
         .def ("insert", &MemoryBlock::insert)
         .def ("removeSection", &MemoryBlock::removeSection)
@@ -849,6 +886,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     // ============================================================================================ juce::InputStream
 
     py::class_<InputStream> classInputStream (m, "InputStream");
+
     classInputStream
         .def ("getTotalLength", &InputStream::getTotalLength)
         .def ("getNumBytesRemaining", &InputStream::getNumBytesRemaining)
@@ -878,6 +916,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     ;
 
     py::class_<BufferedInputStream, InputStream> classBufferedInputStream (m, "BufferedInputStream");
+
     classBufferedInputStream
         .def ("peekByte", &BufferedInputStream::peekByte)
         .def ("getTotalLength", &BufferedInputStream::getTotalLength)
@@ -889,6 +928,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     ;
 
     py::class_<MemoryInputStream, InputStream> classMemoryInputStream (m, "MemoryInputStream");
+
     classMemoryInputStream
         .def ("getData", &MemoryInputStream::getData)
         .def ("getDataSize", &MemoryInputStream::getDataSize)
@@ -901,6 +941,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     ;
 
     py::class_<SubregionStream, InputStream> classSubregionStream (m, "SubregionStream");
+
     classSubregionStream
         .def ("getTotalLength", &SubregionStream::getTotalLength)
         .def ("getPosition", &SubregionStream::getPosition)
@@ -910,6 +951,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     ;
 
     py::class_<FileInputStream, InputStream> classFileInputStream (m, "FileInputStream");
+
     classFileInputStream
         .def ("getFile", &FileInputStream::getFile)
         .def ("getStatus", &FileInputStream::getStatus)
@@ -925,6 +967,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     // ============================================================================================ juce::OutputStream
 
     py::class_<OutputStream> classOutputStream (m, "OutputStream");
+
     classOutputStream
         .def ("flush", &OutputStream::flush)
         .def ("setPosition", &OutputStream::setPosition)
@@ -952,6 +995,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     ;
 
     py::class_<MemoryOutputStream, OutputStream> classMemoryOutputStream (m, "MemoryOutputStream");
+
     classMemoryOutputStream
         .def ("getData", &MemoryOutputStream::getData)
         .def ("getDataSize", &MemoryOutputStream::getDataSize)
@@ -971,6 +1015,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     ;
 
     py::class_<FileOutputStream, OutputStream> classFileOutputStream (m, "FileOutputStream");
+
     classFileOutputStream
         .def ("getFile", &FileOutputStream::getFile)
         .def ("getStatus", &FileOutputStream::getStatus)
@@ -987,6 +1032,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     // ============================================================================================ juce::CriticalSection
 
     py::class_<CriticalSection> classCriticalSection (m, "CriticalSection");
+
     classCriticalSection
         .def (py::init<>())
         .def ("enter", &CriticalSection::enter)
@@ -997,6 +1043,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     // ============================================================================================ juce::SpinLock
 
     py::class_<SpinLock> classSpinLock (m, "SpinLock");
+
     classSpinLock
         .def (py::init<>())
         .def ("enter", &SpinLock::enter)
@@ -1007,6 +1054,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     // ============================================================================================ juce::WaitableEvent
 
     py::class_<WaitableEvent> classWaitableEvent (m, "WaitableEvent");
+
     classWaitableEvent
         .def (py::init<>())
         .def (py::init<bool>())
@@ -1018,6 +1066,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     // ============================================================================================ juce::ReadWriteLock
 
     py::class_<ReadWriteLock> classReadWriteLock (m, "ReadWriteLock");
+
     classReadWriteLock
         .def (py::init<>())
         .def ("enterRead", &ReadWriteLock::enterRead)
@@ -1031,6 +1080,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     // ============================================================================================ juce::InterProcessLock
 
     py::class_<InterProcessLock> classInterProcessLock (m, "InterProcessLock");
+
     classInterProcessLock
         .def (py::init<const String&>())
         .def ("enter", &InterProcessLock::enter)
@@ -1048,6 +1098,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     };
 
     py::class_<HighResolutionTimer, PyHighResolutionTimer> classHighResolutionTimer (m, "HighResolutionTimer");
+
     classHighResolutionTimer
         .def (py::init<>())
         .def ("hiResTimerCallback", &HighResolutionTimer::hiResTimerCallback)
@@ -1060,6 +1111,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     // ============================================================================================ juce::ChildProcess
 
     py::class_<ChildProcess> classChildProcess (m, "ChildProcess");
+
     classChildProcess
         .def (py::init<>())
         .def ("start", py::overload_cast<const String &, int> (&ChildProcess::start))
@@ -1075,6 +1127,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     // ============================================================================================ juce::Random
 
     py::class_<Random> classRandom (m, "Random");
+
     classRandom
         .def (py::init<>())
         .def (py::init<int64>())
@@ -1097,6 +1150,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     // ============================================================================================ juce::PropertySet
 
     py::class_<PropertySet> classPropertySet (m, "PropertySet");
+
     classPropertySet
         .def (py::init<>())
         .def (py::init<const PropertySet&>())
@@ -1259,6 +1313,11 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     // ============================================================================================ juce::URL
 
     py::class_<URL> classURL (m, "URL");
+
+    py::enum_<URL::ParameterHandling> (classURL, "ParameterHandling")
+        .value ("inAddress", URL::ParameterHandling::inAddress)
+        .value ("inPostData", URL::ParameterHandling::inPostData);
+
     classURL
         .def (py::init<>())
         .def (py::init<const String&>())
@@ -1308,7 +1367,9 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     ;
 
     py::class_<URL::InputStreamOptions> classURLInputStreamOptions (classURL, "InputStreamOptions");
+
     classURLInputStreamOptions
+        .def (py::init<URL::ParameterHandling>())
         .def ("withProgressCallback", &URL::InputStreamOptions::withProgressCallback)
         .def ("withExtraHeaders", &URL::InputStreamOptions::withExtraHeaders)
         .def ("withConnectionTimeoutMs", &URL::InputStreamOptions::withConnectionTimeoutMs)
@@ -1326,16 +1387,6 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("getHttpRequestCmd", &URL::InputStreamOptions::getHttpRequestCmd)
     ;
 
-    py::class_<URL::DownloadTask> classURLDownloadTask (classURL, "DownloadTask");
-    classURLDownloadTask
-        .def ("getTotalLength", &URL::DownloadTask::getTotalLength)
-        .def ("getLengthDownloaded", &URL::DownloadTask::getLengthDownloaded)
-        .def ("isFinished", &URL::DownloadTask::isFinished)
-        .def ("statusCode", &URL::DownloadTask::statusCode)
-        .def ("hadError", &URL::DownloadTask::hadError)
-        .def ("getTargetLocation", &URL::DownloadTask::getTargetLocation)
-    ;
-
     struct PyURLDownloadTaskListener : public URL::DownloadTaskListener
     {
         void finished (URL::DownloadTask* task, bool success) override
@@ -1349,30 +1400,38 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         }
     };
 
+    py::class_<URL::DownloadTask> classURLDownloadTask (classURL, "DownloadTask");
+
     py::class_<URL::DownloadTaskListener, PyURLDownloadTaskListener> classURLDownloadTaskListener (classURL, "DownloadTaskListener");
+
     classURLDownloadTaskListener
+        .def (py::init<>())
         .def ("finished", &URL::DownloadTaskListener::finished)
         .def ("progress", &URL::DownloadTaskListener::progress)
     ;
 
+    classURLDownloadTask
+        .def ("getTotalLength", &URL::DownloadTask::getTotalLength)
+        .def ("getLengthDownloaded", &URL::DownloadTask::getLengthDownloaded)
+        .def ("isFinished", &URL::DownloadTask::isFinished)
+        .def ("statusCode", &URL::DownloadTask::statusCode)
+        .def ("hadError", &URL::DownloadTask::hadError)
+        .def ("getTargetLocation", &URL::DownloadTask::getTargetLocation)
+        .def_property_readonly("Listener", [classURLDownloadTaskListener](const URL::DownloadTask&) { return classURLDownloadTaskListener; })
+    ;
+
     py::class_<URL::DownloadTaskOptions> classURLDownloadTaskOptions (classURL, "DownloadTaskOptions");
+
     classURLDownloadTaskOptions
+        .def (py::init<>())
         .def ("withExtraHeaders", &URL::DownloadTaskOptions::withExtraHeaders)
         .def ("withSharedContainer", &URL::DownloadTaskOptions::withSharedContainer)
         .def ("withListener", &URL::DownloadTaskOptions::withListener)
         .def ("withUsePost", &URL::DownloadTaskOptions::withUsePost)
-        .def_property ("extraHeaders",
-                       [](const URL::DownloadTaskOptions& self) { return self.extraHeaders; },
-                       [](URL::DownloadTaskOptions& self, const String& v) { self.extraHeaders = v; })
-        .def_property ("sharedContainer",
-                       [](const URL::DownloadTaskOptions& self) { return self.sharedContainer; },
-                       [](URL::DownloadTaskOptions& self, const String& v) { self.sharedContainer = v; })
-        .def_property ("listener",
-                       [](const URL::DownloadTaskOptions& self) { return self.listener; },
-                       [](URL::DownloadTaskOptions& self, URL::DownloadTaskListener* v) { self.listener = v; })
-        .def_property ("usePost",
-                       [](const URL::DownloadTaskOptions& self) { return self.usePost; },
-                       [](URL::DownloadTaskOptions& self, bool v) { self.usePost = v; })
+        .def_readwrite ("extraHeaders", &URL::DownloadTaskOptions::extraHeaders)
+        .def_readwrite ("sharedContainer", &URL::DownloadTaskOptions::sharedContainer)
+        .def_readwrite ("listener", &URL::DownloadTaskOptions::listener)
+        .def_readwrite ("usePost", &URL::DownloadTaskOptions::usePost)
     ;
 
     // ============================================================================================ juce::SystemStats
