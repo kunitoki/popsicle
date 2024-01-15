@@ -12,6 +12,7 @@ elseif((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQU
         -Wno-self-assign-overloaded
         -Wno-zero-as-null-pointer-constant
         -Wno-gnu-zero-variadic-macro-arguments
+        -Wno-float-conversion
         -Wno-float-equal)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(juce_python_recommended_warning_flags INTERFACE

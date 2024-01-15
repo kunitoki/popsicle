@@ -6,6 +6,10 @@
  * Licensed under the MIT License. Visit https://opensource.org/licenses/MIT for more information.
  */
 
+#include <juce_core/juce_core.h>
+
+JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wcast-align")
+
 #if JUCE_PYTHON_USE_EXTERNAL_PYBIND11
 #include <pybind11/embed.h>
 
@@ -53,3 +57,5 @@
 #endif
 
 #endif
+
+JUCE_END_IGNORE_WARNINGS_GCC_LIKE
