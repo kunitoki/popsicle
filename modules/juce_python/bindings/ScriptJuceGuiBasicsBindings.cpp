@@ -94,6 +94,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     using namespace juce;
 
     namespace py = pybind11;
+    using namespace py::literals;
 
 #if ! JUCE_PYTHON_EMBEDDED_INTERPRETER
 
@@ -289,7 +290,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("getApplicationName", &JUCEApplication::getApplicationName)
         .def ("getApplicationVersion", &JUCEApplication::getApplicationVersion)
         .def ("moreThanOneInstanceAllowed", &JUCEApplication::moreThanOneInstanceAllowed)
-        .def ("initialise", &JUCEApplication::initialise)
+        .def ("initialise", &JUCEApplication::initialise, "commandLineParameters"_a)
         .def ("shutdown", &JUCEApplication::shutdown)
         .def ("anotherInstanceStarted", &JUCEApplication::anotherInstanceStarted)
         .def ("systemRequestedQuit", &JUCEApplication::systemRequestedQuit)
@@ -1197,7 +1198,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
             PYBIND11_OVERRIDE(void, Button, clicked);
         }
 
-        void clicked (const ModifierKeys& modifiers)
+        void clicked (const ModifierKeys& modifiers) override
         {
             PYBIND11_OVERRIDE(void, Button, clicked, modifiers);
         }
@@ -1300,30 +1301,85 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
 
     // ============================================================================================ juce::ArrowButton
 
-    py::class_<ArrowButton, Button> (m, "ArrowButton");
+    py::class_<ArrowButton, Button> classArrowButton (m, "ArrowButton");
+    
+    classArrowButton
+        .def (py::init<const String&, float, Colour>())
+    ;
 
     // ============================================================================================ juce::DrawableButton
 
-    py::class_<DrawableButton, Button> (m, "DrawableButton")
-    //.def ("getStyle", &DrawableButton::getStyle)
+    struct PyDrawableButton : DrawableButton
+    {
+        using DrawableButton::DrawableButton;
+        
+        Rectangle<float> getImageBounds() const override
+        {
+            PYBIND11_OVERRIDE(Rectangle<float>, DrawableButton, getImageBounds);
+        }
+    };
+
+    py::class_<DrawableButton, Button, PyDrawableButton> classDrawableButton (m, "DrawableButton");
+    
+    py::enum_<DrawableButton::ButtonStyle> (classDrawableButton, "ButtonStyle")
+        .value ("ImageFitted", DrawableButton::ButtonStyle::ImageFitted)
+        .value ("ImageRaw", DrawableButton::ButtonStyle::ImageRaw)
+        .value ("ImageAboveTextLabel", DrawableButton::ButtonStyle::ImageAboveTextLabel)
+        .value ("ImageOnButtonBackground", DrawableButton::ButtonStyle::ImageOnButtonBackground)
+        .value ("ImageOnButtonBackgroundOriginalSize", DrawableButton::ButtonStyle::ImageOnButtonBackgroundOriginalSize)
+        .value ("ImageStretched", DrawableButton::ButtonStyle::ImageStretched)
+        .export_values();
+
+    classDrawableButton
+        .def (py::init<const String&, DrawableButton::ButtonStyle>())
+        .def ("setImages", [](DrawableButton* self, const Drawable* normalImage) { self->setImages (normalImage); })
+        .def ("setImages", [](DrawableButton* self, const Drawable* normalImage, const Drawable* downImage) { self->setImages (normalImage, downImage); })
+        .def ("setImages", [](DrawableButton* self, const Drawable* normalImage, const Drawable* downImage, const Drawable* disabledImage) { self->setImages (normalImage, downImage, disabledImage); })
+        .def ("setImages", [](DrawableButton* self, const Drawable* normalImage, const Drawable* downImage, const Drawable* disabledImage, const Drawable* normalImageOn) { self->setImages (normalImage, downImage, disabledImage, normalImageOn); })
+        .def ("setImages", [](DrawableButton* self, const Drawable* normalImage, const Drawable* downImage, const Drawable* disabledImage, const Drawable* normalImageOn, const Drawable* overImageOn) { self->setImages (normalImage, downImage, disabledImage, normalImageOn, overImageOn); })
+        .def ("setImages", [](DrawableButton* self, const Drawable* normalImage, const Drawable* downImage, const Drawable* disabledImage, const Drawable* normalImageOn, const Drawable* overImageOn, const Drawable* downImageOn) { self->setImages (normalImage, downImage, disabledImage, normalImageOn, overImageOn, downImageOn); })
+        .def ("setImages", &DrawableButton::setImages)
+        .def ("setButtonStyle", &DrawableButton::setButtonStyle)
+        .def ("getStyle", &DrawableButton::getStyle)
+        .def ("setEdgeIndent", &DrawableButton::setEdgeIndent)
         .def ("getEdgeIndent", &DrawableButton::getEdgeIndent)
-    //.def ("getCurrentImage", &DrawableButton::getCurrentImage, py::return_value_policy::reference)
-    //.def ("getNormalImage", &DrawableButton::getNormalImage, py::return_value_policy::reference)
-    //.def ("getOverImage", &DrawableButton::getOverImage, py::return_value_policy::reference)
-    //.def ("getDownImage", &DrawableButton::getDownImage, py::return_value_policy::reference)
+        .def ("getCurrentImage", &DrawableButton::getCurrentImage, py::return_value_policy::reference)
+        .def ("getNormalImage", &DrawableButton::getNormalImage, py::return_value_policy::reference)
+        .def ("getOverImage", &DrawableButton::getOverImage, py::return_value_policy::reference)
+        .def ("getDownImage", &DrawableButton::getDownImage, py::return_value_policy::reference)
         .def ("getImageBounds", &DrawableButton::getImageBounds)
     ;
 
+    classDrawableButton.attr ("textColourId") = py::int_(static_cast<int> (DrawableButton::textColourId));
+    classDrawableButton.attr ("textColourOnId") = py::int_(static_cast<int> (DrawableButton::textColourOnId));
+    classDrawableButton.attr ("backgroundColourId") = py::int_(static_cast<int> (DrawableButton::backgroundColourId));
+    classDrawableButton.attr ("backgroundOnColourId") = py::int_(static_cast<int> (DrawableButton::backgroundOnColourId));
+
     // ============================================================================================ juce::HyperlinkButton
 
-    py::class_<HyperlinkButton, Button> (m, "HyperlinkButton")
-    //.def ("getURL", &HyperlinkButton::getURL)
-    //.def ("getJustificationType", &HyperlinkButton::getJustificationType)
+    py::class_<HyperlinkButton, Button> classHyperlinkButton (m, "HyperlinkButton");
+    
+    classHyperlinkButton
+        .def (py::init<>())
+        .def (py::init<const String&, const URL&>())
+        .def ("setFont", &HyperlinkButton::setFont)
+        .def ("setURL", &HyperlinkButton::setURL)
+        .def ("getURL", &HyperlinkButton::getURL)
+        .def ("changeWidthToFitText", &HyperlinkButton::changeWidthToFitText)
+        .def ("setJustificationType", &HyperlinkButton::setJustificationType)
+        .def ("getJustificationType", &HyperlinkButton::getJustificationType)
+    //.def ("createAccessibilityHandler", &ToggleButton::createAccessibilityHandler)
     ;
+
+    classHyperlinkButton.attr ("textColourId") = py::int_(static_cast<int> (HyperlinkButton::textColourId));
 
     // ============================================================================================ juce::ImageButton
 
-    py::class_<ImageButton, Button> (m, "ImageButton")
+    py::class_<ImageButton, Button> classImageButton (m, "ImageButton");
+    
+    classImageButton
+        .def (py::init<const String&>(), "name"_a = String())
+        .def ("setImages", &ImageButton::setImages)
         .def ("getNormalImage", &ImageButton::getNormalImage)
         .def ("getOverImage", &ImageButton::getOverImage)
         .def ("getDownImage", &ImageButton::getDownImage)
@@ -1331,7 +1387,17 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
 
     // ============================================================================================ juce::ShapeButton
 
-    py::class_<ShapeButton, Button> (m, "ShapeButton");
+    py::class_<ShapeButton, Button> classShapeButton (m, "ShapeButton");
+    
+    classShapeButton
+        .def (py::init<const String&, Colour, Colour, Colour>())
+        .def ("setShape", &ShapeButton::setShape)
+        .def ("setColours", &ShapeButton::setColours)
+        .def ("setOnColours", &ShapeButton::setOnColours)
+        .def ("shouldUseOnColours", &ShapeButton::shouldUseOnColours)
+        .def ("setOutline", &ShapeButton::setOutline)
+        .def ("setBorderSize", &ShapeButton::setBorderSize)
+    ;
 
     // ============================================================================================ juce::TextButton
 
@@ -1365,6 +1431,263 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     classToggleButton.attr ("textColourId") = py::int_(static_cast<int> (ToggleButton::textColourId));
     classToggleButton.attr ("tickColourId") = py::int_(static_cast<int> (ToggleButton::tickColourId));
     classToggleButton.attr ("tickDisabledColourId") = py::int_(static_cast<int> (ToggleButton::tickDisabledColourId));
+
+    // ============================================================================================ juce::ToolbarItemFactory
+
+    struct PyToolbarItemFactory : ToolbarItemFactory
+    {
+        using ToolbarItemFactory::ToolbarItemFactory;
+        
+        void getAllToolbarItemIds (Array<int>& ids) override
+        {
+            //PYBIND11_OVERRIDE(void, ToolbarItemFactory, getAllToolbarItemIds, ids);
+
+            {
+                py::gil_scoped_acquire gil;
+
+                if (py::function override_ = py::get_override(static_cast<ToolbarItemFactory*>(this), "getAllToolbarItemIds"); override_)
+                {
+                    auto result = override_ ();
+                    
+                    ids.addArray (result.cast<Array<int>>());
+                }
+            }
+        
+            py::pybind11_fail("Tried to call pure virtual function \"ToolbarItemFactory::getAllToolbarItemIds\"");
+        }
+        
+        void getDefaultItemSet (Array <int>& ids) override
+        {
+            //PYBIND11_OVERRIDE_PURE(void, ToolbarItemFactory, getDefaultItemSet, ids);
+
+            {
+                py::gil_scoped_acquire gil;
+
+                if (py::function override_ = py::get_override(static_cast<ToolbarItemFactory*>(this), "getDefaultItemSet"); override_)
+                {
+                    auto result = override_ ();
+                    
+                    ids.addArray (result.cast<Array<int>>());
+                }
+            }
+        
+            py::pybind11_fail("Tried to call pure virtual function \"ToolbarItemFactory::getDefaultItemSet\"");
+        }
+        
+        ToolbarItemComponent* createItem (int itemId) override
+        {
+            PYBIND11_OVERRIDE_PURE(ToolbarItemComponent*, ToolbarItemFactory, createItem, itemId);
+        }
+    };
+
+    py::class_<ToolbarItemFactory, PyToolbarItemFactory> classToolbarItemFactory (m, "ToolbarItemFactory");
+
+    py::enum_<ToolbarItemFactory::SpecialItemIds> (classToolbarItemFactory, "SpecialItemIds")
+        .value ("separatorBarId", ToolbarItemFactory::SpecialItemIds::separatorBarId)
+        .value ("spacerId", ToolbarItemFactory::SpecialItemIds::spacerId)
+        .value ("flexibleSpacerId", ToolbarItemFactory::SpecialItemIds::flexibleSpacerId)
+        .export_values();
+
+    classToolbarItemFactory
+        .def (py::init<>())
+        .def ("getAllToolbarItemIds", &ToolbarItemFactory::getAllToolbarItemIds)
+        .def ("getDefaultItemSet", &ToolbarItemFactory::getDefaultItemSet)
+        .def ("createItem", &ToolbarItemFactory::createItem)
+    ;
+
+    // ============================================================================================ juce::Toolbar
+
+    py::class_<Toolbar, Component> classToolbar (m, "Toolbar");
+    
+    py::enum_<Toolbar::ToolbarItemStyle> (classToolbar, "ToolbarItemStyle")
+        .value ("iconsOnly", Toolbar::ToolbarItemStyle::iconsOnly)
+        .value ("iconsWithText", Toolbar::ToolbarItemStyle::iconsWithText)
+        .value ("textOnly", Toolbar::ToolbarItemStyle::textOnly)
+        .export_values();
+
+    py::enum_<Toolbar::CustomisationFlags> (classToolbar, "CustomisationFlags")
+        .value ("allowIconsOnlyChoice", Toolbar::CustomisationFlags::allowIconsOnlyChoice)
+        .value ("allowIconsWithTextChoice", Toolbar::CustomisationFlags::allowIconsWithTextChoice)
+        .value ("allowTextOnlyChoice", Toolbar::CustomisationFlags::allowTextOnlyChoice)
+        .value ("showResetToDefaultsButton", Toolbar::CustomisationFlags::showResetToDefaultsButton)
+        .value ("allCustomisationOptionsEnabled", Toolbar::CustomisationFlags::allCustomisationOptionsEnabled)
+        .export_values();
+
+    classToolbar
+        .def (py::init<>())
+        .def ("setVertical", &Toolbar::setVertical)
+        .def ("isVertical", &Toolbar::isVertical)
+        .def ("getThickness", &Toolbar::getThickness)
+        .def ("getLength", &Toolbar::getLength)
+        .def ("clear", &Toolbar::clear)
+        .def ("addItem", &Toolbar::addItem)
+        .def ("removeToolbarItem", &Toolbar::removeToolbarItem)
+        .def ("removeAndReturnItem", &Toolbar::removeAndReturnItem, py::return_value_policy::reference)
+        .def ("getNumItems", &Toolbar::getNumItems)
+        .def ("getItemId", &Toolbar::getItemId)
+        .def ("getItemComponent", &Toolbar::getItemComponent, py::return_value_policy::reference)
+        .def ("addDefaultItems", &Toolbar::addDefaultItems)
+        .def ("getStyle", &Toolbar::getStyle)
+        .def ("setStyle", &Toolbar::setStyle)
+        .def ("showCustomisationDialog", &Toolbar::showCustomisationDialog)
+        .def ("setEditingActive", &Toolbar::setEditingActive)
+        .def ("toString", &Toolbar::toString)
+        .def ("restoreFromString", &Toolbar::restoreFromString)
+    ;
+
+    classToolbar.attr ("backgroundColourId") = py::int_(static_cast<int> (Toolbar::backgroundColourId));
+    classToolbar.attr ("separatorColourId") = py::int_(static_cast<int> (Toolbar::separatorColourId));
+    classToolbar.attr ("buttonMouseOverBackgroundColourId") = py::int_(static_cast<int> (Toolbar::buttonMouseOverBackgroundColourId));
+    classToolbar.attr ("buttonMouseDownBackgroundColourId") = py::int_(static_cast<int> (Toolbar::buttonMouseDownBackgroundColourId));
+    classToolbar.attr ("labelTextColourId") = py::int_(static_cast<int> (Toolbar::labelTextColourId));
+    classToolbar.attr ("editingModeOutlineColourId") = py::int_(static_cast<int> (Toolbar::editingModeOutlineColourId));
+
+    // ============================================================================================ juce::ToolbarItemComponent
+
+    struct PyToolbarItemComponent : ToolbarItemComponent
+    {
+        using ToolbarItemComponent::ToolbarItemComponent;
+        
+        void setStyle (const Toolbar::ToolbarItemStyle& newStyle) override
+        {
+            PYBIND11_OVERRIDE(void, ToolbarItemComponent, setStyle, newStyle);
+        }
+        
+        bool getToolbarItemSizes (int toolbarThickness, bool isToolbarVertical, int& preferredSize, int& minSize, int& maxSize) override
+        {
+            //PYBIND11_OVERRIDE_PURE(bool, ToolbarItemComponent, getToolbarItemSizes, toolbarThickness, ...);
+
+            {
+                py::gil_scoped_acquire gil;
+
+                if (py::function override_ = py::get_override(static_cast<ToolbarItemComponent*>(this), "getToolbarItemSizes"); override_)
+                {
+                    auto result = override_ (toolbarThickness, isToolbarVertical, std::ref (preferredSize), std::ref (minSize), std::ref (maxSize));
+
+                    return py::detail::cast_safe<bool> (std::move(result));
+                }
+            }
+        
+            py::pybind11_fail("Tried to call pure virtual function \"ToolbarItemComponent::getToolbarItemSizes\"");
+        }
+
+        void paintButtonArea (Graphics& g, int width, int height, bool isMouseOver, bool isMouseDown) override
+        {
+            //PYBIND11_OVERRIDE_PURE(void, ToolbarItemComponent, paintButtonArea, g, width, height, isMouseOver, isMouseDown);
+
+            {
+                py::gil_scoped_acquire gil;
+
+                if (py::function override_ = py::get_override(static_cast<ToolbarItemComponent*>(this), "paintButtonArea"); override_)
+                {
+                    override_ (std::addressof (g), width, height, isMouseOver, isMouseDown);
+
+                    return;
+                }
+            }
+        
+            py::pybind11_fail("Tried to call pure virtual function \"ToolbarItemComponent::paintButtonArea\"");
+        }
+
+        void contentAreaChanged (const Rectangle<int>& newBounds) override
+        {
+            PYBIND11_OVERRIDE_PURE(void, ToolbarItemComponent, contentAreaChanged, newBounds);
+        }
+    };
+
+    py::class_<ToolbarItemComponent, Button, PyToolbarItemComponent> classToolbarItemComponent (m, "ToolbarItemComponent");
+
+    py::enum_<ToolbarItemComponent::ToolbarEditingMode> (classToolbarItemComponent, "ToolbarEditingMode")
+        .value ("normalMode", ToolbarItemComponent::ToolbarEditingMode::normalMode)
+        .value ("editableOnToolbar", ToolbarItemComponent::ToolbarEditingMode::editableOnToolbar)
+        .value ("editableOnPalette", ToolbarItemComponent::ToolbarEditingMode::editableOnPalette)
+        .export_values();
+
+    classToolbarItemComponent
+        .def (py::init<int, const String&, bool>())
+        .def ("getItemId", &ToolbarItemComponent::getItemId)
+        .def ("getToolbar", &ToolbarItemComponent::getToolbar, py::return_value_policy::reference)
+        .def ("isToolbarVertical", &ToolbarItemComponent::isToolbarVertical)
+        .def ("getStyle", &ToolbarItemComponent::getStyle)
+        .def ("setStyle", &ToolbarItemComponent::setStyle)
+        .def ("getContentArea", &ToolbarItemComponent::getContentArea)
+        .def ("getToolbarItemSizes", &ToolbarItemComponent::getToolbarItemSizes)
+        .def ("paintButtonArea", &ToolbarItemComponent::paintButtonArea)
+        .def ("contentAreaChanged", &ToolbarItemComponent::contentAreaChanged)
+        .def ("setEditingMode", &ToolbarItemComponent::setEditingMode)
+        .def ("getEditingMode", &ToolbarItemComponent::getEditingMode)
+    ;
+
+    // ============================================================================================ juce::Slider
+
+    struct PyMenuBarModel : MenuBarModel
+    {
+        StringArray getMenuBarNames () override
+        {
+            PYBIND11_OVERRIDE_PURE (StringArray, MenuBarModel, getMenuBarNames);
+        }
+
+        PopupMenu getMenuForIndex (int topLevelMenuIndex, const String& menuName) override
+        {
+            PYBIND11_OVERRIDE_PURE (PopupMenu, MenuBarModel, getMenuForIndex, topLevelMenuIndex, menuName);
+        }
+
+        void menuItemSelected (int menuItemID, int topLevelMenuIndex) override
+        {
+            PYBIND11_OVERRIDE_PURE (void, MenuBarModel, menuItemSelected, menuItemID, topLevelMenuIndex);
+        }
+
+        void menuBarActivated (bool isActive) override
+        {
+            PYBIND11_OVERRIDE (void, MenuBarModel, menuBarActivated, isActive);
+        }
+    };
+
+    struct PyMenuBarModelListener : MenuBarModel::Listener
+    {
+        void menuBarItemsChanged (MenuBarModel* menuBarModel) override
+        {
+            PYBIND11_OVERRIDE_PURE (void, MenuBarModel::Listener, menuBarItemsChanged, menuBarModel);
+        }
+
+        void menuCommandInvoked (MenuBarModel* menuBarModel, const ApplicationCommandTarget::InvocationInfo& info) override
+        {
+            PYBIND11_OVERRIDE_PURE (void, MenuBarModel::Listener, menuCommandInvoked, menuBarModel, info);
+        }
+
+        void menuBarActivated (MenuBarModel* menuBarModel, bool isActive) override
+        {
+            PYBIND11_OVERRIDE_PURE (void, MenuBarModel::Listener, menuBarActivated, menuBarModel, isActive);
+        }
+    };
+
+    py::class_<MenuBarModel, PyMenuBarModel> classMenuBarModel (m, "MenuBarModel");
+
+    py::class_<MenuBarModel::Listener, PyMenuBarModelListener> classMenuBarModelListener (m, "Listener");
+
+    classMenuBarModelListener
+        .def (py::init<>())
+        .def ("menuBarItemsChanged", &MenuBarModel::Listener::menuBarItemsChanged)
+        .def ("menuCommandInvoked", &MenuBarModel::Listener::menuCommandInvoked)
+        .def ("menuBarActivated", &MenuBarModel::Listener::menuBarActivated)
+    ;
+    
+    classMenuBarModel
+        .def (py::init<>())
+        .def ("menuItemsChanged", &MenuBarModel::menuItemsChanged)
+    //.def ("setApplicationCommandManagerToWatch", &MenuBarModel::setApplicationCommandManagerToWatch)
+        .def ("addListener", &MenuBarModel::addListener)
+        .def ("removeListener", &MenuBarModel::removeListener)
+        .def ("getMenuBarNames", &MenuBarModel::getMenuBarNames)
+        .def ("getMenuForIndex", &MenuBarModel::getMenuForIndex)
+        .def ("menuItemSelected", &MenuBarModel::menuItemSelected)
+        .def ("menuBarActivated", &MenuBarModel::menuBarActivated)
+#if JUCE_MAC
+        .def_static ("setMacMainMenu", &MenuBarModel::setMacMainMenu)
+        .def_static ("getMacMainMenu", &MenuBarModel::getMacMainMenu, py::return_value_policy::reference)
+    //.def_static ("getMacExtraAppleItemsMenu", &MenuBarModel::getMacExtraAppleItemsMenu, py::return_value_policy::reference)
+#endif
+    ;
 
     // ============================================================================================ juce::Slider
 
