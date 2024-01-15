@@ -10,7 +10,9 @@
 #include "../utilities/ClassDemangling.h"
 #include "../utilities/PythonInterop.h"
 
+#define JUCE_PYTHON_INCLUDE_PYBIND11_STL
 #define JUCE_PYTHON_INCLUDE_PYBIND11_OPERATORS
+#define JUCE_PYTHON_INCLUDE_PYBIND11_FUNCTIONAL
 #include "../utilities/PyBind11Includes.h"
 
 namespace PYBIND11_NAMESPACE {
@@ -436,7 +438,9 @@ void registerRange (pybind11::module_& m)
 void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
 {
     using namespace juce;
+
     namespace py = pybind11;
+    using namespace py::literals;
 
     // ============================================================================================ juce::ByteOrder
 
@@ -652,7 +656,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def_static ("createStringFromData", [](py::buffer data)
         {
             auto info = data.request();
-            return String::createStringFromData (info.ptr, static_cast<size_t> (info.size));
+            return String::createStringFromData (info.ptr, static_cast<int> (info.size));
         })
     //.def ("begin", &String::begin)
     //.def ("end", &String::end)
@@ -857,8 +861,14 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def (py::self == py::self)
         .def (py::self != py::self)
         .def ("matches", Helpers::makeVoidPointerAndSizeCallable<MemoryBlock> (&MemoryBlock::matches))
-        .def ("getData", py::overload_cast<> (&MemoryBlock::getData))
-        .def ("getData", py::overload_cast<> (&MemoryBlock::getData, py::const_))
+        .def ("getData", [](MemoryBlock* self)
+        {
+            return py::memoryview::from_memory (self->getData(), static_cast<ssize_t> (self->getSize()));
+        }, py::return_value_policy::reference_internal)
+        .def ("getData", [](const MemoryBlock* self)
+        {
+            return py::memoryview::from_memory (self->getData(), static_cast<ssize_t> (self->getSize()));
+        }, py::return_value_policy::reference_internal)
         .def ("__getitem__", [](const MemoryBlock& self, int index) { return self[index]; })
         .def ("__setitem__", [](MemoryBlock* self, int index, char value) { self->operator[](index) = value; })
         .def ("isEmpty", &MemoryBlock::isEmpty)
@@ -868,11 +878,23 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("reset", &MemoryBlock::reset)
         .def ("fillWith", &MemoryBlock::fillWith)
         .def ("append", Helpers::makeVoidPointerAndSizeCallable<MemoryBlock> (&MemoryBlock::append))
-        .def ("replaceAll", &MemoryBlock::replaceAll)
-        .def ("insert", &MemoryBlock::insert)
+        .def ("replaceAll", Helpers::makeVoidPointerAndSizeCallable<MemoryBlock> (&MemoryBlock::replaceAll))
+        .def ("insert", [](MemoryBlock* self, py::buffer data, size_t insertPosition)
+        {
+            auto info = data.request();
+            self->insert (info.ptr, static_cast<size_t> (info.size), insertPosition);
+        })
         .def ("removeSection", &MemoryBlock::removeSection)
-        .def ("copyFrom", &MemoryBlock::copyFrom)
-        .def ("copyTo", &MemoryBlock::copyTo)
+        .def ("copyFrom", [](MemoryBlock* self, py::buffer data, int destinationOffset)
+        {
+            auto info = data.request();
+            self->copyFrom (info.ptr, destinationOffset, static_cast<size_t> (info.size));
+        })
+        .def ("copyTo", [](const MemoryBlock* self, py::buffer data, int sourceOffset)
+        {
+            auto info = data.request (true);
+            self->copyTo (info.ptr, sourceOffset, static_cast<size_t> (info.size));
+        })
         .def ("swapWith", &MemoryBlock::swapWith)
         .def ("toString", &MemoryBlock::toString)
         .def ("loadFromHexString", &MemoryBlock::loadFromHexString)
@@ -885,9 +907,125 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
 
     // ============================================================================================ juce::InputStream
 
-    py::class_<InputStream> classInputStream (m, "InputStream");
+    struct PyInputStream : InputStream
+    {
+        using InputStream::InputStream;
+    
+        int64 getTotalLength() override
+        {
+            PYBIND11_OVERRIDE_PURE (int64, InputStream, getTotalLength);
+        }
+
+        bool isExhausted() override
+        {
+            PYBIND11_OVERRIDE_PURE (bool, InputStream, isExhausted);
+        }
+
+        int read (void* destBuffer, int maxBytesToRead) override
+        {
+            PYBIND11_OVERRIDE_PURE (int, InputStream, read, destBuffer, maxBytesToRead);
+        }
+
+        char readByte() override
+        {
+            PYBIND11_OVERRIDE (char, InputStream, readByte);
+        }
+
+        short readShort() override
+        {
+            PYBIND11_OVERRIDE (short, InputStream, readShort);
+        }
+
+        short readShortBigEndian() override
+        {
+            PYBIND11_OVERRIDE (short, InputStream, readShortBigEndian);
+        }
+
+        int readInt() override
+        {
+            PYBIND11_OVERRIDE (int, InputStream, readInt);
+        }
+
+        int readIntBigEndian() override
+        {
+            PYBIND11_OVERRIDE (int, InputStream, readIntBigEndian);
+        }
+
+        int64 readInt64() override
+        {
+            PYBIND11_OVERRIDE (int64, InputStream, readInt64);
+        }
+
+        int64 readInt64BigEndian() override
+        {
+            PYBIND11_OVERRIDE (int64, InputStream, readInt64BigEndian);
+        }
+
+        float readFloat() override
+        {
+            PYBIND11_OVERRIDE (float, InputStream, readFloat);
+        }
+
+        float readFloatBigEndian() override
+        {
+            PYBIND11_OVERRIDE (float, InputStream, readFloatBigEndian);
+        }
+
+        double readDouble() override
+        {
+            PYBIND11_OVERRIDE (double, InputStream, readDouble);
+        }
+
+        double readDoubleBigEndian() override
+        {
+            PYBIND11_OVERRIDE (double, InputStream, readDoubleBigEndian);
+        }
+
+        int readCompressedInt() override
+        {
+            PYBIND11_OVERRIDE (int, InputStream, readCompressedInt);
+        }
+
+        String readNextLine() override
+        {
+            PYBIND11_OVERRIDE (String, InputStream, readNextLine);
+        }
+
+        String readString() override
+        {
+            PYBIND11_OVERRIDE (String, InputStream, readString);
+        }
+
+        String readEntireStreamAsString() override
+        {
+            PYBIND11_OVERRIDE (String, InputStream, readEntireStreamAsString);
+        }
+
+        size_t readIntoMemoryBlock (MemoryBlock& destBlock, ssize_t maxNumBytesToRead) override
+        {
+            PYBIND11_OVERRIDE (size_t, InputStream, readIntoMemoryBlock, destBlock, maxNumBytesToRead);
+        }
+
+        int64 getPosition() override
+        {
+            PYBIND11_OVERRIDE_PURE (int64, InputStream, getPosition);
+        }
+
+        bool setPosition (int64 newPosition) override
+        {
+            PYBIND11_OVERRIDE_PURE (bool, InputStream, setPosition, newPosition);
+        }
+
+        void skipNextBytes (int64 newPosition) override
+        {
+            PYBIND11_OVERRIDE (void, InputStream, skipNextBytes, newPosition);
+        }
+    };
+
+    py::class_<InputStream, PyInputStream> classInputStream (m, "InputStream");
 
     classInputStream
+        .def (py::init<>())
         .def ("getTotalLength", &InputStream::getTotalLength)
         .def ("getNumBytesRemaining", &InputStream::getNumBytesRemaining)
         .def ("isExhausted", &InputStream::isExhausted)
@@ -918,57 +1056,188 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     py::class_<BufferedInputStream, InputStream> classBufferedInputStream (m, "BufferedInputStream");
 
     classBufferedInputStream
+        .def (py::init<InputStream&, int>())
         .def ("peekByte", &BufferedInputStream::peekByte)
-        .def ("getTotalLength", &BufferedInputStream::getTotalLength)
-        .def ("getPosition", &BufferedInputStream::getPosition)
-        .def ("setPosition", &BufferedInputStream::setPosition)
-        .def ("read", &BufferedInputStream::read)
-        .def ("readString", &BufferedInputStream::readString)
-        .def ("isExhausted", &BufferedInputStream::isExhausted)
     ;
 
     py::class_<MemoryInputStream, InputStream> classMemoryInputStream (m, "MemoryInputStream");
 
     classMemoryInputStream
+        .def (py::init<const MemoryBlock&, bool>())
         .def ("getData", &MemoryInputStream::getData)
         .def ("getDataSize", &MemoryInputStream::getDataSize)
-        .def ("getPosition", &MemoryInputStream::getPosition)
-        .def ("setPosition", &MemoryInputStream::setPosition)
-        .def ("getTotalLength", &MemoryInputStream::getTotalLength)
-        .def ("isExhausted", &MemoryInputStream::isExhausted)
-        .def ("read", &MemoryInputStream::read)
-        .def ("skipNextBytes", &MemoryInputStream::skipNextBytes)
     ;
 
     py::class_<SubregionStream, InputStream> classSubregionStream (m, "SubregionStream");
 
     classSubregionStream
-        .def ("getTotalLength", &SubregionStream::getTotalLength)
-        .def ("getPosition", &SubregionStream::getPosition)
-        .def ("setPosition", &SubregionStream::setPosition)
-        .def ("read", &SubregionStream::read)
-        .def ("isExhausted", &SubregionStream::isExhausted)
+        .def (py::init<InputStream*, int64, int64, bool>())
     ;
 
     py::class_<FileInputStream, InputStream> classFileInputStream (m, "FileInputStream");
 
     classFileInputStream
-        .def ("getFile", &FileInputStream::getFile)
-        .def ("getStatus", &FileInputStream::getStatus)
+        .def (py::init<const File&>())
+        .def ("getFile", &FileInputStream::getFile, py::return_value_policy::reference_internal)
+        .def ("getStatus", &FileInputStream::getStatus, py::return_value_policy::reference_internal)
         .def ("failedToOpen", &FileInputStream::failedToOpen)
         .def ("openedOk", &FileInputStream::openedOk)
-        .def ("getTotalLength", &FileInputStream::getTotalLength)
-        .def ("read", &FileInputStream::read)
-        .def ("isExhausted", &FileInputStream::isExhausted)
-        .def ("getPosition", &FileInputStream::getPosition)
-        .def ("setPosition", &FileInputStream::setPosition)
+    ;
+
+    // ============================================================================================ juce::InputSource
+
+    struct PyInputSource : InputSource
+    {
+        using InputSource::InputSource;
+    
+        InputStream* createInputStream() override
+        {
+            PYBIND11_OVERRIDE_PURE (InputStream*, InputSource, createInputStream);
+        }
+
+        InputStream* createInputStreamFor (const String& relatedItemPath) override
+        {
+            PYBIND11_OVERRIDE_PURE (InputStream*, InputSource, createInputStreamFor, relatedItemPath);
+        }
+
+        int64 hashCode() const override
+        {
+            PYBIND11_OVERRIDE_PURE (int64, InputSource, hashCode);
+        }
+    };
+    
+    py::class_<InputSource, PyInputSource> classInputSource (m, "InputSource");
+
+    classInputSource
+        .def (py::init<>())
+        .def ("createInputStream", &InputSource::createInputStream)
+        .def ("createInputStreamFor", &InputSource::createInputStreamFor)
+        .def ("hashCode", &InputSource::hashCode)
+    ;
+
+    py::class_<FileInputSource, InputSource> classFileInputSource (m, "FileInputSource");
+
+    classFileInputSource
+        .def (py::init<const File&, bool>())
     ;
 
     // ============================================================================================ juce::OutputStream
 
-    py::class_<OutputStream> classOutputStream (m, "OutputStream");
+    struct PyOutputStream : OutputStream
+    {
+        using OutputStream::OutputStream;
+    
+        void flush() override
+        {
+            PYBIND11_OVERRIDE_PURE (void, OutputStream, flush);
+        }
+
+        bool setPosition (int64 newPosition) override
+        {
+            PYBIND11_OVERRIDE_PURE (bool, OutputStream, setPosition, newPosition);
+        }
+
+        int64 getPosition() override
+        {
+            PYBIND11_OVERRIDE_PURE (int64, OutputStream, getPosition);
+        }
+
+        bool write (const void* dataToWrite, size_t numberOfBytes) override
+        {
+            PYBIND11_OVERRIDE_PURE (bool, OutputStream, write, dataToWrite, numberOfBytes);
+        }
+
+        bool writeByte (char value) override
+        {
+            PYBIND11_OVERRIDE (bool, OutputStream, writeByte, value);
+        }
+
+        bool writeBool (bool value) override
+        {
+            PYBIND11_OVERRIDE (bool, OutputStream, writeBool, value);
+        }
+
+        bool writeShort (short value) override
+        {
+            PYBIND11_OVERRIDE (bool, OutputStream, writeShort, value);
+        }
+
+        bool writeShortBigEndian (short value) override
+        {
+            PYBIND11_OVERRIDE (bool, OutputStream, writeShortBigEndian, value);
+        }
+
+
+        bool writeInt (int value) override
+        {
+            PYBIND11_OVERRIDE (bool, OutputStream, writeInt, value);
+        }
+
+        bool writeIntBigEndian (int value) override
+        {
+            PYBIND11_OVERRIDE (bool, OutputStream, writeIntBigEndian, value);
+        }
+
+        bool writeInt64 (int64 value) override
+        {
+            PYBIND11_OVERRIDE (bool, OutputStream, writeInt64, value);
+        }
+
+        bool writeInt64BigEndian (int64 value) override
+        {
+            PYBIND11_OVERRIDE (bool, OutputStream, writeInt64BigEndian, value);
+        }
+
+        bool writeFloat (float value) override
+        {
+            PYBIND11_OVERRIDE (bool, OutputStream, writeFloat, value);
+        }
+
+        bool writeFloatBigEndian (float value) override
+        {
+            PYBIND11_OVERRIDE (bool, OutputStream, writeFloatBigEndian, value);
+        }
+
+        bool writeDouble (double value) override
+        {
+            PYBIND11_OVERRIDE (bool, OutputStream, writeDouble, value);
+        }
+
+        bool writeDoubleBigEndian (double value) override
+        {
+            PYBIND11_OVERRIDE (bool, OutputStream, writeDoubleBigEndian, value);
+        }
+
+        bool writeRepeatedByte (uint8 byte, size_t numTimesToRepeat) override
+        {
+            PYBIND11_OVERRIDE (bool, OutputStream, writeRepeatedByte, byte, numTimesToRepeat);
+        }
+
+        bool writeCompressedInt (int value) override
+        {
+            PYBIND11_OVERRIDE (bool, OutputStream, writeCompressedInt, value);
+        }
+
+        bool writeString (const String& text) override
+        {
+            PYBIND11_OVERRIDE (bool, OutputStream, writeString, text);
+        }
+
+        bool writeText (const String& text, bool asUTF16, bool writeUTF16ByteOrderMark, const char* lineEndings) override
+        {
+            PYBIND11_OVERRIDE (bool, OutputStream, writeText, text, asUTF16, writeUTF16ByteOrderMark, lineEndings);
+        }
+
+        int64 writeFromInputStream (InputStream& source, int64 maxNumBytesToWrite) override
+        {
+            PYBIND11_OVERRIDE (int64, OutputStream, writeFromInputStream, source, maxNumBytesToWrite);
+        }
+    };
+
+    py::class_<OutputStream, PyOutputStream> classOutputStream (m, "OutputStream");
 
     classOutputStream
+        .def (py::init<>())
         .def ("flush", &OutputStream::flush)
         .def ("setPosition", &OutputStream::setPosition)
         .def ("getPosition", &OutputStream::getPosition)
@@ -991,13 +1260,23 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("writeText", &OutputStream::writeText)
         .def ("writeFromInputStream", &OutputStream::writeFromInputStream)
         .def ("setNewLineString", &OutputStream::setNewLineString)
-        .def ("getNewLineString", &OutputStream::getNewLineString)
+        .def ("getNewLineString", &OutputStream::getNewLineString, py::return_value_policy::reference_internal)
     ;
 
     py::class_<MemoryOutputStream, OutputStream> classMemoryOutputStream (m, "MemoryOutputStream");
 
     classMemoryOutputStream
-        .def ("getData", &MemoryOutputStream::getData)
+        .def (py::init<size_t>(), "initialSize"_a = 256)
+        .def (py::init<MemoryBlock&, bool>())
+        /*.def (py::init ([](py::buffer data)
+        {
+            auto info = data.request();
+            return MemoryOutputStream (info.ptr, static_cast<size_t> (info.size));
+        }))*/
+        .def ("getData", [](const MemoryOutputStream* self)
+        {
+            return py::memoryview::from_memory (self->getData(), static_cast<ssize_t> (self->getDataSize()));
+        }, py::return_value_policy::reference_internal)
         .def ("getDataSize", &MemoryOutputStream::getDataSize)
         .def ("reset", &MemoryOutputStream::reset)
         .def ("preallocate", &MemoryOutputStream::preallocate)
@@ -1006,122 +1285,38 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("toString", &MemoryOutputStream::toString)
         .def ("getMemoryBlock", &MemoryOutputStream::getMemoryBlock)
         .def ("flush", &MemoryOutputStream::flush)
-        .def ("write", &MemoryOutputStream::write)
-        .def ("getPosition", &MemoryOutputStream::getPosition)
-        .def ("setPosition", &MemoryOutputStream::setPosition)
-        .def ("writeFromInputStream", &MemoryOutputStream::writeFromInputStream)
-        .def ("writeRepeatedByte", &MemoryOutputStream::writeRepeatedByte)
         .def ("__str__", &MemoryOutputStream::toString)
     ;
 
     py::class_<FileOutputStream, OutputStream> classFileOutputStream (m, "FileOutputStream");
 
     classFileOutputStream
-        .def ("getFile", &FileOutputStream::getFile)
-        .def ("getStatus", &FileOutputStream::getStatus)
+        .def (py::init<const File&, size_t>(), "fileToWriteTo"_a, "bufferSizeToUse"_a = 16384)
+        .def ("getFile", &FileOutputStream::getFile, py::return_value_policy::reference_internal)
+        .def ("getStatus", &FileOutputStream::getStatus, py::return_value_policy::reference_internal)
         .def ("failedToOpen", &FileOutputStream::failedToOpen)
         .def ("openedOk", &FileOutputStream::openedOk)
         .def ("truncate", &FileOutputStream::truncate)
-        .def ("flush", &FileOutputStream::flush)
-        .def ("getPosition", &FileOutputStream::getPosition)
-        .def ("setPosition", &FileOutputStream::setPosition)
-        .def ("write", &FileOutputStream::write)
-        .def ("writeRepeatedByte", &FileOutputStream::writeRepeatedByte)
     ;
 
-    // ============================================================================================ juce::CriticalSection
+    // ============================================================================================ juce::MemoryMappedFile
 
-    py::class_<CriticalSection> classCriticalSection (m, "CriticalSection");
+    py::class_<MemoryMappedFile> classMemoryMappedFile (m, "MemoryMappedFile");
 
-    classCriticalSection
-        .def (py::init<>())
-        .def ("enter", &CriticalSection::enter)
-        .def ("tryEnter", &CriticalSection::tryEnter)
-        .def ("exit", &CriticalSection::exit)
-    ;
+    py::enum_<MemoryMappedFile::AccessMode> (classMemoryMappedFile, "AccessMode")
+        .value ("readOnly", MemoryMappedFile::AccessMode::readOnly)
+        .value ("readWrite", MemoryMappedFile::AccessMode::readWrite)
+        .export_values();
 
-    // ============================================================================================ juce::SpinLock
-
-    py::class_<SpinLock> classSpinLock (m, "SpinLock");
-
-    classSpinLock
-        .def (py::init<>())
-        .def ("enter", &SpinLock::enter)
-        .def ("tryEnter", &SpinLock::tryEnter)
-        .def ("exit", &SpinLock::exit)
-    ;
-
-    // ============================================================================================ juce::WaitableEvent
-
-    py::class_<WaitableEvent> classWaitableEvent (m, "WaitableEvent");
-
-    classWaitableEvent
-        .def (py::init<>())
-        .def (py::init<bool>())
-        .def ("wait", &WaitableEvent::wait)
-        .def ("signal", &WaitableEvent::signal)
-        .def ("reset", &WaitableEvent::reset)
-    ;
-
-    // ============================================================================================ juce::ReadWriteLock
-
-    py::class_<ReadWriteLock> classReadWriteLock (m, "ReadWriteLock");
-
-    classReadWriteLock
-        .def (py::init<>())
-        .def ("enterRead", &ReadWriteLock::enterRead)
-        .def ("tryEnterRead", &ReadWriteLock::tryEnterRead)
-        .def ("exitRead", &ReadWriteLock::exitRead)
-        .def ("enterWrite", &ReadWriteLock::enterWrite)
-        .def ("tryEnterWrite", &ReadWriteLock::tryEnterWrite)
-        .def ("exitWrite", &ReadWriteLock::exitWrite)
-    ;
-
-    // ============================================================================================ juce::InterProcessLock
-
-    py::class_<InterProcessLock> classInterProcessLock (m, "InterProcessLock");
-
-    classInterProcessLock
-        .def (py::init<const String&>())
-        .def ("enter", &InterProcessLock::enter)
-        .def ("exit", &InterProcessLock::exit)
-    ;
-
-    // ============================================================================================ juce::HighResolutionTimer
-
-    struct PyHighResolutionTimer : public HighResolutionTimer
-    {
-        void hiResTimerCallback() override
+    classMemoryMappedFile
+        .def (py::init<const File&, MemoryMappedFile::AccessMode, bool>(), "file"_a, "mode"_a, "exclusive"_a = false)
+        .def (py::init<const File&, const Range<int64>&, MemoryMappedFile::AccessMode, bool>(), "file"_a, "fileRange"_a, "mode"_a, "exclusive"_a = false)
+        .def ("getData", [](const MemoryMappedFile* self)
         {
-            PYBIND11_OVERRIDE_PURE(void, HighResolutionTimer, hiResTimerCallback);
-        }
-    };
-
-    py::class_<HighResolutionTimer, PyHighResolutionTimer> classHighResolutionTimer (m, "HighResolutionTimer");
-
-    classHighResolutionTimer
-        .def (py::init<>())
-        .def ("hiResTimerCallback", &HighResolutionTimer::hiResTimerCallback)
-        .def ("startTimer", &HighResolutionTimer::startTimer)
-        .def ("stopTimer", &HighResolutionTimer::stopTimer)
-        .def ("isTimerRunning", &HighResolutionTimer::isTimerRunning)
-        .def ("getTimerInterval", &HighResolutionTimer::getTimerInterval)
-    ;
-
-    // ============================================================================================ juce::ChildProcess
-
-    py::class_<ChildProcess> classChildProcess (m, "ChildProcess");
-
-    classChildProcess
-        .def (py::init<>())
-        .def ("start", py::overload_cast<const String &, int> (&ChildProcess::start))
-        .def ("start", py::overload_cast<const StringArray &, int> (&ChildProcess::start))
-        .def ("isRunning", &ChildProcess::isRunning)
-        .def ("readProcessOutput", &ChildProcess::readProcessOutput)
-        .def ("readAllProcessOutput", &ChildProcess::readAllProcessOutput)
-        .def ("waitForProcessToFinish", &ChildProcess::waitForProcessToFinish)
-        .def ("getExitCode", &ChildProcess::getExitCode)
-        .def ("kill", &ChildProcess::kill)
+            return py::memoryview::from_memory (self->getData(), static_cast<ssize_t> (self->getSize()));
+        }, py::return_value_policy::reference_internal)
+        .def ("getSize", &MemoryMappedFile::getSize)
+        .def ("getRange", &MemoryMappedFile::getRange)
     ;
 
     // ============================================================================================ juce::Random
@@ -1310,6 +1505,93 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
 #endif
     ;
 
+    // ============================================================================================ juce::FileFilter
+
+    py::class_<FileSearchPath> classFileSearchPath (m, "FileSearchPath");
+
+    classFileSearchPath
+        .def (py::init<>())
+        .def (py::init<const String&>())
+        .def ("getNumPaths", &FileSearchPath::getNumPaths)
+        .def ("__getitem__", [](const FileSearchPath& self, int index) { return self[index]; })
+        .def ("getRawString", &FileSearchPath::getRawString)
+        .def ("toString", &FileSearchPath::toString)
+        .def ("toStringWithSeparator", &FileSearchPath::toStringWithSeparator)
+        .def ("add", &FileSearchPath::add)
+        .def ("addIfNotAlreadyThere", &FileSearchPath::addIfNotAlreadyThere)
+        .def ("remove", &FileSearchPath::remove)
+        .def ("addPath", &FileSearchPath::addPath)
+        .def ("removeRedundantPaths", &FileSearchPath::removeRedundantPaths)
+        .def ("removeNonExistentPaths", &FileSearchPath::removeNonExistentPaths)
+        .def ("findChildFiles", py::overload_cast<int, bool, const String&> (&FileSearchPath::findChildFiles, py::const_),
+            "whatToLookFor"_a, "searchRecursively"_a, "wildCardPattern"_a = "*")
+        //.def ("findChildFiles", [](const FileSearchPath& self, int whatToLookFor, bool searchRecursively, const String& wildCardPattern)
+        //{
+        //}, "whatToLookFor"_a, "searchRecursively"_a, "wildCardPattern"_a = "*")
+        .def ("isFileInPath", &FileSearchPath::isFileInPath)
+    ;
+
+    // ============================================================================================ juce::FileFilter
+
+    struct PyFileFilter : FileFilter
+    {
+        using FileFilter::FileFilter;
+    
+        bool isFileSuitable (const File& file) const override
+        {
+            PYBIND11_OVERRIDE_PURE (bool, FileFilter, isFileSuitable, file);
+        }
+
+        bool isDirectorySuitable (const File& file) const override
+        {
+            PYBIND11_OVERRIDE_PURE (bool, FileFilter, isDirectorySuitable, file);
+        }
+    };
+
+    py::class_<FileFilter, PyFileFilter> classFileFilter (m, "FileFilter");
+
+    classFileFilter
+        .def (py::init<const String&>())
+        .def ("getDescription", &FileFilter::getDescription, py::return_value_policy::reference_internal)
+        .def ("isFileSuitable", &FileFilter::isFileSuitable)
+        .def ("isDirectorySuitable", &FileFilter::isDirectorySuitable)
+    ;
+
+    py::class_<WildcardFileFilter, FileFilter> classWildcardFileFilter (m, "WildcardFileFilter");
+
+    classWildcardFileFilter
+        .def (py::init<const String&, const String&, const String&>())
+    ;
+
+    // ============================================================================================ juce::URL
+
+    py::class_<DirectoryEntry> classDirectoryEntry (m, "DirectoryEntry");
+
+    classDirectoryEntry
+        .def (py::init<>())
+        .def ("getFile", &DirectoryEntry::getFile)
+        .def ("getModificationTime", &DirectoryEntry::getModificationTime)
+        .def ("getCreationTime", &DirectoryEntry::getCreationTime)
+        .def ("getFileSize", &DirectoryEntry::getFileSize)
+        .def ("isDirectory", &DirectoryEntry::isDirectory)
+        .def ("isHidden", &DirectoryEntry::isHidden)
+        .def ("isReadOnly", &DirectoryEntry::isReadOnly)
+        .def ("getEstimatedProgress", &DirectoryEntry::getEstimatedProgress)
+    ;
+
+    py::class_<RangedDirectoryIterator> classRangedDirectoryIterator (m, "RangedDirectoryIterator");
+
+    classRangedDirectoryIterator
+        .def (py::init<const File&, bool, const String&, int, File::FollowSymlinks>(),
+            "directory"_a, "isRecursive"_a, "wildCard"_a = "*", "whatToLookFor"_a = File::findFiles, "followSymlinks"_a = File::FollowSymlinks::yes)
+        .def (py::self == py::self)
+        .def (py::self != py::self)
+        .def ("__iter__", [](const RangedDirectoryIterator& self)
+        {
+            return py::make_iterator (begin (self), end (self));
+        }, py::keep_alive<0, 1>())
+    ;
+
     // ============================================================================================ juce::URL
 
     py::class_<URL> classURL (m, "URL");
@@ -1432,6 +1714,274 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def_readwrite ("sharedContainer", &URL::DownloadTaskOptions::sharedContainer)
         .def_readwrite ("listener", &URL::DownloadTaskOptions::listener)
         .def_readwrite ("usePost", &URL::DownloadTaskOptions::usePost)
+    ;
+
+    // ============================================================================================ juce::CriticalSection
+
+    py::class_<CriticalSection> classCriticalSection (m, "CriticalSection");
+
+    classCriticalSection
+        .def (py::init<>())
+        .def ("enter", &CriticalSection::enter)
+        .def ("tryEnter", &CriticalSection::tryEnter)
+        .def ("exit", &CriticalSection::exit)
+    ;
+
+    // ============================================================================================ juce::SpinLock
+
+    py::class_<SpinLock> classSpinLock (m, "SpinLock");
+
+    classSpinLock
+        .def (py::init<>())
+        .def ("enter", &SpinLock::enter)
+        .def ("tryEnter", &SpinLock::tryEnter)
+        .def ("exit", &SpinLock::exit)
+    ;
+
+    // ============================================================================================ juce::WaitableEvent
+
+    py::class_<WaitableEvent> classWaitableEvent (m, "WaitableEvent");
+
+    classWaitableEvent
+        .def (py::init<bool>(), "manualReset"_a = false)
+        .def ("wait", &WaitableEvent::wait, "timeOutMilliseconds"_a = -1.0)
+        .def ("signal", &WaitableEvent::signal)
+        .def ("reset", &WaitableEvent::reset)
+    ;
+
+    // ============================================================================================ juce::ReadWriteLock
+
+    py::class_<ReadWriteLock> classReadWriteLock (m, "ReadWriteLock");
+
+    classReadWriteLock
+        .def (py::init<>())
+        .def ("enterRead", &ReadWriteLock::enterRead)
+        .def ("tryEnterRead", &ReadWriteLock::tryEnterRead)
+        .def ("exitRead", &ReadWriteLock::exitRead)
+        .def ("enterWrite", &ReadWriteLock::enterWrite)
+        .def ("tryEnterWrite", &ReadWriteLock::tryEnterWrite)
+        .def ("exitWrite", &ReadWriteLock::exitWrite)
+    ;
+
+    // ============================================================================================ juce::InterProcessLock
+
+    py::class_<InterProcessLock> classInterProcessLock (m, "InterProcessLock");
+
+    classInterProcessLock
+        .def (py::init<const String&>())
+        .def ("enter", &InterProcessLock::enter, "timeOutMillisecs"_a = -1)
+        .def ("exit", &InterProcessLock::exit)
+    ;
+
+    // ============================================================================================ juce::HighResolutionTimer
+
+    struct PyHighResolutionTimer : public HighResolutionTimer
+    {
+        void hiResTimerCallback() override
+        {
+            PYBIND11_OVERRIDE_PURE(void, HighResolutionTimer, hiResTimerCallback);
+        }
+    };
+
+    py::class_<HighResolutionTimer, PyHighResolutionTimer> classHighResolutionTimer (m, "HighResolutionTimer");
+
+    classHighResolutionTimer
+        .def (py::init<>())
+        .def ("hiResTimerCallback", &HighResolutionTimer::hiResTimerCallback)
+        .def ("startTimer", &HighResolutionTimer::startTimer)
+        .def ("stopTimer", &HighResolutionTimer::stopTimer)
+        .def ("isTimerRunning", &HighResolutionTimer::isTimerRunning)
+        .def ("getTimerInterval", &HighResolutionTimer::getTimerInterval)
+    ;
+
+    // ============================================================================================ juce::ChildProcess
+
+    py::class_<ChildProcess> classChildProcess (m, "ChildProcess");
+
+    classChildProcess
+        .def (py::init<>())
+        .def ("start", py::overload_cast<const String &, int> (&ChildProcess::start))
+        .def ("start", py::overload_cast<const StringArray &, int> (&ChildProcess::start))
+        .def ("isRunning", &ChildProcess::isRunning)
+        .def ("readProcessOutput", &ChildProcess::readProcessOutput)
+        .def ("readAllProcessOutput", &ChildProcess::readAllProcessOutput)
+        .def ("waitForProcessToFinish", &ChildProcess::waitForProcessToFinish)
+        .def ("getExitCode", &ChildProcess::getExitCode)
+        .def ("kill", &ChildProcess::kill)
+    ;
+
+    // ============================================================================================ juce::Thread
+
+    struct PyThread : Thread
+    {
+        using Thread::Thread;
+    
+        void run() override
+        {
+            PYBIND11_OVERRIDE_PURE (void, Thread, run);
+        }
+    };
+
+    py::class_<Thread, PyThread> classThread (m, "Thread");
+
+    py::enum_<Thread::Priority> (classThread, "Priority")
+        .value ("highest", Thread::Priority::highest)
+        .value ("high", Thread::Priority::high)
+        .value ("normal", Thread::Priority::normal)
+        .value ("low", Thread::Priority::low)
+        .value ("background", Thread::Priority::background);
+
+    py::class_<Thread::RealtimeOptions> classThreadRealtimeOptions (classThread, "RealtimeOptions");
+
+    classThreadRealtimeOptions
+        .def (py::init<>())
+        .def ("withPriority", &Thread::RealtimeOptions::withPriority)
+        .def ("withProcessingTimeMs", &Thread::RealtimeOptions::withProcessingTimeMs)
+        .def ("withMaximumProcessingTimeMs", &Thread::RealtimeOptions::withMaximumProcessingTimeMs)
+        .def ("withApproximateAudioProcessingTime", &Thread::RealtimeOptions::withApproximateAudioProcessingTime)
+        .def ("withPeriodMs", &Thread::RealtimeOptions::withPeriodMs)
+        .def ("withPeriodHz", &Thread::RealtimeOptions::withPeriodHz)
+        .def ("getPriority", &Thread::RealtimeOptions::getPriority)
+        .def ("getProcessingTimeMs", &Thread::RealtimeOptions::getProcessingTimeMs)
+        .def ("getMaximumProcessingTimeMs", &Thread::RealtimeOptions::getMaximumProcessingTimeMs)
+        .def ("getPeriodMs", &Thread::RealtimeOptions::getPeriodMs)
+    ;
+
+    struct PyThreadListener : Thread::Listener
+    {
+        using Thread::Listener::Listener;
+    
+        void exitSignalSent() override
+        {
+            PYBIND11_OVERRIDE_PURE (void, Thread::Listener, exitSignalSent);
+        }
+    };
+
+    py::class_<Thread::Listener, PyThreadListener> classThreadListener (classThread, "Listener");
+
+    classThreadListener
+        .def (py::init<>())
+        .def ("exitSignalSent", &Thread::Listener::exitSignalSent)
+    ;
+
+    classThread
+        .def (py::init<const String&, size_t>(), "threadName"_a, "threadStackSize"_a = Thread::osDefaultStackSize)
+        .def ("run", &Thread::run)
+        .def ("startThread", py::overload_cast<> (&Thread::startThread))
+        .def ("startThread", py::overload_cast<Thread::Priority> (&Thread::startThread))
+        .def ("startRealtimeThread", &Thread::startRealtimeThread)
+        .def ("stopThread", &Thread::stopThread)
+        .def_static ("launch", static_cast<bool (*)(std::function<void()>)> (&Thread::launch))
+        .def_static ("launch", static_cast<bool (*)(Thread::Priority priority, std::function<void()>)> (&Thread::launch))
+        .def ("isThreadRunning", &Thread::isThreadRunning)
+        .def ("signalThreadShouldExit", &Thread::signalThreadShouldExit)
+        .def ("threadShouldExit", &Thread::threadShouldExit)
+        .def_static ("currentThreadShouldExit", &Thread::currentThreadShouldExit)
+        .def ("waitForThreadToExit", &Thread::waitForThreadToExit)
+        .def ("addListener", &Thread::addListener)
+        .def ("removeListener", &Thread::removeListener)
+        .def ("isRealtime", &Thread::isRealtime)
+        .def ("setAffinityMask", &Thread::setAffinityMask)
+        .def_static ("setCurrentThreadAffinityMask", &Thread::setCurrentThreadAffinityMask)
+        .def_static ("sleep", &Thread::sleep)
+        .def_static ("yield", &Thread::yield)
+        .def ("wait", &Thread::wait)
+        .def ("notify", &Thread::notify)
+        .def_static ("getCurrentThreadId", &Thread::getCurrentThreadId)
+        .def_static ("getCurrentThread", &Thread::getCurrentThread, py::return_value_policy::reference)
+        .def ("getThreadId", &Thread::getThreadId)
+        .def ("getThreadName", &Thread::getThreadName)
+        .def_static ("setCurrentThreadName", &Thread::setCurrentThreadName)
+    //.def ("getPriority", &Thread::getPriority)
+    //.def ("setPriority", &Thread::setPriority)
+    ;
+
+    // ============================================================================================ juce::ThreadPoolJob
+
+    struct PyThreadPoolJob : ThreadPoolJob
+    {
+        using ThreadPoolJob::ThreadPoolJob;
+    
+        JobStatus runJob() override
+        {
+            PYBIND11_OVERRIDE_PURE (JobStatus, ThreadPoolJob, runJob);
+        }
+    };
+
+    py::class_<ThreadPoolJob, PyThreadPoolJob> classThreadPoolJob (m, "ThreadPoolJob");
+
+    py::enum_<ThreadPoolJob::JobStatus> (classThreadPoolJob, "JobStatus")
+        .value ("jobHasFinished", ThreadPoolJob::JobStatus::jobHasFinished)
+        .value ("jobNeedsRunningAgain", ThreadPoolJob::JobStatus::jobNeedsRunningAgain)
+        .export_values();
+
+    classThreadPoolJob
+        .def (py::init<const String&>())
+        .def ("getJobName", &ThreadPoolJob::getJobName)
+        .def ("setJobName", &ThreadPoolJob::setJobName)
+        .def ("runJob", &ThreadPoolJob::runJob)
+        .def ("isRunning", &ThreadPoolJob::isRunning)
+        .def ("shouldExit", &ThreadPoolJob::shouldExit)
+        .def ("signalJobShouldExit", &ThreadPoolJob::signalJobShouldExit)
+        .def ("addListener", &ThreadPoolJob::addListener)
+        .def ("removeListener", &ThreadPoolJob::removeListener)
+        .def_static ("getCurrentThreadPoolJob", &ThreadPoolJob::getCurrentThreadPoolJob, py::return_value_policy::reference)
+    ;
+
+    py::class_<ThreadPoolOptions> classThreadPoolOptions (m, "ThreadPoolOptions");
+
+    classThreadPoolOptions
+        .def (py::init<>())
+        .def ("withThreadName", &ThreadPoolOptions::withThreadName)
+        .def ("withNumberOfThreads", &ThreadPoolOptions::withNumberOfThreads)
+        .def ("withThreadStackSizeBytes", &ThreadPoolOptions::withThreadStackSizeBytes)
+        .def ("withDesiredThreadPriority", &ThreadPoolOptions::withDesiredThreadPriority)
+        .def_readwrite ("threadName", &ThreadPoolOptions::threadName)
+        .def_readwrite ("numberOfThreads", &ThreadPoolOptions::numberOfThreads)
+        .def_readwrite ("threadStackSizeBytes", &ThreadPoolOptions::threadStackSizeBytes)
+        .def_readwrite ("desiredThreadPriority", &ThreadPoolOptions::desiredThreadPriority)
+    ;
+
+    py::class_<ThreadPool> classThreadPool (m, "ThreadPool");
+
+    struct PyThreadPoolJobSelector : ThreadPool::JobSelector
+    {
+        using ThreadPool::JobSelector::JobSelector;
+    
+        bool isJobSuitable (ThreadPoolJob* job) override
+        {
+            PYBIND11_OVERRIDE_PURE (bool, ThreadPool::JobSelector, isJobSuitable, job);
+        }
+    };
+
+    py::class_<ThreadPool::JobSelector, PyThreadPoolJobSelector> classThreadPoolJobSelector (classThreadPool, "JobSelector");
+    
+    classThreadPoolJobSelector
+        .def (py::init<>())
+        .def ("isJobSuitable", &ThreadPool::JobSelector::isJobSuitable)
+    ;
+
+    classThreadPool
+        .def (py::init<>())
+        .def (py::init<const ThreadPoolOptions&>(), "options"_a)
+        .def (py::init<int, size_t, Thread::Priority>(),
+            "numberOfThreads"_a, "threadStackSizeBytes"_a = Thread::osDefaultStackSize, "desiredThreadPriority"_a = Thread::Priority::normal)
+        .def ("addJob", py::overload_cast<ThreadPoolJob*, bool> (&ThreadPool::addJob))
+        .def ("addJob", py::overload_cast<std::function<ThreadPoolJob::JobStatus()>> (&ThreadPool::addJob))
+        .def ("addJob", py::overload_cast<std::function<void()>> (&ThreadPool::addJob))
+        .def ("removeJob", &ThreadPool::removeJob)
+        .def ("removeAllJobs", [](ThreadPool& self, bool interruptRunningJobs, int timeOutMilliseconds, ThreadPool::JobSelector* selectedJobsToRemove)
+        {
+            self.removeAllJobs (interruptRunningJobs, timeOutMilliseconds, selectedJobsToRemove); 
+        }, "interruptRunningJobs"_a, "timeOutMilliseconds"_a, "selectedJobsToRemove"_a = nullptr)
+        .def ("getNumJobs", &ThreadPool::getNumJobs)
+        .def ("getNumThreads", &ThreadPool::getNumThreads)
+        .def ("getJob", &ThreadPool::getJob, py::return_value_policy::reference)
+        .def ("contains", &ThreadPool::contains)
+        .def ("isJobRunning", &ThreadPool::isJobRunning)
+        .def ("waitForJobToFinish", &ThreadPool::waitForJobToFinish)
+        .def ("moveJobToFront", &ThreadPool::moveJobToFront)
+        .def ("getNamesOfAllJobs", &ThreadPool::getNamesOfAllJobs)
     ;
 
     // ============================================================================================ juce::SystemStats

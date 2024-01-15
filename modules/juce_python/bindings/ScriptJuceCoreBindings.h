@@ -10,10 +10,14 @@
 
 #include <juce_core/juce_core.h>
 
+#define JUCE_PYTHON_INCLUDE_PYBIND11_STL
 #include "../utilities/PyBind11Includes.h"
 
 #include <functional>
+#include <memory>
 #include <typeinfo>
+#include <type_traits>
+#include <utility>
 
 //=================================================================================================
 
@@ -154,18 +158,24 @@ public:
         return true;
     }
 
-    handle cast (const juce::Array<T>& src, return_value_policy policy, handle parent)
+    template <class U>
+    static handle cast(U&& src, return_value_policy policy, handle parent)
     {
-        list l;
+        if (! std::is_lvalue_reference_v<U>)
+            policy = return_value_policy_override<T>::policy(policy);
 
-        for (const auto& arrayItem : src)
+        list l (src.size());
+        ssize_t index = 0;
+
+        for (auto&& value : src)
         {
-            auto item = reinterpret_steal<object> (make_caster<T>::cast (arrayItem, policy, parent));
+            auto value_object = reinterpret_steal<object>(
+                value_conv::cast (forward_like<U> (value), policy, parent));
 
-            if (! item)
+            if (! value_object)
                 return handle();
 
-            l.append (std::move (item));
+            PyList_SET_ITEM(l.ptr(), index++, value_object.release().ptr()); // steals a reference
         }
 
         return l.release();
