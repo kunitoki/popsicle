@@ -1,9 +1,19 @@
 /**
- * juce_python - Python bindings for the JUCE framework
+ * juce_python - Python bindings for the JUCE framework.
  *
- * Copyright (c) 2024 - kunitoki <kunitoki@gmail.com>
+ * This file is part of the popsicle project.
  *
- * Licensed under the MIT License. Visit https://opensource.org/licenses/MIT for more information.
+ * Copyright (c) 2022 - kunitoki <kunitoki@gmail.com>
+ *
+ * popsicle is an open source library subject to commercial or open-source licensing.
+ *
+ * By using popsicle, you agree to the terms of the popsicle License Agreement, which can
+ * be found at https://raw.githubusercontent.com/kunitoki/popsicle/master/LICENSE
+ *
+ * Or: You may also use this code under the terms of the GPL v3 (see www.gnu.org/licenses).
+ *
+ * POPSICLE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER EXPRESSED
+ * OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE DISCLAIMED.
  */
 
 #if __has_include(<juce_gui_basics/juce_gui_basics.h>)
@@ -1187,12 +1197,12 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     struct PyButton : Button
     {
         using Button::Button;
-    
+
         void triggerClick() override
         {
             PYBIND11_OVERRIDE(void, Button, triggerClick);
         }
-        
+
         void clicked() override
         {
             PYBIND11_OVERRIDE(void, Button, clicked);
@@ -1214,7 +1224,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
                     return;
                 }
             }
-            
+
             py::pybind11_fail("Tried to call pure virtual function \"Button::paintButton\"");
         }
 
@@ -1223,11 +1233,11 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
             PYBIND11_OVERRIDE(void, Button, buttonStateChanged);
         }
     };
-    
+
     struct PyButtonListener : Button::Listener
     {
         using Button::Listener::Listener;
-        
+
         void buttonClicked (Button* button) override
         {
             PYBIND11_OVERRIDE_PURE(void, Button::Listener, buttonClicked, button);
@@ -1240,7 +1250,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     };
 
     py::class_<Button, Component, PyButton> classButton (m, "Button");
-    
+
     py::enum_<Button::ConnectedEdgeFlags> (classButton, "ConnectedEdgeFlags")
         .value ("ConnectedOnLeft", Button::ConnectedEdgeFlags::ConnectedOnLeft)
         .value ("ConnectedOnRight", Button::ConnectedEdgeFlags::ConnectedOnRight)
@@ -1302,7 +1312,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     // ============================================================================================ juce::ArrowButton
 
     py::class_<ArrowButton, Button> classArrowButton (m, "ArrowButton");
-    
+
     classArrowButton
         .def (py::init<const String&, float, Colour>())
     ;
@@ -1312,7 +1322,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     struct PyDrawableButton : DrawableButton
     {
         using DrawableButton::DrawableButton;
-        
+
         Rectangle<float> getImageBounds() const override
         {
             PYBIND11_OVERRIDE(Rectangle<float>, DrawableButton, getImageBounds);
@@ -1320,7 +1330,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     };
 
     py::class_<DrawableButton, Button, PyDrawableButton> classDrawableButton (m, "DrawableButton");
-    
+
     py::enum_<DrawableButton::ButtonStyle> (classDrawableButton, "ButtonStyle")
         .value ("ImageFitted", DrawableButton::ButtonStyle::ImageFitted)
         .value ("ImageRaw", DrawableButton::ButtonStyle::ImageRaw)
@@ -1358,7 +1368,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     // ============================================================================================ juce::HyperlinkButton
 
     py::class_<HyperlinkButton, Button> classHyperlinkButton (m, "HyperlinkButton");
-    
+
     classHyperlinkButton
         .def (py::init<>())
         .def (py::init<const String&, const URL&>())
@@ -1376,7 +1386,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     // ============================================================================================ juce::ImageButton
 
     py::class_<ImageButton, Button> classImageButton (m, "ImageButton");
-    
+
     classImageButton
         .def (py::init<const String&>(), "name"_a = String())
         .def ("setImages", &ImageButton::setImages)
@@ -1388,7 +1398,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     // ============================================================================================ juce::ShapeButton
 
     py::class_<ShapeButton, Button> classShapeButton (m, "ShapeButton");
-    
+
     classShapeButton
         .def (py::init<const String&, Colour, Colour, Colour>())
         .def ("setShape", &ShapeButton::setShape)
@@ -1402,7 +1412,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     // ============================================================================================ juce::TextButton
 
     py::class_<TextButton, Button> classTextButton (m, "TextButton");
-    
+
     classTextButton
         .def (py::init<>())
         .def (py::init<const String&>())
@@ -1437,7 +1447,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     struct PyToolbarItemFactory : ToolbarItemFactory
     {
         using ToolbarItemFactory::ToolbarItemFactory;
-        
+
         void getAllToolbarItemIds (Array<int>& ids) override
         {
             //PYBIND11_OVERRIDE(void, ToolbarItemFactory, getAllToolbarItemIds, ids);
@@ -1448,14 +1458,14 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
                 if (py::function override_ = py::get_override(static_cast<ToolbarItemFactory*>(this), "getAllToolbarItemIds"); override_)
                 {
                     auto result = override_ ();
-                    
+
                     ids.addArray (result.cast<Array<int>>());
                 }
             }
-        
+
             py::pybind11_fail("Tried to call pure virtual function \"ToolbarItemFactory::getAllToolbarItemIds\"");
         }
-        
+
         void getDefaultItemSet (Array <int>& ids) override
         {
             //PYBIND11_OVERRIDE_PURE(void, ToolbarItemFactory, getDefaultItemSet, ids);
@@ -1466,14 +1476,14 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
                 if (py::function override_ = py::get_override(static_cast<ToolbarItemFactory*>(this), "getDefaultItemSet"); override_)
                 {
                     auto result = override_ ();
-                    
+
                     ids.addArray (result.cast<Array<int>>());
                 }
             }
-        
+
             py::pybind11_fail("Tried to call pure virtual function \"ToolbarItemFactory::getDefaultItemSet\"");
         }
-        
+
         ToolbarItemComponent* createItem (int itemId) override
         {
             PYBIND11_OVERRIDE_PURE(ToolbarItemComponent*, ToolbarItemFactory, createItem, itemId);
@@ -1498,7 +1508,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     // ============================================================================================ juce::Toolbar
 
     py::class_<Toolbar, Component> classToolbar (m, "Toolbar");
-    
+
     py::enum_<Toolbar::ToolbarItemStyle> (classToolbar, "ToolbarItemStyle")
         .value ("iconsOnly", Toolbar::ToolbarItemStyle::iconsOnly)
         .value ("iconsWithText", Toolbar::ToolbarItemStyle::iconsWithText)
@@ -1547,12 +1557,12 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     struct PyToolbarItemComponent : ToolbarItemComponent
     {
         using ToolbarItemComponent::ToolbarItemComponent;
-        
+
         void setStyle (const Toolbar::ToolbarItemStyle& newStyle) override
         {
             PYBIND11_OVERRIDE(void, ToolbarItemComponent, setStyle, newStyle);
         }
-        
+
         bool getToolbarItemSizes (int toolbarThickness, bool isToolbarVertical, int& preferredSize, int& minSize, int& maxSize) override
         {
             //PYBIND11_OVERRIDE_PURE(bool, ToolbarItemComponent, getToolbarItemSizes, toolbarThickness, ...);
@@ -1567,7 +1577,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
                     return py::detail::cast_safe<bool> (std::move(result));
                 }
             }
-        
+
             py::pybind11_fail("Tried to call pure virtual function \"ToolbarItemComponent::getToolbarItemSizes\"");
         }
 
@@ -1585,7 +1595,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
                     return;
                 }
             }
-        
+
             py::pybind11_fail("Tried to call pure virtual function \"ToolbarItemComponent::paintButtonArea\"");
         }
 
@@ -1671,7 +1681,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("menuCommandInvoked", &MenuBarModel::Listener::menuCommandInvoked)
         .def ("menuBarActivated", &MenuBarModel::Listener::menuBarActivated)
     ;
-    
+
     classMenuBarModel
         .def (py::init<>())
         .def ("menuItemsChanged", &MenuBarModel::menuItemsChanged)

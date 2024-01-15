@@ -1,9 +1,19 @@
 /**
- * juce_python - Python bindings for the JUCE framework
+ * juce_python - Python bindings for the JUCE framework.
  *
- * Copyright (c) 2024 - kunitoki <kunitoki@gmail.com>
+ * This file is part of the popsicle project.
  *
- * Licensed under the MIT License. Visit https://opensource.org/licenses/MIT for more information.
+ * Copyright (c) 2022 - kunitoki <kunitoki@gmail.com>
+ *
+ * popsicle is an open source library subject to commercial or open-source licensing.
+ *
+ * By using popsicle, you agree to the terms of the popsicle License Agreement, which can
+ * be found at https://raw.githubusercontent.com/kunitoki/popsicle/master/LICENSE
+ *
+ * Or: You may also use this code under the terms of the GPL v3 (see www.gnu.org/licenses).
+ *
+ * POPSICLE IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER EXPRESSED
+ * OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE DISCLAIMED.
  */
 
 #include "ScriptJuceCoreBindings.h"
@@ -125,7 +135,7 @@ bool type_caster<juce::String>::load_raw (handle src)
 handle type_caster<juce::NewLine>::cast (const juce::NewLine& src, return_value_policy policy, handle parent)
 {
     juce::ignoreUnused (policy, parent);
-    
+
     const juce::String newLineString = src;
 
     return PyUnicode_FromStringAndSize (newLineString.toRawUTF8(), static_cast<Py_ssize_t> (newLineString.getNumBytesAsUTF8()));
@@ -455,16 +465,64 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def_static ("swap", static_cast<int64 (*)(int64)> (&ByteOrder::swap))
         .def_static ("swap", static_cast<float (*)(float)> (&ByteOrder::swap))
         .def_static ("swap", static_cast<double (*)(double)> (&ByteOrder::swap))
-        .def_static ("littleEndianInt", &ByteOrder::littleEndianInt)
-        .def_static ("littleEndianInt64", &ByteOrder::littleEndianInt64)
-        .def_static ("littleEndianShort", &ByteOrder::littleEndianShort)
-        .def_static ("littleEndian24Bit", &ByteOrder::littleEndian24Bit)
-        .def_static ("littleEndian24BitToChars", &ByteOrder::littleEndian24BitToChars)
-        .def_static ("bigEndianInt", &ByteOrder::bigEndianInt)
-        .def_static ("bigEndianInt64", &ByteOrder::bigEndianInt64)
-        .def_static ("bigEndianShort", &ByteOrder::bigEndianShort)
-        .def_static ("bigEndian24Bit", &ByteOrder::bigEndian24Bit)
-        .def_static ("bigEndian24BitToChars", &ByteOrder::bigEndian24BitToChars)
+        .def_static ("littleEndianInt", [](py::buffer data)
+        {
+            auto info = data.request();
+            if (static_cast <size_t> (info.size) < sizeof (int))
+                py::pybind11_fail ("Insufficient bytes to construct an 32bit integer");
+            return ByteOrder::littleEndianInt (info.ptr);
+        })
+        .def_static ("littleEndianInt64", [](py::buffer data)
+        {
+            auto info = data.request();
+            if (static_cast <size_t> (info.size) < sizeof (int64))
+                py::pybind11_fail ("Insufficient bytes to construct an 64bit integer");
+            return ByteOrder::littleEndianInt64 (info.ptr);
+        })
+        .def_static ("littleEndianShort", [](py::buffer data)
+        {
+            auto info = data.request();
+            if (static_cast <size_t> (info.size) < sizeof (short))
+                py::pybind11_fail ("Insufficient bytes to construct an 16bit integer");
+            return ByteOrder::littleEndianShort (info.ptr);
+        })
+        .def_static ("littleEndian24Bit", [](py::buffer data)
+        {
+            auto info = data.request();
+            if (static_cast <size_t> (info.size) < sizeof (int8) * 3)
+                py::pybind11_fail ("Insufficient bytes to construct an 24bit integer");
+            return ByteOrder::littleEndian24Bit (info.ptr);
+        })
+    //.def_static ("littleEndian24BitToChars", &ByteOrder::littleEndian24BitToChars)
+        .def_static ("bigEndianInt", [](py::buffer data)
+        {
+            auto info = data.request();
+            if (static_cast <size_t> (info.size) < sizeof (int))
+                py::pybind11_fail ("Insufficient bytes to construct an 32bit integer");
+            return ByteOrder::bigEndianInt (info.ptr);
+        })
+        .def_static ("bigEndianInt64", [](py::buffer data)
+        {
+            auto info = data.request();
+            if (static_cast <size_t> (info.size) < sizeof (int64))
+                py::pybind11_fail ("Insufficient bytes to construct an 64bit integer");
+            return ByteOrder::bigEndianInt64 (info.ptr);
+        })
+        .def_static ("bigEndianShort", [](py::buffer data)
+        {
+            auto info = data.request();
+            if (static_cast <size_t> (info.size) < sizeof (short))
+                py::pybind11_fail ("Insufficient bytes to construct an 16bit integer");
+            return ByteOrder::bigEndianShort (info.ptr);
+        })
+        .def_static ("bigEndian24Bit", [](py::buffer data)
+        {
+            auto info = data.request();
+            if (static_cast <size_t> (info.size) < sizeof (char) * 3)
+                py::pybind11_fail ("Insufficient bytes to construct an 24bit integer");
+            return ByteOrder::bigEndian24Bit (info.ptr);
+        })
+    //.def_static ("bigEndian24BitToChars", [](py::buffer data) { auto info = data.request(); return ByteOrder::bigEndian24BitToChars (info.ptr); })
         .def_static ("makeInt", static_cast<uint16 (*)(uint8, uint8)> (&ByteOrder::makeInt))
         .def_static ("makeInt", static_cast<uint32 (*)(uint8, uint8, uint8, uint8)> (&ByteOrder::makeInt))
         .def_static ("makeInt", static_cast<uint64 (*)(uint8, uint8, uint8, uint8, uint8, uint8, uint8, uint8)> (&ByteOrder::makeInt))
@@ -910,7 +968,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     struct PyInputStream : InputStream
     {
         using InputStream::InputStream;
-    
+
         int64 getTotalLength() override
         {
             PYBIND11_OVERRIDE_PURE (int64, InputStream, getTotalLength);
@@ -1089,7 +1147,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     struct PyInputSource : InputSource
     {
         using InputSource::InputSource;
-    
+
         InputStream* createInputStream() override
         {
             PYBIND11_OVERRIDE_PURE (InputStream*, InputSource, createInputStream);
@@ -1105,7 +1163,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
             PYBIND11_OVERRIDE_PURE (int64, InputSource, hashCode);
         }
     };
-    
+
     py::class_<InputSource, PyInputSource> classInputSource (m, "InputSource");
 
     classInputSource
@@ -1126,7 +1184,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     struct PyOutputStream : OutputStream
     {
         using OutputStream::OutputStream;
-    
+
         void flush() override
         {
             PYBIND11_OVERRIDE_PURE (void, OutputStream, flush);
@@ -1536,7 +1594,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     struct PyFileFilter : FileFilter
     {
         using FileFilter::FileFilter;
-    
+
         bool isFileSuitable (const File& file) const override
         {
             PYBIND11_OVERRIDE_PURE (bool, FileFilter, isFileSuitable, file);
@@ -1815,7 +1873,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     struct PyThread : Thread
     {
         using Thread::Thread;
-    
+
         void run() override
         {
             PYBIND11_OVERRIDE_PURE (void, Thread, run);
@@ -1850,7 +1908,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     struct PyThreadListener : Thread::Listener
     {
         using Thread::Listener::Listener;
-    
+
         void exitSignalSent() override
         {
             PYBIND11_OVERRIDE_PURE (void, Thread::Listener, exitSignalSent);
@@ -1901,7 +1959,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     struct PyThreadPoolJob : ThreadPoolJob
     {
         using ThreadPoolJob::ThreadPoolJob;
-    
+
         JobStatus runJob() override
         {
             PYBIND11_OVERRIDE_PURE (JobStatus, ThreadPoolJob, runJob);
@@ -1947,7 +2005,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     struct PyThreadPoolJobSelector : ThreadPool::JobSelector
     {
         using ThreadPool::JobSelector::JobSelector;
-    
+
         bool isJobSuitable (ThreadPoolJob* job) override
         {
             PYBIND11_OVERRIDE_PURE (bool, ThreadPool::JobSelector, isJobSuitable, job);
@@ -1955,7 +2013,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     };
 
     py::class_<ThreadPool::JobSelector, PyThreadPoolJobSelector> classThreadPoolJobSelector (classThreadPool, "JobSelector");
-    
+
     classThreadPoolJobSelector
         .def (py::init<>())
         .def ("isJobSuitable", &ThreadPool::JobSelector::isJobSuitable)
@@ -1972,7 +2030,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("removeJob", &ThreadPool::removeJob)
         .def ("removeAllJobs", [](ThreadPool& self, bool interruptRunningJobs, int timeOutMilliseconds, ThreadPool::JobSelector* selectedJobsToRemove)
         {
-            self.removeAllJobs (interruptRunningJobs, timeOutMilliseconds, selectedJobsToRemove); 
+            self.removeAllJobs (interruptRunningJobs, timeOutMilliseconds, selectedJobsToRemove);
         }, "interruptRunningJobs"_a, "timeOutMilliseconds"_a, "selectedJobsToRemove"_a = nullptr)
         .def ("getNumJobs", &ThreadPool::getNumJobs)
         .def ("getNumThreads", &ThreadPool::getNumThreads)
