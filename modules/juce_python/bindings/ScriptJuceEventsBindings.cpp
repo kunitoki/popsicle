@@ -258,7 +258,6 @@ void registerJuceEventsBindings (pybind11::module_& m)
     classMessageManagerLock
         .def (py::init<Thread*>(), "threadToCheckForExitSignal"_a = nullptr)
         .def (py::init<ThreadPoolJob*>())
-        .def ("lockWasGained", &MessageManagerLock::lockWasGained)
         .def ("__enter__", [](PyMessageManagerLock& self)
         {
             if (self.thread != nullptr)
@@ -267,10 +266,19 @@ void registerJuceEventsBindings (pybind11::module_& m)
                 self.state.emplace<MessageManagerLock> (self.threadPoolJob);
             else
                 py::pybind11_fail ("Invalid constructed MessageManagerLock, either Thread or ThreadPoolJob must be provided");
-        })
+
+            return std::addressof (std::as_const (self));
+        }, py::return_value_policy::reference)
         .def ("__exit__", [](PyMessageManagerLock& self, const std::optional<py::type>&, const std::optional<py::object>&, const std::optional<py::object>&)
         {
             self.state.emplace<std::monostate>();
+        })
+        .def ("lockWasGained", [](const PyMessageManagerLock& self)
+        {
+            if (auto lock = std::get_if<MessageManagerLock> (std::addressof (self.state)))
+                return lock->lockWasGained();
+
+            return false;
         })
     ;
 
