@@ -63,7 +63,9 @@ juce::String demangleClassName (juce::StringRef className)
 
 juce::String pythonizeClassName (juce::StringRef className)
 {
-    return demangleClassName (className).replace("::", ".");
+    return demangleClassName (className)
+        .replace ("juce::", "")
+        .replace ("::", ".");
 }
 
 } // namespace popsicle::Helpers

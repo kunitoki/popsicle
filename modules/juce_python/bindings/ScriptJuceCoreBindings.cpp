@@ -392,7 +392,6 @@ void registerRange (pybind11::module_& m)
     namespace py = pybind11;
 
     py::dict type;
-    py::object scope;
 
     ([&]
     {
@@ -402,7 +401,7 @@ void registerRange (pybind11::module_& m)
         String className;
         className << "Range[" << popsicle::Helpers::pythonizeClassName (typeid (Types).name()) << "]";
 
-        auto class_ = py::class_<T> (scope, className.toRawUTF8())
+        auto class_ = py::class_<T> (m, className.toRawUTF8())
             .def (py::init<>())
             .def (py::init<ValueType, ValueType>())
             .def_static ("between", &T::between)

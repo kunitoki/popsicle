@@ -11,9 +11,9 @@ from distutils import log
 from distutils import sysconfig
 from setuptools import Extension
 from setuptools.command.build_ext import build_ext
-from setuptools.command.install_lib import install_lib
 
 project_name = "popsicle"
+root_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 def glob_python_library(path):
@@ -118,33 +118,32 @@ class BuildExtension(build_ext):
         finally:
             os.chdir(str(cwd))
 
-class BuildPyiCommand(install_lib):
-    def run(self):
-        self.announce(">>>> building the pyi files !")
+        self.generate_pyi(cwd)
 
-        install_lib.run(self)
-
-        cwd = pathlib.Path().absolute()
-
+    def generate_pyi(self, cwd):
         library = None
         for extension in [".so", ".pyd"]:
             for m in glob.iglob(f"{cwd}/**/{project_name}{extension}", recursive=True):
                 library = m
                 break
 
-        if library is not None:
-            library_dir = os.path.dirname(library)
+        if library is None:
+            return
 
-            try:
-                os.chdir(library_dir)
+        library_dir = os.path.dirname(library)
+        final_pyi_dir = os.path.join(root_dir, project_name)
 
-                self.spawn(["stubgen", "--output", library_dir, "-p", project_name])
+        try:
+            os.chdir(library_dir)
 
-                shutil.rmtree(os.path.join(library_dir, "..", "..", project_name), ignore_errors=True)
-                shutil.move(project_name, os.path.join(library_dir, "..", ".."))
+            shutil.rmtree(final_pyi_dir, ignore_errors=True)
 
-            finally:
-                os.chdir(str(cwd))
+            self.spawn(["stubgen", "--output", library_dir, "-p", project_name])
+
+            shutil.copytree(project_name, final_pyi_dir)
+
+        finally:
+            os.chdir(str(cwd))
 
 
 with open("modules/juce_python/juce_python.h", mode="r", encoding="utf-8") as f:
@@ -152,7 +151,6 @@ with open("modules/juce_python/juce_python.h", mode="r", encoding="utf-8") as f:
 
 with open("README.rst", mode="r", encoding="utf-8") as f:
     long_description = f.read()
-
 
 if platform.system() == 'Darwin':
     os.environ["_PYTHON_HOST_PLATFORM"] = "macosx-10.15-universal2"
@@ -169,7 +167,7 @@ setuptools.setup(
     url="https://github.com/kunitoki/popsicle",
     packages=setuptools.find_packages(".", exclude=["*demo*", "*examples*", "*JUCE*", "*scripts*", "*tests*"]),
     include_package_data=True,
-    cmdclass={"build_ext": BuildExtension, "install_lib": BuildPyiCommand},
+    cmdclass={"build_ext": BuildExtension},
     ext_modules=[CMakeExtension(project_name)],
     zip_safe=False,
     platforms=["macosx", "win32", "linux"],
