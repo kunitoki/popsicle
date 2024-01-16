@@ -13,7 +13,7 @@ class MainContentComponent(juce.Component, juce.Timer):
 		self.setOpaque(True)
 		self.startTimerHz(60)
 
-	def paint(self, g):
+	def paint(self, g: juce.Graphics):
 		g.fillAll(juce.Colours.black)
 
 		random = juce.Random.getSystemRandom()
@@ -29,13 +29,13 @@ class MainContentComponent(juce.Component, juce.Timer):
 			rect.setCentre(random.nextInt(self.getWidth()), random.nextInt(self.getHeight()))
 			g.drawRect(rect, 1)
 
-	def mouseDown(self, event):
+	def mouseDown(self, event: juce.MouseEvent):
 		print("mouseDown", event)
 
-	def mouseMove(self, event):
+	def mouseMove(self, event: juce.MouseEvent):
 		print("mouseMove", event.position.x, event.position.y)
 
-	def mouseUp(self, event):
+	def mouseUp(self, event: juce.MouseEvent):
 		print("mouseUp", event)
 
 	def timerCallback(self):
@@ -82,24 +82,15 @@ class Application(juce.JUCEApplication):
 	def getApplicationVersion(self):
 		return "1.0"
 
-	def initialise(self, commandLineParameters):
-		print("initialise", commandLineParameters)
-
+	def initialise(self, commandLineParameters: juce.String):
 		self.window = MainWindow()
 
 	def shutdown(self):
-		print("shutdown")
-
 		if self.window:
 			del self.window
 
 	def systemRequestedQuit(self):
-		print("systemRequestedQuit")
 		self.quit()
-
-	def unhandledException(self, ex, file, line):
-		print(">>", ex, type(ex), file, line)
-		sys.exit(1)
 
 
 if __name__ == "__main__":

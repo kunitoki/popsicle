@@ -23,6 +23,11 @@ JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wcast-align")
 #if JUCE_PYTHON_USE_EXTERNAL_PYBIND11
 #include <pybind11/embed.h>
 
+#if defined (JUCE_PYTHON_INCLUDE_PYBIND11_CAST)
+#include <pybind11/cast.h>
+#undef JUCE_PYTHON_INCLUDE_PYBIND11_CAST
+#endif
+
 #if defined (JUCE_PYTHON_INCLUDE_PYBIND11_OPERATORS)
 #include <pybind11/operators.h>
 #undef JUCE_PYTHON_INCLUDE_PYBIND11_OPERATORS
@@ -45,6 +50,11 @@ JUCE_BEGIN_IGNORE_WARNINGS_GCC_LIKE ("-Wcast-align")
 
 #else // JUCE_PYTHON_USE_EXTERNAL_PYBIND11
 #include "../pybind11/embed.h"
+
+#if defined (JUCE_PYTHON_INCLUDE_PYBIND11_CAST)
+#include "../pybind11/cast.h"
+#undef JUCE_PYTHON_INCLUDE_PYBIND11_CAST
+#endif
 
 #if defined (JUCE_PYTHON_INCLUDE_PYBIND11_OPERATORS)
 #include "../pybind11/operators.h"

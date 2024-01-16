@@ -69,6 +69,16 @@ struct CppToPython<juce::String>
 
 //=================================================================================================
 
+template <class T>
+struct NoopDeleter
+{
+    inline void operator()(T*) const noexcept
+    {
+    }
+};
+
+//=================================================================================================
+
 template <class T, class F>
 auto makeVoidPointerAndSizeCallable (F&& func)
 {

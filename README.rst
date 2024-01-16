@@ -209,7 +209,7 @@ Licensing
 
 It comes in two licensed flavours:
 
-- **MIT License**: When used from python using the PyPi provided wheels or embedded in an OSS application
+- **GPLv3 License**: When used from python using the PyPi provided wheels or embedded in an OSS application
 - **Commercial License**: When embedded in a closed source application
 
 ------------

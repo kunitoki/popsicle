@@ -3,4 +3,6 @@ include LICENSE.GPLv3
 include LICENSE.COMMERCIAL
 include README.rst
 
+include popsicle/*.pyi
+
 global-exclude *.py[cod] __pycache__ .DS_Store CMakeLists.txt

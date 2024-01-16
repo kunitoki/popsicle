@@ -59,4 +59,11 @@ juce::String demangleClassName (juce::StringRef className)
     return name;
 }
 
+//=================================================================================================
+
+juce::String pythonizeClassName (juce::StringRef className)
+{
+    return demangleClassName (className).replace("::", ".");
+}
+
 } // namespace popsicle::Helpers

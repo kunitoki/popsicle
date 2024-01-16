@@ -321,7 +321,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
 
     py::class_<ModifierKeys> classModifierKeys (m, "ModifierKeys");
 
-    py::enum_<ModifierKeys::Flags> (classModifierKeys, "Flags")
+    py::enum_<ModifierKeys::Flags> (classModifierKeys, "Flags", py::arithmetic())
         .value("noModifiers", ModifierKeys::Flags::noModifiers)
         .value("shiftModifier", ModifierKeys::Flags::shiftModifier)
         .value("ctrlModifier", ModifierKeys::Flags::ctrlModifier)
@@ -358,7 +358,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("withFlags", &ModifierKeys::withFlags)
         .def ("testFlags", &ModifierKeys::testFlags)
         .def ("getNumMouseButtonsDown", &ModifierKeys::getNumMouseButtonsDown)
-        .def_property_readonly_static ("currentModifiers", [] { return ModifierKeys::currentModifiers; })
+        .def_readonly_static ("currentModifiers", &ModifierKeys::currentModifiers, py::return_value_policy::copy)
         .def_static ("getCurrentModifiers", &ModifierKeys::getCurrentModifiers)
         .def_static ("getCurrentModifiersRealtime", &ModifierKeys::getCurrentModifiersRealtime)
     ;
@@ -409,12 +409,11 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("enableUnboundedMouseMovement", &MouseInputSource::enableUnboundedMouseMovement)
         .def ("isUnboundedMouseMovementEnabled", &MouseInputSource::isUnboundedMouseMovementEnabled)
         .def ("setScreenPosition", &MouseInputSource::setScreenPosition)
-        .def_property_readonly_static ("defaultPressure", [] { return MouseInputSource::defaultPressure; })
-        .def_property_readonly_static ("defaultOrientation", [] { return MouseInputSource::defaultOrientation; })
-        .def_property_readonly_static ("defaultRotation", [] { return MouseInputSource::defaultRotation; })
-        .def_property_readonly_static ("defaultTiltX", [] { return MouseInputSource::defaultTiltX; })
-        .def_property_readonly_static ("defaultTiltY", [] { return MouseInputSource::defaultTiltY; })
-        .def_property_readonly_static ("offscreenMousePos", [] { return MouseInputSource::offscreenMousePos; })
+        .def_readonly_static ("defaultPressure", &MouseInputSource::defaultPressure)
+        .def_readonly_static ("defaultRotation", &MouseInputSource::defaultRotation)
+        .def_readonly_static ("defaultTiltX", &MouseInputSource::defaultTiltX)
+        .def_readonly_static ("defaultTiltY", &MouseInputSource::defaultTiltY)
+        .def_readonly_static ("offscreenMousePos", &MouseInputSource::offscreenMousePos)
     ;
 
     // ============================================================================================ juce::MouseEvent
@@ -674,7 +673,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
 
     py::class_<Desktop, std::unique_ptr<Desktop, py::nodelete>> classDesktop (m, "Desktop");
 
-    py::enum_<Desktop::DisplayOrientation> (classDesktop, "DisplayOrientation")
+    py::enum_<Desktop::DisplayOrientation> (classDesktop, "DisplayOrientation", py::arithmetic())
         .value("upright", Desktop::upright)
         .value("upsideDown", Desktop::upsideDown)
         .value("rotatedClockwise", Desktop::rotatedClockwise)
@@ -1188,7 +1187,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         })
         .def ("typeName", [](const juce::Component* self)
         {
-            return Helpers::demangleClassName (typeid(*self).name());
+            return Helpers::pythonizeClassName (typeid(*self).name());
         })
     ;
 
@@ -1251,7 +1250,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
 
     py::class_<Button, Component, PyButton> classButton (m, "Button");
 
-    py::enum_<Button::ConnectedEdgeFlags> (classButton, "ConnectedEdgeFlags")
+    py::enum_<Button::ConnectedEdgeFlags> (classButton, "ConnectedEdgeFlags", py::arithmetic())
         .value ("ConnectedOnLeft", Button::ConnectedEdgeFlags::ConnectedOnLeft)
         .value ("ConnectedOnRight", Button::ConnectedEdgeFlags::ConnectedOnRight)
         .value ("ConnectedOnTop", Button::ConnectedEdgeFlags::ConnectedOnTop)
@@ -1820,7 +1819,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
 
     py::class_<DocumentWindow, ResizableWindow, PyDocumentWindow> classDocumentWindow (m, "DocumentWindow");
 
-    py::enum_<DocumentWindow::TitleBarButtons> (classDocumentWindow, "TitleBarButtons")
+    py::enum_<DocumentWindow::TitleBarButtons> (classDocumentWindow, "TitleBarButtons", py::arithmetic())
         .value("minimiseButton", DocumentWindow::minimiseButton)
         .value("maximiseButton", DocumentWindow::maximiseButton)
         .value("closeButton", DocumentWindow::closeButton)

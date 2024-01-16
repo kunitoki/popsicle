@@ -29,6 +29,7 @@
 #include "../pybind11/operators.h"
 
 #include <functional>
+#include <memory>
 #include <string_view>
 #include <tuple>
 #include <variant>
@@ -52,7 +53,7 @@ void registerPoint (pybind11::module_& m)
         using T = Class<ValueType>;
 
         String className;
-        className << "Point[" << popsicle::Helpers::demangleClassName (typeid (Types).name()) << "]";
+        className << "Point[" << popsicle::Helpers::pythonizeClassName (typeid (Types).name()) << "]";
 
         auto class_ = py::class_<T> (m, className.toRawUTF8())
             .def (py::init<>())
@@ -129,7 +130,7 @@ void registerLine (pybind11::module_& m)
         using T = Class<ValueType>;
 
         String className;
-        className << "Line[" << popsicle::Helpers::demangleClassName (typeid (Types).name()) << "]";
+        className << "Line[" << popsicle::Helpers::pythonizeClassName (typeid (Types).name()) << "]";
 
         auto class_ = py::class_<T> (m, className.toRawUTF8())
             .def (py::init<>())
@@ -196,7 +197,7 @@ void registerRectangle (pybind11::module_& m)
         using T = Class<ValueType>;
 
         String className;
-        className << "Rectangle[" << popsicle::Helpers::demangleClassName (typeid (Types).name()) << "]";
+        className << "Rectangle[" << popsicle::Helpers::pythonizeClassName (typeid (Types).name()) << "]";
 
         auto class_ = py::class_<T> (m, className.toRawUTF8())
             .def (py::init<>())
@@ -306,7 +307,7 @@ void registerRectangleList (pybind11::module_& m)
         using T = Class<ValueType>;
 
         String className;
-        className << "RectangleList[" << popsicle::Helpers::demangleClassName (typeid (Types).name()) << "]";
+        className << "RectangleList[" << popsicle::Helpers::pythonizeClassName (typeid (Types).name()) << "]";
 
         auto class_ = py::class_<T> (m, className.toRawUTF8())
             .def (py::init<>())
@@ -369,7 +370,7 @@ void registerBorderSize (pybind11::module_& m)
         using T = Class<ValueType>;
 
         String className;
-        className << "BorderSize[" << popsicle::Helpers::demangleClassName (typeid (Types).name()) << "]";
+        className << "BorderSize[" << popsicle::Helpers::pythonizeClassName (typeid (Types).name()) << "]";
 
         auto class_ = py::class_<T> (m, className.toRawUTF8())
             .def (py::init<>())
@@ -416,7 +417,7 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
 
     py::class_<Justification> classJustification (m, "Justification");
 
-    py::enum_<Justification::Flags> (classJustification, "Flags")
+    py::enum_<Justification::Flags> (classJustification, "Flags", py::arithmetic())
         .value ("left", Justification::Flags::left)
         .value ("right", Justification::Flags::right)
         .value ("horizontallyCentred", Justification::Flags::horizontallyCentred)
@@ -632,7 +633,9 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
 
     // ============================================================================================ juce::PixelARGB
 
-    py::class_<PixelARGB> (m, "PixelARGB")
+    py::class_<PixelARGB> classPixelARGB (m, "PixelARGB");
+    
+    classPixelARGB
         .def (py::init<>())
         .def (py::init<uint8, uint8, uint8, uint8>())
         .def ("getNativeARGB", &PixelARGB::getNativeARGB)
@@ -664,13 +667,16 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("premultiply", &PixelARGB::premultiply)
         .def ("unpremultiply", &PixelARGB::unpremultiply)
         .def ("desaturate", &PixelARGB::desaturate)
-        .def_property_readonly_static ("indexA", [] { return PixelARGB::indexA; })
-        .def_property_readonly_static ("indexR", [] { return PixelARGB::indexR; })
-        .def_property_readonly_static ("indexG", [] { return PixelARGB::indexG; })
-        .def_property_readonly_static ("indexB", [] { return PixelARGB::indexB; })
     ;
 
-    py::class_<PixelRGB> (m, "PixelRGB")
+    classPixelARGB.attr ("indexA") = py::int_ (static_cast<int> (PixelARGB::indexA));
+    classPixelARGB.attr ("indexR") = py::int_ (static_cast<int> (PixelARGB::indexR));
+    classPixelARGB.attr ("indexG") = py::int_ (static_cast<int> (PixelARGB::indexG));
+    classPixelARGB.attr ("indexB") = py::int_ (static_cast<int> (PixelARGB::indexB));
+
+    py::class_<PixelRGB> classPixelRGB (m, "PixelRGB");
+    
+    classPixelRGB
         .def (py::init<>())
         .def ("getNativeARGB", &PixelRGB::getNativeARGB)
         .def ("getInARGBMaskOrder", &PixelRGB::getInARGBMaskOrder)
@@ -703,12 +709,15 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("premultiply", &PixelRGB::premultiply)
         .def ("unpremultiply", &PixelRGB::unpremultiply)
         .def ("desaturate", &PixelRGB::desaturate)
-        .def_property_readonly_static ("indexR", [] { return PixelARGB::indexR; })
-        .def_property_readonly_static ("indexG", [] { return PixelARGB::indexG; })
-        .def_property_readonly_static ("indexB", [] { return PixelARGB::indexB; })
     ;
 
-    py::class_<PixelAlpha> (m, "PixelAlpha")
+    classPixelRGB.attr ("indexR") = py::int_ (static_cast<int> (PixelRGB::indexR));
+    classPixelRGB.attr ("indexG") = py::int_ (static_cast<int> (PixelRGB::indexG));
+    classPixelRGB.attr ("indexB") = py::int_ (static_cast<int> (PixelRGB::indexB));
+
+    py::class_<PixelAlpha> classPixelAlpha (m, "PixelAlpha");
+    
+    classPixelAlpha
         .def (py::init<>())
         .def ("getNativeARGB", &PixelAlpha::getNativeARGB)
         .def ("getInARGBMaskOrder", &PixelAlpha::getInARGBMaskOrder)
@@ -741,8 +750,9 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("premultiply", &PixelAlpha::premultiply)
         .def ("unpremultiply", &PixelAlpha::unpremultiply)
         .def ("desaturate", &PixelAlpha::desaturate)
-        .def_property_readonly_static ("indexA", [] { return PixelARGB::indexA; })
     ;
+
+    classPixelAlpha.attr ("indexA") = py::int_ (static_cast<int> (PixelAlpha::indexA));
 
     // ============================================================================================ juce::Colour
 
@@ -850,10 +860,43 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .value ("SingleChannel", Image::PixelFormat::SingleChannel)
         .export_values();
 
+    py::class_<Image::BitmapData> classImageBitmapData (classImage, "BitmapData");
+
+    py::enum_<Image::BitmapData::ReadWriteMode> (classImageBitmapData, "ReadWriteMode")
+        .value ("readOnly", Image::BitmapData::ReadWriteMode::readOnly)
+        .value ("writeOnly", Image::BitmapData::ReadWriteMode::writeOnly)
+        .value ("readWrite", Image::BitmapData::ReadWriteMode::readWrite)
+        .export_values();
+
+    classImageBitmapData
+        .def (py::init<Image&, int, int, int, int, Image::BitmapData::ReadWriteMode>())
+        .def (py::init<const Image&, int, int, int, int>())
+        .def (py::init<const Image&, Image::BitmapData::ReadWriteMode>())
+        .def ("getLinePointer", [](const Image::BitmapData& self, int y) { return py::memoryview::from_memory (self.getLinePointer(y), static_cast<ssize_t> (self.size) - y * self.lineStride); })
+        .def ("getPixelPointer", [](const Image::BitmapData& self, int x, int y) { return py::memoryview::from_memory (self.getPixelPointer(x, y), static_cast<ssize_t> (self.size) - (y * self.lineStride + x * self.pixelStride)); })
+        .def ("getPixelColour", &Image::BitmapData::getPixelColour)
+        .def ("setPixelColour", &Image::BitmapData::setPixelColour)
+        .def ("getBounds", &Image::BitmapData::getBounds)
+        .def_property ("data",
+            [](const Image::BitmapData& self) { return py::memoryview::from_memory (self.data, static_cast<ssize_t> (self.size)); },
+            [](Image::BitmapData& self, py::buffer data)
+            {
+                auto info = data.request();
+                std::memcpy (self.data, info.ptr, static_cast<size_t> (std::min (info.size, static_cast<ssize_t> (self.size))));
+            })
+        .def_readwrite ("size", &Image::BitmapData::size)
+        .def_readwrite ("pixelFormat", &Image::BitmapData::pixelFormat)
+        .def_readwrite ("lineStride", &Image::BitmapData::lineStride)
+        .def_readwrite ("pixelStride", &Image::BitmapData::pixelStride)
+        .def_readwrite ("width", &Image::BitmapData::width)
+        .def_readwrite ("height", &Image::BitmapData::height)
+    ;
+
     classImage
         .def (py::init<>())
         .def (py::init<Image::PixelFormat, int, int, bool>())
         .def (py::init<Image::PixelFormat, int, int, bool, const ImageType&>())
+        .def (py::init<const Image&>())
         .def (py::self == py::self)
         .def (py::self != py::self)
         .def ("isValid", &Image::isValid)
@@ -879,10 +922,10 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("desaturate", &Image::desaturate)
         .def ("moveImageSection", &Image::moveImageSection)
         .def ("createSolidAreaMask", &Image::createSolidAreaMask)
-        .def ("getProperties", &Image::getProperties)
+        .def ("getProperties", &Image::getProperties, py::return_value_policy::reference_internal)
     //.def ("createLowLevelContext", &Image::createLowLevelContext)
         .def ("getReferenceCount", &Image::getReferenceCount)
-    //.def ("getPixelData", &Image::getPixelData)
+        .def ("getPixelData", &Image::getPixelData, py::return_value_policy::reference_internal)
     ;
 
     // ============================================================================================ juce::ImagePixelData
@@ -904,16 +947,119 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("sendDataChangeMessage", &ImagePixelData::sendDataChangeMessage)
     ;
 
-    // ============================================================================================ juce::ImagePixelData
+    // ============================================================================================ juce::ImageType
 
-    py::class_<ImageType> classImageType (m, "ImageType");
+    struct PyImageType : ImageType
+    {
+        ImagePixelData::Ptr create (Image::PixelFormat format, int width, int height, bool shouldClearImage) const override
+        {
+            PYBIND11_OVERRIDE_PURE (ImagePixelData::Ptr, ImageType, create, format, width, height, shouldClearImage);
+        }
+        
+        int getTypeID() const override
+        {
+            PYBIND11_OVERRIDE_PURE (int, ImageType, getTypeID);
+        }
+    
+        Image convert (const Image& source) const override
+        {
+            PYBIND11_OVERRIDE (Image, ImageType, convert, source);
+        }
+    };
+
+    py::class_<ImageType, PyImageType> classImageType (m, "ImageType");
 
     classImageType
-    //.def (py::init<>())
+        .def (py::init<>())
         .def ("create", &ImageType::create)
         .def ("getTypeID", &ImageType::getTypeID)
         .def ("convert", &ImageType::convert)
     ;
+
+    py::class_<SoftwareImageType, ImageType> classSoftwareImageType (m, "SoftwareImageType");
+
+    classSoftwareImageType
+        .def (py::init<>())
+    ;
+
+    py::class_<NativeImageType, ImageType> classNativeImageType (m, "NativeImageType");
+
+    classNativeImageType
+        .def (py::init<>())
+    ;
+
+    // ============================================================================================ juce::ImageCache
+
+    py::class_<ImageCache, std::unique_ptr<ImageCache, Helpers::NoopDeleter<ImageCache>>> classImageCache (m, "ImageCache");
+
+    classImageCache
+        .def_static ("getFromFile", &ImageCache::getFromFile)
+        .def_static ("getFromMemory", [](py::buffer data)
+        {
+            auto info = data.request();
+            return ImageCache::getFromMemory (info.ptr, static_cast<int> (info.size));
+        })
+        .def_static ("getFromHashCode", &ImageCache::getFromHashCode)
+        .def_static ("addImageToCache", &ImageCache::addImageToCache)
+        .def_static ("setCacheTimeout", &ImageCache::setCacheTimeout)
+        .def_static ("releaseUnusedImages", &ImageCache::releaseUnusedImages)
+    ;
+
+    // ============================================================================================ juce::ImageCache
+
+    struct PyImageFileFormat : ImageFileFormat
+    {
+        using ImageFileFormat::ImageFileFormat;
+
+        String getFormatName() override
+        {
+            PYBIND11_OVERRIDE_PURE (String, ImageFileFormat, getFormatName);
+        }
+
+        bool canUnderstand (InputStream& input) override
+        {
+            PYBIND11_OVERRIDE_PURE (bool, ImageFileFormat, canUnderstand, input);
+        }
+
+        bool usesFileExtension (const File& possibleFile) override
+        {
+            PYBIND11_OVERRIDE_PURE (bool, ImageFileFormat, usesFileExtension, possibleFile);
+        }
+
+        Image decodeImage (InputStream& input) override
+        {
+            PYBIND11_OVERRIDE_PURE (Image, ImageFileFormat, decodeImage, input);
+        }
+
+        bool writeImageToStream (const Image& sourceImage, OutputStream& destStream) override
+        {
+            PYBIND11_OVERRIDE_PURE (bool, ImageFileFormat, writeImageToStream, sourceImage, destStream);
+        }
+    };
+
+    py::class_<ImageFileFormat, PyImageFileFormat> classImageFileFormat (m, "ImageFileFormat");
+
+    classImageFileFormat
+        .def (py::init<>())
+        .def ("getFormatName", &ImageFileFormat::getFormatName)
+        .def ("canUnderstand", &ImageFileFormat::canUnderstand)
+        .def ("usesFileExtension", &ImageFileFormat::usesFileExtension)
+        .def ("decodeImage", &ImageFileFormat::decodeImage)
+        .def ("writeImageToStream", &ImageFileFormat::writeImageToStream)
+        .def_static ("findImageFormatForStream", &ImageFileFormat::findImageFormatForStream, py::return_value_policy::reference_internal)
+        .def_static ("findImageFormatForFileExtension", &ImageFileFormat::findImageFormatForFileExtension, py::return_value_policy::reference_internal)
+        .def_static ("loadFrom", static_cast<Image (*)(InputStream&)> (&ImageFileFormat::loadFrom))
+        .def_static ("loadFrom", static_cast<Image (*)(const File&)> (&ImageFileFormat::loadFrom))
+        .def_static ("loadFrom", [](py::buffer data)
+        {
+            auto info = data.request();
+            return ImageFileFormat::loadFrom (info.ptr, static_cast<size_t> (info.size));
+        })
+    ;
+
+    py::class_<PNGImageFormat, ImageFileFormat> (m, "PNGImageFormat");
+    py::class_<JPEGImageFormat, ImageFileFormat> (m, "JPEGImageFormat");
+    py::class_<GIFImageFormat, ImageFileFormat> (m, "GIFImageFormat");
 
     // ============================================================================================ juce::FillType
 

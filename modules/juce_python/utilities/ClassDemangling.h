@@ -37,4 +37,15 @@ namespace popsicle::Helpers {
  */
 juce::String demangleClassName (juce::StringRef className);
 
+/**
+ * @brief Demangle a C++ class name and pythonize it.
+ *
+ * This function takes a StringRef containing a mangled class name and returns the demangled and pythonized class name as a String.
+ *
+ * @param className The mangled class name to demangle and pythonize.
+ *
+ * @return A String containing the demangled and pythonized class name.
+ */
+juce::String pythonizeClassName (juce::StringRef className);
+
 } // namespace popsicle::Helpers

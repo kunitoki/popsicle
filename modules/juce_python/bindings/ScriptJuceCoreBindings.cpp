@@ -400,7 +400,7 @@ void registerRange (pybind11::module_& m)
         using T = Class<ValueType>;
 
         String className;
-        className << "Range[" << popsicle::Helpers::demangleClassName (typeid (Types).name()) << "]";
+        className << "Range[" << popsicle::Helpers::pythonizeClassName (typeid (Types).name()) << "]";
 
         auto class_ = py::class_<T> (scope, className.toRawUTF8())
             .def (py::init<>())
@@ -451,6 +451,34 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
 
     namespace py = pybind11;
     using namespace py::literals;
+
+    // ============================================================================================ Common
+
+    py::class_<StringRef> (m, "StringRef");
+    py::class_<StringArray> (m, "StringArray");
+    py::class_<NamedValueSet> (m, "NamedValueSet");
+    py::class_<var> (m, "var");
+
+    // ============================================================================================ Common
+
+    py::class_<Identifier> classIdentifier (m, "Identifier");
+
+    classIdentifier
+        .def (py::init<>())
+        .def (py::init<const char*>())
+        .def (py::init<const String&>())
+        .def (py::init<const Identifier&>())
+        .def (py::self == py::self)
+        .def (py::self != py::self)
+        .def (py::self > py::self)
+        .def (py::self >= py::self)
+        .def (py::self < py::self)
+        .def (py::self <= py::self)
+        .def ("toString", &Identifier::toString)
+        .def ("isValid", &Identifier::isValid)
+        .def ("isNull", &Identifier::isNull)
+        .def_static ("isValidIdentifier", &Identifier::isValidIdentifier)
+    ;
 
     // ============================================================================================ juce::ByteOrder
 
@@ -529,6 +557,79 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def_static ("isBigEndian", &ByteOrder::isBigEndian)
     ;
 
+    // ============================================================================================ juce::Math
+
+    m.def ("juce_hypot", &juce_hypot<float>);
+    m.def ("juce_hypot", &juce_hypot<double>);
+    m.def ("degreesToRadians", &degreesToRadians<float>);
+    m.def ("degreesToRadians", &degreesToRadians<double>);
+    m.def ("radiansToDegrees", &radiansToDegrees<float>);
+    m.def ("radiansToDegrees", &radiansToDegrees<double>);
+    m.def ("juce_isfinite", &juce_isfinite<float>);
+    m.def ("juce_isfinite", &juce_isfinite<double>);
+    m.def ("exactlyEqual", &exactlyEqual<float>);
+    m.def ("exactlyEqual", &exactlyEqual<double>);
+    //m.def ("absoluteTolerance", &absoluteTolerance<float>);
+    //m.def ("absoluteTolerance", &absoluteTolerance<double>);
+    //m.def ("relativeTolerance", &relativeTolerance<float>);
+    //m.def ("relativeTolerance", &relativeTolerance<double>);
+    //m.def ("approximatelyEqual", &approximatelyEqual<char>);
+    //m.def ("approximatelyEqual", &approximatelyEqual<uint8>);
+    //m.def ("approximatelyEqual", &approximatelyEqual<short>);
+    //m.def ("approximatelyEqual", &approximatelyEqual<int>);
+    //m.def ("approximatelyEqual", &approximatelyEqual<int64>);
+    //m.def ("approximatelyEqual", &approximatelyEqual<float>);
+    //m.def ("approximatelyEqual", &approximatelyEqual<double>);
+    m.def ("nextFloatUp", &nextFloatUp<float>);
+    m.def ("nextFloatUp", &nextFloatUp<double>);
+    m.def ("nextFloatDown", &nextFloatDown<float>);
+    m.def ("nextFloatDown", &nextFloatDown<double>);
+    m.def ("mapToLog10", &mapToLog10<float>);
+    m.def ("mapToLog10", &mapToLog10<double>);
+    m.def ("mapFromLog10", &mapFromLog10<float>);
+    m.def ("mapFromLog10", &mapFromLog10<double>);
+    //m.def ("findMinimum", &findMinimum<float, int>);
+    //m.def ("findMaximum", &findMaximum<float, int>);
+    //m.def ("findMinAndMax", &findMaximum<float>);
+    //m.def ("jlimit", &jlimit<?>);
+    //m.def ("isPositiveAndBelow", &isPositiveAndBelow<?>);
+    //m.def ("isPositiveAndNotGreaterThan", &isPositiveAndNotGreaterThan<?>);
+    //m.def ("isWithin", &isWithin<?>);
+    m.def ("roundToInt", &roundToInt<int>);
+    m.def ("roundToInt", &roundToInt<float>);
+    m.def ("roundToInt", &roundToInt<double>);
+    m.def ("roundToIntAccurate", &roundToIntAccurate);
+    m.def ("truncatePositiveToUnsignedInt", &truncatePositiveToUnsignedInt<float>);
+    m.def ("truncatePositiveToUnsignedInt", &truncatePositiveToUnsignedInt<double>);
+    m.def ("isPowerOfTwo", &isPowerOfTwo<int>);
+    m.def ("isPowerOfTwo", &isPowerOfTwo<int64>);
+    m.def ("nextPowerOfTwo", &nextPowerOfTwo);
+    m.def ("nextPowerOfTwo", &nextPowerOfTwo);
+    m.def ("findHighestSetBit", &findHighestSetBit);
+    m.def ("countNumberOfBits", static_cast<int (*)(uint32) noexcept> (&countNumberOfBits));
+    m.def ("countNumberOfBits", static_cast<int (*)(uint64) noexcept> (&countNumberOfBits));
+    m.def ("negativeAwareModulo", &negativeAwareModulo<char>);
+    m.def ("negativeAwareModulo", &negativeAwareModulo<uint8>);
+    m.def ("negativeAwareModulo", &negativeAwareModulo<short>);
+    m.def ("negativeAwareModulo", &negativeAwareModulo<int>);
+    m.def ("negativeAwareModulo", &negativeAwareModulo<int64>);
+    m.def ("negativeAwareModulo", &negativeAwareModulo<int64>);
+    //m.def ("square", &square<?>);
+    m.def ("writeLittleEndianBitsInBuffer", [](py::buffer target, uint32 startBit, uint32 numBits, uint32 value)
+    {
+        auto info = target.request (false);
+        if ((startBit + numBits) >= static_cast<uint32> (info.size) * 8)
+             py::pybind11_fail ("Insufficient bytes to write into provided buffer");
+        writeLittleEndianBitsInBuffer (info.ptr, startBit, numBits, value);
+    });
+    m.def ("readLittleEndianBitsInBuffer", [](py::buffer target, uint32 startBit, uint32 numBits)
+    {
+        auto info = target.request();
+        if ((startBit + numBits) >= static_cast<uint32> (info.size) * 8)
+             py::pybind11_fail ("Insufficient bytes to write into provided buffer");
+        return readLittleEndianBitsInBuffer (info.ptr, startBit, numBits);
+    });
+
     // ============================================================================================ juce::BigInteger
 
     py::class_<BigInteger> classBigInteger (m, "BigInteger");
@@ -537,6 +638,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def (py::init<>())
         .def (py::init<int32>())
         .def (py::init<int64>())
+        .def (py::init<const BigInteger&>())
         .def ("swapWith", &BigInteger::swapWith)
         .def ("isZero", &BigInteger::isZero)
         .def ("isOne", &BigInteger::isOne)
@@ -586,6 +688,12 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def (py::self <= py::self)
         .def (py::self > py::self)
         .def (py::self >= py::self)
+        .def (py::self == int())
+        .def (py::self != int())
+        .def (py::self < int())
+        .def (py::self <= int())
+        .def (py::self > int())
+        .def (py::self >= int())
         .def ("compare", &BigInteger::compare)
         .def ("compareAbsolute", &BigInteger::compareAbsolute)
         .def ("divideBy", &BigInteger::divideBy)
@@ -1391,8 +1499,13 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("nextFloat", &Random::nextFloat)
         .def ("nextDouble", &Random::nextDouble)
         .def ("nextBool", &Random::nextBool)
-    //.def ("nextLargeNumber", &Random::nextLargeNumber)
-    //.def ("fillBitsRandomly", py::overload_cast<BigInteger&, int, int> (&Random::fillBitsRandomly))
+        .def ("nextLargeNumber", &Random::nextLargeNumber)
+        .def ("fillBitsRandomly", [](Random& self, py::buffer data)
+        {
+            auto info = data.request (false);
+            self.fillBitsRandomly (info.ptr, static_cast<size_t> (info.size));
+        })
+        .def ("fillBitsRandomly", py::overload_cast<BigInteger&, int, int> (&Random::fillBitsRandomly))
         .def ("setSeed", &Random::setSeed)
         .def ("getSeed", &Random::getSeed)
         .def ("combineSeed", &Random::combineSeed)
@@ -2042,11 +2155,41 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("getNamesOfAllJobs", &ThreadPool::getNamesOfAllJobs)
     ;
 
+    // ============================================================================================ juce::Process
+
+    py::class_<Process> classProcess (m, "Process");
+
+    py::enum_<Process::ProcessPriority> (classProcess, "ProcessPriority")
+        .value ("LowPriority", Process::ProcessPriority::LowPriority)
+        .value ("NormalPriority", Process::ProcessPriority::NormalPriority)
+        .value ("HighPriority", Process::ProcessPriority::HighPriority)
+        .value ("RealtimePriority", Process::ProcessPriority::RealtimePriority)
+        .export_values();
+
+    classProcess
+        .def_static ("setPriority", &Process::setPriority)
+        .def_static ("terminate", &Process::terminate)
+        .def_static ("isForegroundProcess", &Process::isForegroundProcess)
+        .def_static ("makeForegroundProcess", &Process::makeForegroundProcess)
+        .def_static ("hide", &Process::hide)
+        .def_static ("raisePrivilege", &Process::raisePrivilege)
+        .def_static ("lowerPrivilege", &Process::lowerPrivilege)
+        .def_static ("isRunningUnderDebugger", &Process::isRunningUnderDebugger)
+        .def_static ("openDocument", &Process::openDocument)
+        .def_static ("openEmailWithAttachments", &Process::openEmailWithAttachments)
+#if JUCE_MAC
+        .def_static ("setDockIconVisible", &Process::setDockIconVisible)
+#endif
+#if JUCE_MAC || JUCE_LINUX || JUCE_BSD
+        .def_static ("setMaxNumberOfFileHandles", &Process::setMaxNumberOfFileHandles)
+#endif
+    ;
+
     // ============================================================================================ juce::SystemStats
 
     py::class_<SystemStats> classSystemStats (m, "SystemStats");
 
-    py::enum_<SystemStats::OperatingSystemType> (classSystemStats, "OperatingSystemType")
+    py::enum_<SystemStats::OperatingSystemType> (classSystemStats, "OperatingSystemType", py::arithmetic())
         .value ("UnknownOS", SystemStats::OperatingSystemType::UnknownOS)
         .value ("MacOSX", SystemStats::OperatingSystemType::MacOSX)
         .value ("Windows", SystemStats::OperatingSystemType::Windows)

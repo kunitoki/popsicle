@@ -3,6 +3,7 @@ __pycache__/
 .vscode/
 dist/
 build/
+popsicle/
 *.egg-info/
 
 .DS_Store

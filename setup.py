@@ -1,6 +1,7 @@
 import os
 import sys
 import re
+import shutil
 import pathlib
 import platform
 import glob
@@ -10,9 +11,61 @@ from distutils import log
 from distutils import sysconfig
 from setuptools import Extension
 from setuptools.command.build_ext import build_ext
-
+from setuptools.command.install_lib import install_lib
 
 project_name = "popsicle"
+
+
+def glob_python_library(path):
+    for extension in [".a", ".lib", ".so", ".dylib", ".dll", ".pyd"]:
+        for m in glob.iglob(f"{path}/**/*python*{extension}", recursive=True):
+            if "site-packages" not in m:
+                return m
+    return None
+
+
+def get_python_path():
+    vars = sysconfig.get_config_vars()
+
+    if 'LIBPL' in vars and 'LIBRARY' in vars:
+        path = os.path.join(vars['LIBPL'], vars['LIBRARY'])
+        if os.path.exists(path):
+            return path
+
+    if 'SCRIPTDIR' in vars:
+        srcdir = vars['SCRIPTDIR']
+    elif 'srcdir' in vars:
+        srcdir = vars['srcdir']
+    else:
+        srcdir = None
+
+    if srcdir:
+        path = glob_python_library(srcdir)
+        if path and os.path.exists(path):
+            return path
+
+    if 'LIBDEST' in vars:
+        path = vars['LIBDEST']
+        if sys.platform in ["win32", "cygwin"]:
+            path = os.path.split(os.path.split(path)[0])[0]
+
+        path = glob_python_library(path)
+        if path and os.path.exists(path):
+            return path
+
+    log.error("cannot find static library to be linked")
+    exit(-1)
+
+
+def get_python_includes_path():
+    include_dir = sysconfig.get_config_var('CONFINCLUDEPY')
+    if include_dir and os.path.exists(include_dir):
+        return include_dir
+    return sysconfig.get_config_var('INCLUDEPY')
+
+
+def get_python_lib_path():
+    return os.path.dirname(get_python_path())
 
 
 class CMakeExtension(Extension):
@@ -40,8 +93,8 @@ class BuildExtension(build_ext):
             f"-DCMAKE_BUILD_TYPE={config}",
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={output_path}",
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{config.upper()}={output_path}",
-            f"-DPython_INCLUDE_DIRS={self.get_includes_path()}",
-            f"-DPython_LIBRARY_DIRS={self.get_lib_path()}"
+            f"-DPython_INCLUDE_DIRS={get_python_includes_path()}",
+            f"-DPython_LIBRARY_DIRS={get_python_lib_path()}"
         ]
 
         if platform.system() == 'Darwin':
@@ -65,53 +118,33 @@ class BuildExtension(build_ext):
         finally:
             os.chdir(str(cwd))
 
-    def get_python_path(self):
-        vars = sysconfig.get_config_vars()
+class BuildPyiCommand(install_lib):
+    def run(self):
+        self.announce(">>>> building the pyi files !")
 
-        if 'LIBPL' in vars and 'LIBRARY' in vars:
-            path = os.path.join(vars['LIBPL'], vars['LIBRARY'])
-            if os.path.exists(path):
-                return path
+        install_lib.run(self)
 
-        if 'SCRIPTDIR' in vars:
-            srcdir = vars['SCRIPTDIR']
-        elif 'srcdir' in vars:
-            srcdir = vars['srcdir']
-        else:
-            srcdir = None
+        cwd = pathlib.Path().absolute()
 
-        if srcdir:
-            path = self.glob_python_library(srcdir)
-            if path and os.path.exists(path):
-                return path
+        library = None
+        for extension in [".so", ".pyd"]:
+            for m in glob.iglob(f"{cwd}/**/{project_name}{extension}", recursive=True):
+                library = m
+                break
 
-        if 'LIBDEST' in vars:
-            path = vars['LIBDEST']
-            if sys.platform in ["win32", "cygwin"]:
-                path = os.path.split(os.path.split(path)[0])[0]
+        if library is not None:
+            library_dir = os.path.dirname(library)
 
-            path = self.glob_python_library(path)
-            if path and os.path.exists(path):
-                return path
+            try:
+                os.chdir(library_dir)
 
-        log.error("cannot find static library to be linked")
-        exit(-1)
+                self.spawn(["stubgen", "--output", library_dir, "-p", project_name])
 
-    def glob_python_library(self, path):
-        for extension in [".a", ".lib", ".so", ".dylib", ".dll", ".pyd"]:
-            for m in glob.iglob(f"{path}/**/*python*{extension}", recursive=True):
-                if "site-packages" not in m:
-                    return m
-        return None
+                shutil.rmtree(os.path.join(library_dir, "..", "..", project_name), ignore_errors=True)
+                shutil.move(project_name, os.path.join(library_dir, "..", ".."))
 
-    def get_includes_path(self):
-        include_dir = sysconfig.get_config_var('CONFINCLUDEPY')
-        if include_dir and os.path.exists(include_dir):
-            return include_dir
-        return sysconfig.get_config_var('INCLUDEPY')
-
-    def get_lib_path(self):
-        return os.path.dirname(self.get_python_path())
+            finally:
+                os.chdir(str(cwd))
 
 
 with open("modules/juce_python/juce_python.h", mode="r", encoding="utf-8") as f:
@@ -136,12 +169,12 @@ setuptools.setup(
     url="https://github.com/kunitoki/popsicle",
     packages=setuptools.find_packages(".", exclude=["*demo*", "*examples*", "*JUCE*", "*scripts*", "*tests*"]),
     include_package_data=True,
-    cmdclass={"build_ext": BuildExtension},
+    cmdclass={"build_ext": BuildExtension, "install_lib": BuildPyiCommand},
     ext_modules=[CMakeExtension(project_name)],
     zip_safe=False,
     platforms=["macosx", "win32", "linux"],
     python_requires=">=3.10",
-    setup_requires=["wheel"],
+    setup_requires=["wheel", "mypy"],
     license="GPLv3",
     classifiers=[
         "Intended Audience :: Developers",

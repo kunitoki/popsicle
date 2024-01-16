@@ -34,8 +34,10 @@ def START_JUCE_COMPONENT(ComponentClass, name):
 
             self.setResizable(True, True)
             self.setContentNonOwned(self.component, True)
-            self.centreWithSize(800, 600)
+            self.centreWithSize(self.component.getWidth(), self.component.getHeight() + self.getTitleBarHeight())
             self.setVisible(True)
+
+            juce.MessageManager.callAsync(lambda: juce.Process.makeForegroundProcess())
 
         def __del__(self):
             self.clearContentComponent()

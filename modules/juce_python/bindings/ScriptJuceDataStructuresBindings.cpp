@@ -48,7 +48,7 @@ void registerCachedValue (pybind11::module_& m)
         using T = Class<ValueType>;
 
         String className;
-        className << "CachedValue[" << popsicle::Helpers::demangleClassName (typeid (Types).name()) << "]";
+        className << "CachedValue[" << popsicle::Helpers::pythonizeClassName (typeid (Types).name()) << "]";
 
         auto class_ = py::class_<T> (m, className.toRawUTF8())
             .def (py::init<>())
