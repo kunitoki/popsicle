@@ -68,4 +68,20 @@ juce::String pythonizeClassName (juce::StringRef className)
         .replace ("::", ".");
 }
 
+//=================================================================================================
+
+juce::String pythonizeCompoundClassName (juce::StringRef prefixName, juce::StringRef className)
+{
+    const auto pythonizedName = pythonizeClassName (className);
+
+    juce::String result;
+
+    result
+        << prefixName
+        << pythonizedName.substring(0, 1).toUpperCase()
+        << pythonizedName.substring(1);
+
+    return result;
+}
+
 } // namespace popsicle::Helpers

@@ -18,9 +18,4 @@
 
 #include "juce_python.h"
 
-#include "scripting/ScriptEngine.cpp"
-#include "scripting/ScriptBindings.cpp"
-#include "scripting/ScriptUtilities.cpp"
-#include "utilities/ClassDemangling.cpp"
-
-#include "bindings/ScriptJuceBindings.cpp"
+#include "modules/ScriptPopsicleModule.cpp"

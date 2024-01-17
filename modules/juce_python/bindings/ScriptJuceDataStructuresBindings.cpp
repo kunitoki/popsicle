@@ -47,8 +47,7 @@ void registerCachedValue (pybind11::module_& m)
         using ValueType = Types;
         using T = Class<ValueType>;
 
-        String className;
-        className << "CachedValue[" << popsicle::Helpers::pythonizeClassName (typeid (Types).name()) << "]";
+        const auto className = popsicle::Helpers::pythonizeCompoundClassName ("CachedValue", typeid (Types).name());
 
         auto class_ = py::class_<T> (m, className.toRawUTF8())
             .def (py::init<>())
@@ -72,7 +71,7 @@ void registerCachedValue (pybind11::module_& m)
             .def ("getUndoManager", &T::getUndoManager, py::return_value_policy::reference)
         ;
 
-        type[py::type::of (typename Helpers::CppToPython<Types>::type{})] = class_;
+        type[py::type::of (py::cast (Types{}))] = class_;
 
         return true;
     }() && ...);
@@ -318,14 +317,14 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
         .def ("toXmlString", &ValueTree::toXmlString)
         .def ("writeToStream", &ValueTree::writeToStream)
         .def_static ("readFromStream", &ValueTree::readFromStream)
-        .def_static ("readFromData", [](const py::buffer& data)
+        .def_static ("readFromData", [](py::buffer data)
         {
-            py::buffer_info info = data.request();
+            auto info = data.request();
             return ValueTree::readFromData (info.ptr, static_cast<size_t> (info.size));
         })
-        .def_static ("readFromGZIPData", [](const py::buffer& data)
+        .def_static ("readFromGZIPData", [](py::buffer data)
         {
-            py::buffer_info info = data.request();
+            auto info = data.request();
             return ValueTree::readFromGZIPData (info.ptr, static_cast<size_t> (info.size));
         })
         .def ("addListener", &ValueTree::addListener)
@@ -367,15 +366,12 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
 
     classValueTreeSynchroniser
         .def (py::init<const ValueTree&>())
-        .def ("stateChanged", &ValueTreeSynchroniser::stateChanged)
+        .def ("stateChanged", popsicle::Helpers::makeVoidPointerAndSizeCallable<ValueTreeSynchroniser> (&ValueTreeSynchroniser::stateChanged))
         .def ("sendFullSyncCallback", &ValueTreeSynchroniser::sendFullSyncCallback)
-        .def_static ("applyChange", [](ValueTree* root, const py::buffer& data, UndoManager* undoManager)
+        .def_static ("applyChange", [](ValueTree& root, py::buffer data, UndoManager* undoManager)
         {
-            jassert (root != nullptr); // TODO
-
-            py::buffer_info info = data.request();
-
-            return ValueTreeSynchroniser::applyChange (*root, info.ptr, static_cast<size_t> (info.size), undoManager);
+            auto info = data.request();
+            return ValueTreeSynchroniser::applyChange (root, info.ptr, static_cast<size_t> (info.size), undoManager);
         })
         .def ("getRoot", &ValueTreeSynchroniser::getRoot, py::return_value_policy::reference)
     ;

@@ -1,6 +1,8 @@
 from .. import common
 import popsicle as juce
 
+from ctypes import c_uint32
+
 
 def get_big_random(r: juce.Random) -> juce.BigInteger:
     b = juce.BigInteger()
@@ -17,7 +19,7 @@ def test_comparisons():
     assert juce.BigInteger().isZero()
     assert juce.BigInteger(1).isOne()
 
-    for j in range(10000, 0, -1):
+    for _ in range(10000, 0, -1):
         b1 = juce.BigInteger(get_big_random(r))
         b2 = juce.BigInteger(get_big_random(r))
 
@@ -38,28 +40,27 @@ def test_comparisons():
         b5.loadFromMemoryBlock(b3.toMemoryBlock())
         assert b3 == b5
 
-"""
-    beginTest ("Bit setting");
 
-    Random r = getRandom();
-    static uint8 test[2048];
+def test_bit_setting():
+    r = juce.Random.getSystemRandom()
 
-    for (int j = 100000; --j >= 0;)
-    {
-        uint32 offset = static_cast<uint32> (r.nextInt (200) + 10);
-        uint32 num = static_cast<uint32> (r.nextInt (32) + 1);
-        uint32 value = static_cast<uint32> (r.nextInt());
+    test = bytearray(2048)
 
-        if (num < 32)
-            value &= ((1u << num) - 1);
+    for _ in range(10000, 0, -1):
+        offset = r.nextInt (200) + 10
+        num = r.nextInt (32) + 1
+        value = r.nextInt()
 
-        auto old1 = readLittleEndianBitsInBuffer (test, offset - 6, 6);
-        auto old2 = readLittleEndianBitsInBuffer (test, offset + num, 6);
-        writeLittleEndianBitsInBuffer (test, offset, num, value);
-        auto result = readLittleEndianBitsInBuffer (test, offset, num);
+        if num < 32:
+            value &= ((1 << num) - 1)
 
-        expect (result == value);
-        expect (old1 == readLittleEndianBitsInBuffer (test, offset - 6, 6));
-        expect (old2 == readLittleEndianBitsInBuffer (test, offset + num, 6));
-    }
-"""
+        value = c_uint32(value)
+
+        old1 = juce.readLittleEndianBitsInBuffer (test, offset - 6, 6)
+        old2 = juce.readLittleEndianBitsInBuffer (test, offset + num, 6)
+        juce.writeLittleEndianBitsInBuffer (test, offset, num, value.value)
+        result = juce.readLittleEndianBitsInBuffer (test, offset, num)
+
+        assert c_uint32(result).value == value.value
+        assert old1 == juce.readLittleEndianBitsInBuffer (test, offset - 6, 6)
+        assert old2 == juce.readLittleEndianBitsInBuffer (test, offset + num, 6)

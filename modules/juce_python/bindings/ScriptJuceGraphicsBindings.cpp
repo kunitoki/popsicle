@@ -52,8 +52,7 @@ void registerPoint (pybind11::module_& m)
         using ValueType = Types;
         using T = Class<ValueType>;
 
-        String className;
-        className << "Point[" << popsicle::Helpers::pythonizeClassName (typeid (Types).name()) << "]";
+        const auto className = popsicle::Helpers::pythonizeCompoundClassName ("Point", typeid (Types).name());
 
         auto class_ = py::class_<T> (m, className.toRawUTF8())
             .def (py::init<>())
@@ -105,7 +104,7 @@ void registerPoint (pybind11::module_& m)
             .def ("__str__", &T::toString)
         ;
 
-        type[py::type::of (typename Helpers::CppToPython<Types>::type{})] = class_;
+        type[py::type::of (py::cast (Types{}))] = class_;
 
         return true;
     }() && ...);
@@ -129,8 +128,7 @@ void registerLine (pybind11::module_& m)
         using ValueType = Types;
         using T = Class<ValueType>;
 
-        String className;
-        className << "Line[" << popsicle::Helpers::pythonizeClassName (typeid (Types).name()) << "]";
+        const auto className = popsicle::Helpers::pythonizeCompoundClassName ("Line", typeid (Types).name());
 
         auto class_ = py::class_<T> (m, className.toRawUTF8())
             .def (py::init<>())
@@ -172,7 +170,7 @@ void registerLine (pybind11::module_& m)
             .def ("withShortenedEnd", &T::withShortenedEnd)
         ;
 
-        type[py::type::of (typename Helpers::CppToPython<Types>::type{})] = class_;
+        type[py::type::of (py::cast (Types{}))] = class_;
 
         return true;
     }() && ...);
@@ -196,8 +194,7 @@ void registerRectangle (pybind11::module_& m)
         using ValueType = Types;
         using T = Class<ValueType>;
 
-        String className;
-        className << "Rectangle[" << popsicle::Helpers::pythonizeClassName (typeid (Types).name()) << "]";
+        const auto className = popsicle::Helpers::pythonizeCompoundClassName ("Rectangle", typeid (Types).name());
 
         auto class_ = py::class_<T> (m, className.toRawUTF8())
             .def (py::init<>())
@@ -282,7 +279,7 @@ void registerRectangle (pybind11::module_& m)
             .def ("getProportion", &T::template getProportion<double>)
         ;
 
-        type[py::type::of (typename Helpers::CppToPython<Types>::type{})] = class_;
+        type[py::type::of (py::cast (Types{}))] = class_;
 
         return true;
     }() && ...);
@@ -306,8 +303,7 @@ void registerRectangleList (pybind11::module_& m)
         using ValueType = Types;
         using T = Class<ValueType>;
 
-        String className;
-        className << "RectangleList[" << popsicle::Helpers::pythonizeClassName (typeid (Types).name()) << "]";
+        const auto className = popsicle::Helpers::pythonizeCompoundClassName ("RectangleList", typeid (Types).name());
 
         auto class_ = py::class_<T> (m, className.toRawUTF8())
             .def (py::init<>())
@@ -345,7 +341,7 @@ void registerRectangleList (pybind11::module_& m)
             .def ("ensureStorageAllocated", &T::ensureStorageAllocated)
         ;
 
-        type[py::type::of (typename Helpers::CppToPython<Types>::type{})] = class_;
+        type[py::type::of (py::cast (Types{}))] = class_;
 
         return true;
     }() && ...);
@@ -369,8 +365,7 @@ void registerBorderSize (pybind11::module_& m)
         using ValueType = Types;
         using T = Class<ValueType>;
 
-        String className;
-        className << "BorderSize[" << popsicle::Helpers::pythonizeClassName (typeid (Types).name()) << "]";
+        const auto className = popsicle::Helpers::pythonizeCompoundClassName ("BorderSize", typeid (Types).name());
 
         auto class_ = py::class_<T> (m, className.toRawUTF8())
             .def (py::init<>())
@@ -399,7 +394,7 @@ void registerBorderSize (pybind11::module_& m)
             .def (py::self != py::self)
         ;
 
-        type[py::type::of (typename Helpers::CppToPython<Types>::type{})] = class_;
+        type[py::type::of (py::cast (Types{}))] = class_;
 
         return true;
     }() && ...);
@@ -527,6 +522,7 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
     // ============================================================================================ juce::Path
 
     py::class_<Path> classPath (m, "Path");
+
     classPath
         .def (py::init<>())
         .def (py::self == py::self)
@@ -588,7 +584,11 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("setUsingNonZeroWinding", &Path::setUsingNonZeroWinding)
         .def ("isUsingNonZeroWinding", &Path::isUsingNonZeroWinding)
         .def ("loadPathFromStream", &Path::loadPathFromStream)
-        .def ("loadPathFromData", &Path::loadPathFromData)
+        .def ("loadPathFromData", [](Path& self, py::buffer data)
+        {
+            auto info = data.request();
+            self.loadPathFromData (info.ptr, static_cast<size_t> (info.size));
+        })
         .def ("writePathToStream", &Path::writePathToStream)
         .def ("toString", &Path::toString)
         .def ("restoreFromString", &Path::restoreFromString)
@@ -634,7 +634,7 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
     // ============================================================================================ juce::PixelARGB
 
     py::class_<PixelARGB> classPixelARGB (m, "PixelARGB");
-    
+
     classPixelARGB
         .def (py::init<>())
         .def (py::init<uint8, uint8, uint8, uint8>())
@@ -675,7 +675,7 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
     classPixelARGB.attr ("indexB") = py::int_ (static_cast<int> (PixelARGB::indexB));
 
     py::class_<PixelRGB> classPixelRGB (m, "PixelRGB");
-    
+
     classPixelRGB
         .def (py::init<>())
         .def ("getNativeARGB", &PixelRGB::getNativeARGB)
@@ -716,7 +716,7 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
     classPixelRGB.attr ("indexB") = py::int_ (static_cast<int> (PixelRGB::indexB));
 
     py::class_<PixelAlpha> classPixelAlpha (m, "PixelAlpha");
-    
+
     classPixelAlpha
         .def (py::init<>())
         .def ("getNativeARGB", &PixelAlpha::getNativeARGB)
@@ -860,7 +860,7 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .value ("SingleChannel", Image::PixelFormat::SingleChannel)
         .export_values();
 
-    py::class_<Image::BitmapData> classImageBitmapData (classImage, "BitmapData");
+    py::class_<Image::BitmapData> classImageBitmapData (classImage, "BitmapData", py::buffer_protocol());
 
     py::enum_<Image::BitmapData::ReadWriteMode> (classImageBitmapData, "ReadWriteMode")
         .value ("readOnly", Image::BitmapData::ReadWriteMode::readOnly)
@@ -890,6 +890,26 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def_readwrite ("pixelStride", &Image::BitmapData::pixelStride)
         .def_readwrite ("width", &Image::BitmapData::width)
         .def_readwrite ("height", &Image::BitmapData::height)
+        .def_buffer ([](Image::BitmapData& self)
+        {
+            return py::buffer_info
+            (
+                self.data,
+                sizeof (unsigned char),
+                py::format_descriptor<unsigned char>::format(),
+                self.pixelStride,
+                {
+                    self.height,
+                    self.width,
+                    self.pixelStride
+                },
+                {
+                    sizeof (unsigned char) * static_cast<size_t> (self.pixelStride) * static_cast<size_t> (self.width),
+                    sizeof (unsigned char) * static_cast<size_t> (self.pixelStride),
+                    sizeof (unsigned char)
+                }
+            );
+        });
     ;
 
     classImage
@@ -955,12 +975,12 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         {
             PYBIND11_OVERRIDE_PURE (ImagePixelData::Ptr, ImageType, create, format, width, height, shouldClearImage);
         }
-        
+
         int getTypeID() const override
         {
             PYBIND11_OVERRIDE_PURE (int, ImageType, getTypeID);
         }
-    
+
         Image convert (const Image& source) const override
         {
             PYBIND11_OVERRIDE (Image, ImageType, convert, source);

@@ -12,6 +12,7 @@ from distutils import sysconfig
 from setuptools import Extension
 from setuptools.command.build_ext import build_ext
 
+
 project_name = "popsicle"
 root_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -75,7 +76,7 @@ class CMakeExtension(Extension):
 
 class BuildExtension(build_ext):
     def build_extension(self, ext):
-        log.info("entering build extension: cmake")
+        log.info("building with cmake")
 
         cwd = pathlib.Path().absolute()
 
@@ -121,6 +122,8 @@ class BuildExtension(build_ext):
         self.generate_pyi(cwd)
 
     def generate_pyi(self, cwd):
+        log.info("generating pyi files")
+
         library = None
         for extension in [".so", ".pyd"]:
             for m in glob.iglob(f"{cwd}/**/{project_name}{extension}", recursive=True):
@@ -131,11 +134,13 @@ class BuildExtension(build_ext):
             return
 
         library_dir = os.path.dirname(library)
+        temp_pyi_dir = os.path.join(library_dir, project_name)
         final_pyi_dir = os.path.join(root_dir, project_name)
 
         try:
             os.chdir(library_dir)
 
+            shutil.rmtree(temp_pyi_dir, ignore_errors=True)
             shutil.rmtree(final_pyi_dir, ignore_errors=True)
 
             self.spawn(["stubgen", "--output", library_dir, "-p", project_name])

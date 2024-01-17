@@ -71,7 +71,7 @@ public:
      *
      * @return A Result object indicating the success or failure of the script execution.
      */
-    juce::Result runScript (const juce::String& code, pybind11::dict globals = {}, pybind11::dict locals = {});
+    juce::Result runScript (const juce::String& code, pybind11::dict locals = {}, pybind11::dict globals = pybind11::globals());
 
     /**
      * @brief Run a Python script file.
@@ -82,10 +82,10 @@ public:
      *
      * @return A Result object indicating the success or failure of the script execution.
      */
-    juce::Result runScript (const juce::File& script, pybind11::dict globals = {}, pybind11::dict locals = {});
+    juce::Result runScript (const juce::File& script, pybind11::dict locals = {}, pybind11::dict globals = pybind11::globals());
 
 private:
-    juce::Result runScriptInternal (const juce::String& code, pybind11::dict globals = {}, pybind11::dict locals = {});
+    juce::Result runScriptInternal (const juce::String& code, pybind11::dict locals, pybind11::dict globals);
 
     pybind11::scoped_interpreter& pythonEngine;
     juce::StringArray customModules;

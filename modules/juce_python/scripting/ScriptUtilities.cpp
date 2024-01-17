@@ -16,11 +16,28 @@
  * OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE DISCLAIMED.
  */
 
-#include "juce_python.h"
+#include "ScriptUtilities.h"
 
-#include "scripting/ScriptEngine.cpp"
-#include "scripting/ScriptBindings.cpp"
-#include "scripting/ScriptUtilities.cpp"
-#include "utilities/ClassDemangling.cpp"
+#include <optional>
 
-#include "bindings/ScriptJuceBindings.cpp"
+namespace popsicle {
+
+namespace py = pybind11;
+
+ScriptStreamRedirection::ScriptStreamRedirection() noexcept
+{
+#if JUCE_PYTHON_EMBEDDED_INTERPRETER
+    sys = py::module::import ("__popsicle__");
+
+    sys.attr ("__redirect__")();
+#endif
+}
+
+ScriptStreamRedirection::~ScriptStreamRedirection() noexcept
+{
+#if JUCE_PYTHON_EMBEDDED_INTERPRETER
+    sys.attr ("__restore__")();
+#endif
+}
+
+} // namespace popsicle

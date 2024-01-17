@@ -48,4 +48,14 @@ juce::String demangleClassName (juce::StringRef className);
  */
 juce::String pythonizeClassName (juce::StringRef className);
 
+/**
+ * @brief Demangle a C++ class name and pythonize it by compunding to another class name.
+ *
+ * @param prefixName The prefix to apply to the class name.
+ * @param className The mangled class name to demangle and pythonize.
+ *
+ * @return A String containing the demangled and pythonized class name with a prefix.
+ */
+juce::String pythonizeCompoundClassName (juce::StringRef prefixName, juce::StringRef className);
+
 } // namespace popsicle::Helpers

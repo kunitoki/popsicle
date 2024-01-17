@@ -40,4 +40,16 @@ std::optional<T> python_cast (const pybind11::object& value)
     }
 }
 
+/**
+ * @brief
+ */
+struct ScriptStreamRedirection
+{
+    ScriptStreamRedirection() noexcept;
+    ~ScriptStreamRedirection() noexcept;
+
+private:
+    pybind11::object sys;
+};
+
 } // namespace popsicle

@@ -42,10 +42,11 @@ PopsicleDemo::PopsicleDemo()
 
     engine.runScript (R"(
 # An example of scriptable self
+print("Scripting JUCE!")
 this.text = "Popsicle"
 this.setOpaque(True)
 this.setSize(600, 300)
-    )", pybind11::globals(), locals);
+    )", locals);
 }
 
 PopsicleDemo::~PopsicleDemo()

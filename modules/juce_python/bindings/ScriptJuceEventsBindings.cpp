@@ -180,11 +180,11 @@ void registerJuceEventsBindings (pybind11::module_& m)
 #if JUCE_MODAL_LOOPS_PERMITTED
         .def ("runDispatchLoopUntil", &MessageManager::runDispatchLoopUntil)
 #endif
-        .def_static ("callAsync", &MessageManager::callAsync) // TODO - test
-        .def ("callFunctionOnMessageThread", &MessageManager::callFunctionOnMessageThread)
+        .def_static ("callAsync", &MessageManager::callAsync)
+    //.def ("callFunctionOnMessageThread", &MessageManager::callFunctionOnMessageThread)
         .def ("isThisTheMessageThread", &MessageManager::isThisTheMessageThread)
         .def ("setCurrentThreadAsMessageThread", &MessageManager::setCurrentThreadAsMessageThread)
-    //.def ("getCurrentMessageThread", &MessageManager::getCurrentMessageThread)
+        .def ("getCurrentMessageThread", &MessageManager::getCurrentMessageThread)
         .def ("currentThreadHasLockedMessageManager", &MessageManager::currentThreadHasLockedMessageManager)
         .def_static ("existsAndIsLockedByCurrentThread", &MessageManager::existsAndIsLockedByCurrentThread)
         .def_static ("existsAndIsCurrentThread", &MessageManager::existsAndIsCurrentThread)

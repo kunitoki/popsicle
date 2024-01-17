@@ -29,47 +29,6 @@ namespace popsicle::Helpers {
 //=================================================================================================
 
 template <class T>
-struct CppToPython;
-
-template <>
-struct CppToPython<bool>
-{
-    using type = pybind11::bool_;
-};
-
-template <>
-struct CppToPython<int>
-{
-    using type = pybind11::int_;
-};
-
-template <>
-struct CppToPython<juce::int64>
-{
-    using type = pybind11::int_;
-};
-
-template <>
-struct CppToPython<float>
-{
-    using type = pybind11::float_;
-};
-
-template <>
-struct CppToPython<double>
-{
-    using type = pybind11::float_;
-};
-
-template <>
-struct CppToPython<juce::String>
-{
-    using type = pybind11::str;
-};
-
-//=================================================================================================
-
-template <class T>
 struct NoopDeleter
 {
     inline void operator()(T*) const noexcept
@@ -88,7 +47,7 @@ auto makeVoidPointerAndSizeCallable (F&& func)
     {
         return [func](T* self, py::buffer data)
         {
-            auto info = data.request(true);
+            auto info = data.request (true);
 
             using return_value = std::invoke_result_t<F, T&, void*, size_t>;
 
@@ -102,7 +61,7 @@ auto makeVoidPointerAndSizeCallable (F&& func)
     {
         return [func](const T* self, py::buffer data)
         {
-            auto info = data.request(true);
+            auto info = data.request (true);
 
             using return_value = std::invoke_result_t<F, T&, void*, size_t>;
 

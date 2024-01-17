@@ -19,6 +19,7 @@
 #include "ScriptEngine.h"
 #include "ScriptBindings.h"
 #include "ScriptException.h"
+#include "ScriptUtilities.h"
 
 #include <regex>
 
@@ -26,9 +27,9 @@ namespace popsicle {
 
 namespace py = pybind11;
 
-//=================================================================================================
-
 namespace {
+
+//=================================================================================================
 
 [[maybe_unused]] juce::String replaceBrokenLineNumbers (const juce::String& input, const juce::String& code)
 {
@@ -92,9 +93,12 @@ ScriptEngine::~ScriptEngine()
 
 //=================================================================================================
 
-juce::Result ScriptEngine::runScript (const juce::String& code, py::dict globals, py::dict locals)
+juce::Result ScriptEngine::runScript (const juce::String& code, py::dict locals, py::dict globals)
 {
     currentScriptCode = code;
+    if (! currentScriptCode.startsWith (juce::newLine))
+        currentScriptCode = juce::String (juce::newLine) + currentScriptCode;
+
     currentScriptFile = juce::File();
 
     return runScriptInternal (currentScriptCode, std::move (globals), std::move (locals));
@@ -102,7 +106,7 @@ juce::Result ScriptEngine::runScript (const juce::String& code, py::dict globals
 
 //=================================================================================================
 
-juce::Result ScriptEngine::runScript (const juce::File& script, py::dict globals, py::dict locals)
+juce::Result ScriptEngine::runScript (const juce::File& script, py::dict locals, py::dict globals)
 {
     {
         auto is = script.createInputStream();
@@ -110,6 +114,9 @@ juce::Result ScriptEngine::runScript (const juce::File& script, py::dict globals
             return juce::Result::fail ("Unable to open the requested script file");
 
         currentScriptCode = is->readEntireStreamAsString();
+        if (! currentScriptCode.startsWith (juce::newLine))
+            currentScriptCode = juce::String (juce::newLine) + currentScriptCode;
+
         currentScriptFile = script;
     }
 
@@ -118,7 +125,7 @@ juce::Result ScriptEngine::runScript (const juce::File& script, py::dict globals
 
 //=================================================================================================
 
-juce::Result ScriptEngine::runScriptInternal (const juce::String& code, py::dict globals, py::dict locals)
+juce::Result ScriptEngine::runScriptInternal (const juce::String& code, py::dict locals, py::dict globals)
 {
 #if JUCE_PYTHON_SCRIPT_CATCH_EXCEPTION
     try
@@ -126,6 +133,8 @@ juce::Result ScriptEngine::runScriptInternal (const juce::String& code, py::dict
 
     {
         py::gil_scoped_acquire acquire;
+
+        [[maybe_unused]] const auto redirectStreamsUntilExit = ScriptStreamRedirection();
 
         for (const auto& m : customModules)
             globals [m.toRawUTF8()] = py::module_::import (m.toRawUTF8());
