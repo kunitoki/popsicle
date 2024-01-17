@@ -97,7 +97,7 @@ juce::Result ScriptEngine::runScript (const juce::String& code, py::dict locals,
 {
     currentScriptCode = code;
     if (! currentScriptCode.startsWith (juce::newLine))
-        currentScriptCode = juce::String (juce::newLine) + currentScriptCode;
+        currentScriptCode = static_cast<juce::String> (juce::newLine) + currentScriptCode;
 
     currentScriptFile = juce::File();
 
@@ -115,7 +115,7 @@ juce::Result ScriptEngine::runScript (const juce::File& script, py::dict locals,
 
         currentScriptCode = is->readEntireStreamAsString();
         if (! currentScriptCode.startsWith (juce::newLine))
-            currentScriptCode = juce::String (juce::newLine) + currentScriptCode;
+            currentScriptCode = static_cast<juce::String> (juce::newLine) + currentScriptCode;
 
         currentScriptFile = script;
     }
