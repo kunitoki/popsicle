@@ -121,7 +121,8 @@ class BuildExtension(build_ext):
         finally:
             os.chdir(str(cwd))
 
-        self.generate_pyi(cwd)
+        if sys.platform not in ["win32", "cygwin"]:
+            self.generate_pyi(cwd)
 
     def generate_pyi(self, cwd):
         log.info("generating pyi files")
