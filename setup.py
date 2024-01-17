@@ -116,6 +116,8 @@ class BuildExtension(build_ext):
                 build_command += ["--", f"-j{os.cpu_count()}"]
             self.spawn(build_command)
 
+            #self.spawn(["cmake", "--build", ".", "--target", f"{project_name}_coverage"])
+
         finally:
             os.chdir(str(cwd))
 
@@ -177,7 +179,6 @@ setuptools.setup(
     zip_safe=False,
     platforms=["macosx", "win32", "linux"],
     python_requires=">=3.10",
-    setup_requires=["wheel", "mypy"],
     license="GPLv3",
     classifiers=[
         "Intended Audience :: Developers",
