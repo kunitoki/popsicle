@@ -68,6 +68,8 @@ public:
      * Executes the given Python code within the Python interpreter.
      *
      * @param code The Python code to be executed.
+     * @param locals A python dictionary containing local variables.
+     * @param globals A python dictionary containing global variables.
      *
      * @return A Result object indicating the success or failure of the script execution.
      */
@@ -79,6 +81,8 @@ public:
      * Executes the given Python file within the Python interpreter.
      *
      * @param script The Python file to be executed.
+     * @param locals A python dictionary containing local variables.
+     * @param globals A python dictionary containing global variables.
      *
      * @return A Result object indicating the success or failure of the script execution.
      */

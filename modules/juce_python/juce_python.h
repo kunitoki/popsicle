@@ -59,7 +59,7 @@
     Enable or disable catching script exceptions.
 */
 #ifndef JUCE_PYTHON_SCRIPT_CATCH_EXCEPTION
- #define JUCE_PYTHON_SCRIPT_CATCH_EXCEPTION 0
+ #define JUCE_PYTHON_SCRIPT_CATCH_EXCEPTION 1
 #endif
 
 #include "scripting/ScriptException.h"

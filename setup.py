@@ -11,6 +11,7 @@ from distutils import log
 from distutils import sysconfig
 from setuptools import Extension
 from setuptools.command.build_ext import build_ext
+from setuptools.command.install_scripts import install_scripts
 
 
 project_name = "popsicle"
@@ -74,7 +75,7 @@ class CMakeExtension(Extension):
         super().__init__(name, sources=[])
 
 
-class BuildExtension(build_ext):
+class CMakeBuildExtension(build_ext):
     def build_extension(self, ext):
         log.info("building with cmake")
 
@@ -154,6 +155,17 @@ class BuildExtension(build_ext):
             os.chdir(str(cwd))
 
 
+class CustomInstallScripts(install_scripts):
+    def run(self):
+        install_scripts.run(self)
+
+        if sys.platform not in ["win32", "cygwin"]:
+            log.info("cleaning up pyi files")
+            final_pyi_dir = os.path.join(root_dir, project_name)
+            if os.path.isdir(final_pyi_dir):
+                shutil.rmtree(final_pyi_dir, ignore_errors=True)
+
+
 with open("modules/juce_python/juce_python.h", mode="r", encoding="utf-8") as f:
     version = re.findall(r"version\:\s+(\d+\.\d+\.\d+)", f.read())[0]
 
@@ -175,7 +187,7 @@ setuptools.setup(
     url="https://github.com/kunitoki/popsicle",
     packages=setuptools.find_packages(".", exclude=["*demo*", "*examples*", "*JUCE*", "*scripts*", "*tests*"]),
     include_package_data=True,
-    cmdclass={"build_ext": BuildExtension},
+    cmdclass={"build_ext": CMakeBuildExtension, "install_scripts": CustomInstallScripts},
     ext_modules=[CMakeExtension(project_name)],
     zip_safe=False,
     platforms=["macosx", "win32", "linux"],

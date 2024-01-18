@@ -40,6 +40,11 @@ PopsicleDemo::PopsicleDemo()
     locals["juce"] = pybind11::module_::import ("popsicle");
     locals["this"] = pybind11::cast (this);
 
+    auto result = engine.runScript (R"(xyz())", locals);
+
+    if (result.failed())
+        std::cout << result.getErrorMessage();
+
     engine.runScript (R"(
 # An example of scriptable self
 print("Scripting JUCE!")

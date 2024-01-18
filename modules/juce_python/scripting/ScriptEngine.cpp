@@ -95,13 +95,7 @@ ScriptEngine::~ScriptEngine()
 
 juce::Result ScriptEngine::runScript (const juce::String& code, py::dict locals, py::dict globals)
 {
-    currentScriptCode.clear();
-
-    if (! currentScriptCode.startsWith (juce::newLine))
-        currentScriptCode << juce::newLine;
-
-    currentScriptCode << code;
-
+    currentScriptCode = code;
     currentScriptFile = juce::File();
 
     return runScriptInternal (currentScriptCode, std::move (globals), std::move (locals));
@@ -116,15 +110,7 @@ juce::Result ScriptEngine::runScript (const juce::File& script, py::dict locals,
         if (is == nullptr)
             return juce::Result::fail ("Unable to open the requested script file");
 
-        auto fileContent = is->readEntireStreamAsString();
-
-        currentScriptCode.clear();
-
-        if (! fileContent.startsWith (juce::newLine))
-            currentScriptCode << juce::newLine;
-
-        currentScriptCode << fileContent;
-
+        currentScriptCode = is->readEntireStreamAsString();
         currentScriptFile = script;
     }
 
