@@ -48,3 +48,14 @@ def test_number_constructor():
     assert d.isNotEmpty()
     assert str(d) == "-1.2345"
     assert d.length() == 7
+
+def test_hashCode():
+    a = juce.String("abc")
+    assert a.hashCode() == 96354
+
+def test_toHexString():
+    a = juce.String.toHexString(1)
+    assert a == "1"
+
+    b = juce.String.toHexString(31)
+    assert b == "1f"

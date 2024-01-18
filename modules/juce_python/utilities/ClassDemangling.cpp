@@ -50,9 +50,13 @@ juce::String demangleClassName (juce::StringRef className)
     std::free (demangledName);
 
 #else
-    char demangledName [1024] = { 0 };
-    __unDName (demangledName, name.toUTF8() + 1, juce::numElementsInArray (demangledName), malloc, free, 0x2800);
-    name = juce::String::fromUTF8 (demangledName);
+    if (name.startsWith("class "))
+    {
+        char demangledName[1024] = { 0 };
+        auto offset = name.startsWithChar (L'?') ? 1 : 0;
+        __unDName(demangledName, name.toRawUTF8() + offset, juce::numElementsInArray(demangledName), malloc, free, 0x2800);
+        name = juce::String::fromUTF8(demangledName).replace("class ", "");
+    }
 
 #endif
 

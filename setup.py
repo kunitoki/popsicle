@@ -122,8 +122,7 @@ class CMakeBuildExtension(build_ext):
         finally:
             os.chdir(str(cwd))
 
-        if sys.platform not in ["win32", "cygwin"]:
-            self.generate_pyi(cwd)
+        self.generate_pyi(cwd)
 
     def generate_pyi(self, cwd):
         log.info("generating pyi files")
@@ -159,11 +158,10 @@ class CustomInstallScripts(install_scripts):
     def run(self):
         install_scripts.run(self)
 
-        if sys.platform not in ["win32", "cygwin"]:
-            log.info("cleaning up pyi files")
-            final_pyi_dir = os.path.join(root_dir, project_name)
-            if os.path.isdir(final_pyi_dir):
-                shutil.rmtree(final_pyi_dir, ignore_errors=True)
+        log.info("cleaning up pyi files")
+        final_pyi_dir = os.path.join(root_dir, project_name)
+        if os.path.isdir(final_pyi_dir):
+            shutil.rmtree(final_pyi_dir, ignore_errors=True)
 
 
 with open("modules/juce_python/juce_python.h", mode="r", encoding="utf-8") as f:
