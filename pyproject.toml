@@ -16,7 +16,7 @@ testpaths = ["tests/"]
 [tool.cibuildwheel]
 build-verbosity = 3
 test-requires = "pytest"
-test-command = "pytest"
+test-command = "pytest {project}/tests"
 manylinux-x86_64-image = "manylinux2014"
 manylinux-i686-image = "manylinux2014"
 
