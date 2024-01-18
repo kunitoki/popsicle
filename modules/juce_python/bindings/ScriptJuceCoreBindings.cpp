@@ -30,8 +30,10 @@ namespace detail {
 
 //=================================================================================================
 
-bool type_caster<juce::StringRef>::load (handle src, bool)
+bool type_caster<juce::StringRef>::load (handle src, bool convert)
 {
+    juce::ignoreUnused (convert);
+
     if (! src)
         return false;
 
@@ -44,6 +46,9 @@ bool type_caster<juce::StringRef>::load (handle src, bool)
         return false;
 
     value = buffer;
+
+    loader_life_support::add_patient (src);
+
     return true;
 }
 
@@ -83,14 +88,10 @@ bool type_caster<juce::StringRef>::load_raw (handle src)
 
 bool type_caster<juce::String>::load (handle src, bool convert)
 {
+    juce::ignoreUnused (convert);
+
     if (! src)
         return false;
-
-    if (base_type::load (src, convert))
-    {
-        value = *reinterpret_cast<juce::String*> (base_type::value);
-        return true;
-    }
 
     if (! PyUnicode_Check (src.ptr()))
         return load_raw(src);
@@ -107,9 +108,6 @@ bool type_caster<juce::String>::load (handle src, bool convert)
 handle type_caster<juce::String>::cast (const juce::String& src, return_value_policy policy, handle parent)
 {
     juce::ignoreUnused (policy, parent);
-
-    //if (auto result = base_type::cast (src, policy, parent); result.check())
-    //    return result;
 
     return PyUnicode_FromStringAndSize (src.toRawUTF8(), static_cast<Py_ssize_t> (src.getNumBytesAsUTF8()));
 }
@@ -137,17 +135,6 @@ bool type_caster<juce::String>::load_raw (handle src)
     }
 
     return false;
-}
-
-//=================================================================================================
-
-handle type_caster<juce::NewLine>::cast (const juce::NewLine& src, return_value_policy policy, handle parent)
-{
-    juce::ignoreUnused (policy, parent);
-
-    const juce::String newLineString = src;
-
-    return PyUnicode_FromStringAndSize (newLineString.toRawUTF8(), static_cast<Py_ssize_t> (newLineString.getNumBytesAsUTF8()));
 }
 
 //=================================================================================================
@@ -184,8 +171,8 @@ handle type_caster<juce::Identifier>::cast (const juce::Identifier& src, return_
 {
     juce::ignoreUnused (policy, parent);
 
-    //if (auto result = base_type::cast (src, policy, parent); result.check())
-    //    return result;
+    if (auto result = base_type::cast (src, policy, parent))
+        return result;
 
     return make_caster<juce::String>::cast (src.toString(), policy, parent);
 }
@@ -609,7 +596,6 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
 
     // ============================================================================================ juce Forwards
 
-    py::class_<StringRef> (m, "StringRef");
     py::class_<StringArray> (m, "StringArray");
     py::class_<NamedValueSet> (m, "NamedValueSet");
     py::class_<var> (m, "var");
@@ -633,7 +619,8 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("isValid", &Identifier::isValid)
         .def ("isNull", &Identifier::isNull)
         .def_static ("isValidIdentifier", &Identifier::isValidIdentifier)
-        .def ("__str__", [](const Identifier& self) { return py::str (self.toString().toRawUTF8()); })
+        .def ("__repr__", &Identifier::toString)
+        .def ("__str__", &Identifier::toString)
     ;
 
     // ============================================================================================ juce::ByteOrder
@@ -789,169 +776,9 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("parseString", &BigInteger::parseString)
         .def ("toMemoryBlock", &BigInteger::toMemoryBlock)
         .def ("loadFromMemoryBlock", &BigInteger::loadFromMemoryBlock)
+        .def ("__repr__", &BigInteger::toString)
         .def ("__str__", &BigInteger::toString)
     ;
-
-    // ============================================================================================ juce::String
-
-    py::class_<String> classString (m, "String");
-
-    classString
-        .def (py::init<>())
-        .def (py::init<const char*>())
-        .def (py::init<const char*, size_t>())
-        .def (py::init<const wchar_t*>())
-        .def (py::init<const wchar_t*, size_t>())
-        .def (py::init<StringRef>())
-        .def (py::init<const String&>())
-        .def (py::init<int>())
-        .def (py::init<int64>())
-        .def (py::init<float>())
-        .def (py::init<double>())
-        .def (py::init<float, int, bool>())
-        .def (py::init<double, int, bool>())
-   //.def_static ("charToString", &String::charToString)
-        .def ("hashCode", &String::hashCode)
-        .def ("hashCode64", &String::hashCode64)
-        .def ("hash", &String::hash)
-        .def ("length", &String::length)
-        .def (py::self += py::self)
-    //.def (py::self += const char*{})
-    //.def (py::self += const wchar_t*{})
-        .def (py::self += int{})
-        .def (py::self += int64{})
-        .def (py::self += char{})
-        .def (py::self += wchar_t{})
-        .def ("append", &String::append)
-    //.def ("appendCharPointer", py::overload_cast<String::CharPointerType, String::CharPointerType> (&String::appendCharPointer))
-        .def ("isEmpty", &String::isEmpty)
-        .def ("isNotEmpty", &String::isNotEmpty)
-        .def ("clear", &String::clear)
-        .def ("equalsIgnoreCase", py::overload_cast<const String&> (&String::equalsIgnoreCase, py::const_))
-        .def ("equalsIgnoreCase", py::overload_cast<StringRef> (&String::equalsIgnoreCase, py::const_))
-        .def ("equalsIgnoreCase", py::overload_cast<const wchar_t*> (&String::equalsIgnoreCase, py::const_))
-        .def ("equalsIgnoreCase", py::overload_cast<const char*> (&String::equalsIgnoreCase, py::const_))
-        .def ("compare", py::overload_cast<const String&> (&String::compare, py::const_))
-        .def ("compare", py::overload_cast<const wchar_t*> (&String::compare, py::const_))
-        .def ("compare", py::overload_cast<const char*> (&String::compare, py::const_))
-        .def ("compareIgnoreCase", &String::compareIgnoreCase)
-        .def ("compareNatural", &String::compareNatural)
-        .def ("startsWith", &String::startsWith)
-        .def ("startsWithChar", &String::startsWithChar)
-        .def ("startsWithIgnoreCase", &String::startsWithIgnoreCase)
-        .def ("endsWith", &String::endsWith)
-        .def ("endsWithChar", &String::endsWithChar)
-        .def ("endsWithIgnoreCase", &String::endsWithIgnoreCase)
-        .def ("contains", &String::contains)
-        .def ("containsChar", &String::containsChar)
-        .def ("containsIgnoreCase", &String::containsIgnoreCase)
-        .def ("containsWholeWord", &String::containsWholeWord)
-        .def ("containsWholeWordIgnoreCase", &String::containsWholeWordIgnoreCase)
-        .def ("indexOfWholeWord", &String::indexOfWholeWord)
-        .def ("indexOfWholeWordIgnoreCase", &String::indexOfWholeWordIgnoreCase)
-        .def ("containsAnyOf", &String::containsAnyOf)
-        .def ("containsOnly", &String::containsOnly)
-        .def ("containsNonWhitespaceChars", &String::containsNonWhitespaceChars)
-        .def ("matchesWildcard", &String::matchesWildcard)
-        .def ("indexOfChar", py::overload_cast<juce_wchar> (&String::indexOfChar, py::const_))
-        .def ("indexOfChar", py::overload_cast<int, juce_wchar> (&String::indexOfChar, py::const_))
-        .def ("indexOfAnyOf", &String::indexOfAnyOf)
-        .def ("indexOf", py::overload_cast<StringRef> (&String::indexOf, py::const_))
-        .def ("indexOf", py::overload_cast<int, StringRef> (&String::indexOf, py::const_))
-        .def ("indexOfIgnoreCase", py::overload_cast<StringRef> (&String::indexOfIgnoreCase, py::const_))
-        .def ("indexOfIgnoreCase", py::overload_cast<int, StringRef> (&String::indexOfIgnoreCase, py::const_))
-        .def ("lastIndexOfChar", &String::lastIndexOfChar)
-        .def ("lastIndexOf", &String::lastIndexOf)
-        .def ("lastIndexOfIgnoreCase", &String::lastIndexOfIgnoreCase)
-        .def ("lastIndexOfAnyOf", &String::lastIndexOfAnyOf)
-        .def ("getLastCharacter", &String::getLastCharacter)
-        .def ("substring", py::overload_cast<int, int> (&String::substring, py::const_))
-        .def ("substring", py::overload_cast<int> (&String::substring, py::const_))
-        .def ("dropLastCharacters", &String::dropLastCharacters)
-        .def ("getLastCharacters", &String::getLastCharacters)
-        .def ("fromFirstOccurrenceOf", &String::fromFirstOccurrenceOf)
-        .def ("fromLastOccurrenceOf", &String::fromLastOccurrenceOf)
-        .def ("upToFirstOccurrenceOf", &String::upToFirstOccurrenceOf)
-        .def ("upToLastOccurrenceOf", &String::upToLastOccurrenceOf)
-        .def ("trim", &String::trim)
-        .def ("trimStart", &String::trimStart)
-        .def ("trimEnd", &String::trimEnd)
-        .def ("trimCharactersAtStart", &String::trimCharactersAtStart)
-        .def ("trimCharactersAtEnd", &String::trimCharactersAtEnd)
-        .def ("toUpperCase", &String::toUpperCase)
-        .def ("toLowerCase", &String::toLowerCase)
-        .def ("replaceSection", &String::replaceSection)
-        .def ("replace", &String::replace)
-        .def ("replaceFirstOccurrenceOf", &String::replaceFirstOccurrenceOf)
-        .def ("replaceCharacter", &String::replaceCharacter)
-        .def ("replaceCharacters", &String::replaceCharacters)
-        .def ("retainCharacters", &String::retainCharacters)
-        .def ("removeCharacters", &String::removeCharacters)
-        .def ("initialSectionContainingOnly", &String::initialSectionContainingOnly)
-        .def ("initialSectionNotContaining", &String::initialSectionNotContaining)
-        .def ("isQuotedString", &String::isQuotedString)
-        .def ("unquoted", &String::unquoted)
-        .def ("quoted", &String::quoted)
-        .def_static ("repeatedString", &String::repeatedString)
-        .def ("paddedLeft", &String::paddedLeft)
-        .def ("paddedRight", &String::paddedRight)
-        .def_static ("createStringFromData", [](py::buffer data)
-        {
-            auto info = data.request();
-            return String::createStringFromData (info.ptr, static_cast<int> (info.size));
-        })
-    //.def ("begin", &String::begin)
-    //.def ("end", &String::end)
-        .def ("getIntValue", &String::getIntValue)
-        .def ("getLargeIntValue", &String::getLargeIntValue)
-        .def ("getTrailingIntValue", &String::getTrailingIntValue)
-        .def ("getFloatValue", &String::getFloatValue)
-        .def ("getDoubleValue", &String::getDoubleValue)
-        .def ("getHexValue32", &String::getHexValue32)
-        .def ("getHexValue64", &String::getHexValue64)
-        .def_static ("toHexString", &String::template toHexString<int>)
-        .def_static ("toHexString", &String::template toHexString<int64>)
-        .def_static ("toHexString", [](py::buffer data, int groupSize)
-        {
-            const auto info = data.request();
-            return String::toHexString (info.ptr, static_cast<int> (info.size), groupSize);
-        }, "data"_a, "groupSize"_a = 1)
-    //.def_static ("toDecimalStringWithSignificantFigures", &String::toDecimalStringWithSignificantFigures)
-    //.def ("getCharPointer", &String::getCharPointer)
-    //.def ("toUTF8", &String::toUTF8)
-        .def ("toRawUTF8", &String::toRawUTF8)
-    //.def ("toUTF16", &String::toUTF16)
-    //.def ("toUTF32", &String::toUTF32)
-    //.def ("toWideCharPointer", &String::toWideCharPointer)
-        .def ("getCharPointer", &String::getCharPointer)
-        .def_static ("fromUTF8", [](const char* const buffer) { return String::fromUTF8(buffer); })
-        .def_static ("fromUTF8", [](const char* const buffer, int bufferSizeBytes) { return String::fromUTF8(buffer, bufferSizeBytes); })
-        .def ("getNumBytesAsUTF8", &String::getNumBytesAsUTF8)
-    //.def ("copyToUTF8", &String::copyToUTF8)
-    //.def ("copyToUTF16", &String::copyToUTF16)
-    //.def ("copyToUTF32", &String::copyToUTF32)
-        .def ("preallocateBytes", &String::preallocateBytes)
-    //.def ("swapWith", &String::swapWith)
-#if JUCE_MAC
-        .def ("convertToPrecomposedUnicode", &String::convertToPrecomposedUnicode)
-#endif
-        .def ("getReferenceCount", &String::getReferenceCount)
-        .def ("__str__", [](const String& self) { return py::str (self.toRawUTF8()); })
-        .def (py::self == py::self)
-        .def (py::self != py::self)
-    ;
-
-    py::implicitly_convertible<py::str, String>();
-
-    // ============================================================================================ juce::NewLine
-
-    py::class_<NewLine> classNewLine (m, "NewLine");
-
-    classNewLine
-        .def ("getDefault", &NewLine::getDefault)
-    ;
-
-    m.add_object ("newLine", py::cast (newLine));
 
     // ============================================================================================ juce::Base64
 
@@ -977,6 +804,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     py::class_<Result> classResult (m, "Result");
 
     classResult
+        .def (py::init<const Result&>())
         .def_static ("ok", &Result::ok)
         .def_static ("fail", &Result::fail)
         .def ("wasOk", &Result::wasOk)
@@ -993,15 +821,27 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
 
     classUuid
         .def (py::init<>())
+        .def (py::init<const Uuid&>())
+        .def (py::init ([](py::buffer data)
+        {
+            auto info = data.request();
+
+            if (info.size != 16)
+                py::pybind11_fail ("Invalid length of bytes to construct a Uuid class, needs to be 16");
+
+            return Uuid (static_cast<const uint8*> (info.ptr));
+        }))
+        .def (py::init<const String&>())
         .def ("isNull", &Uuid::isNull)
         .def_static ("null", &Uuid::null)
         .def (py::self == py::self)
         .def (py::self != py::self)
+        .def (py::self == String())
+        .def (py::self != String())
         .def (py::self < py::self)
         .def (py::self > py::self)
         .def (py::self <= py::self)
         .def (py::self >= py::self)
-    //.def (py::self = String())
         .def ("toString", &Uuid::toString)
         .def ("toDashedString", &Uuid::toDashedString)
         .def ("getTimeLow", &Uuid::getTimeLow)
@@ -1011,7 +851,11 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("getClockSeqLow", &Uuid::getClockSeqLow)
         .def ("getNode", &Uuid::getNode)
         .def ("hash", &Uuid::hash)
-        .def ("getRawData", &Uuid::getRawData)
+        .def ("getRawData", [](const Uuid& self)
+        {
+            return py::memoryview::from_memory (self.getRawData(), 16);
+        }, py::return_value_policy::reference_internal)
+        .def ("__repr__", &Uuid::toString)
         .def ("__str__", &Uuid::toString)
     ;
 
@@ -1021,7 +865,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
 
     classRelativeTime
         .def (py::init<>())
-    //.def_static ("milliseconds", static_cast<RelativeTime (*)(int)> (&RelativeTime::milliseconds))
+        .def (py::init<const RelativeTime&>())
         .def_static ("milliseconds", static_cast<RelativeTime (*)(int64)> (&RelativeTime::milliseconds))
         .def_static ("seconds", &RelativeTime::seconds)
         .def_static ("minutes", &RelativeTime::minutes)
@@ -1047,7 +891,11 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     py::class_<Time> classTime (m, "Time");
 
     classTime
-    //.def (py::self = Time())
+        .def (py::init<>())
+        .def (py::init<int64>())
+        .def (py::init<const Time&>())
+        .def (py::init<int, int, int, int, int, int, int, bool>(),
+            "year"_a, "month"_a, "day"_a, "hours"_a, "minutes"_a, "seconds"_a = 0, "milliseconds"_a = 0, "useLocalTime"_a = true)
         .def_static ("getCurrentTime", &Time::getCurrentTime)
         .def ("toMilliseconds", &Time::toMilliseconds)
         .def ("getYear", &Time::getYear)
@@ -1149,6 +997,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("getBitRange", &MemoryBlock::getBitRange)
         .def ("toBase64Encoding", &MemoryBlock::toBase64Encoding)
         .def ("fromBase64Encoding", &MemoryBlock::fromBase64Encoding)
+        .def ("__repr__", &MemoryBlock::toString)
         .def ("__str__", &MemoryBlock::toString)
     ;
 

@@ -37,8 +37,6 @@ def START_JUCE_COMPONENT(ComponentClass, name):
             self.centreWithSize(self.component.getWidth(), self.component.getHeight() + self.getTitleBarHeight())
             self.setVisible(True)
 
-            juce.MessageManager.callAsync(lambda: juce.Process.makeForegroundProcess())
-
         def __del__(self):
             self.clearContentComponent()
 
@@ -62,6 +60,8 @@ def START_JUCE_COMPONENT(ComponentClass, name):
 
         def initialise(self, commandLineParameters):
             self.window = DefaultWindow()
+
+            juce.MessageManager.callAsync(lambda: juce.Process.makeForegroundProcess())
 
         def shutdown(self):
             if self.window:

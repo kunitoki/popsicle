@@ -48,7 +48,7 @@ template <>
 struct type_caster<juce::StringRef>
 {
 public:
-    PYBIND11_TYPE_CASTER (juce::StringRef, const_name ("popsicle.StringRef"));
+    PYBIND11_TYPE_CASTER (juce::StringRef, const_name (PYBIND11_STRING_NAME));
 
     bool load (handle src, bool convert);
 
@@ -61,12 +61,10 @@ private:
 //=================================================================================================
 
 template <>
-struct type_caster<juce::String> : public type_caster_base<juce::String>
+struct type_caster<juce::String>
 {
-    using base_type = type_caster_base<juce::String>;
-
 public:
-    PYBIND11_TYPE_CASTER (juce::String, const_name ("popsicle.String"));
+    PYBIND11_TYPE_CASTER (juce::String, const_name (PYBIND11_STRING_NAME));
 
     bool load (handle src, bool convert);
 
@@ -74,17 +72,6 @@ public:
 
 private:
     bool load_raw (handle src);
-};
-
-//=================================================================================================
-
-template <>
-struct type_caster<juce::NewLine>
-{
-public:
-    PYBIND11_TYPE_CASTER (juce::NewLine, const_name ("popsicle.NewLine"));
-
-    static handle cast (const juce::NewLine& src, return_value_policy policy, handle parent);
 };
 
 //=================================================================================================

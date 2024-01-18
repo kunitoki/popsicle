@@ -40,8 +40,8 @@ PopsicleDemo::PopsicleDemo()
     locals["juce"] = pybind11::module_::import ("popsicle");
     locals["this"] = pybind11::cast (this);
 
-    auto result = engine.runScript (R"(xyz())", locals);
-
+    auto result = engine.runScript (R"(
+    )", locals);
     if (result.failed())
         std::cout << result.getErrorMessage();
 

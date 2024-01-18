@@ -52,6 +52,34 @@ def test_number_constructor():
 def test_hashCode():
     a = juce.String("abc")
     assert a.hashCode() == 96354
+    assert a.hashCode64() == 999494
+    assert a.hash() == 999494
+
+def test_length():
+    a = juce.String()
+    assert a.length() == 0
+
+    b = juce.String("")
+    assert b.length() == 0
+
+    c = juce.String("------------------------")
+    assert c.length() == 24
+
+def test_append():
+    a = juce.String()
+    assert a == ""
+
+    a += "1"
+    assert a == "1"
+
+    a += juce.String("2")
+    assert a == "12"
+
+def test_clear():
+    a = juce.String("1234567890")
+    a.clear()
+    assert a.isEmpty()
+    assert a == ""
 
 def test_toHexString():
     a = juce.String.toHexString(1)
@@ -59,3 +87,10 @@ def test_toHexString():
 
     b = juce.String.toHexString(31)
     assert b == "1f"
+
+def test_swapWith():
+    a = juce.String("1")
+    b = juce.String("2")
+    a.swapWith (b)
+    assert a == "2"
+    assert b == "1"

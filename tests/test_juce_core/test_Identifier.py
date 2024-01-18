@@ -1,6 +1,7 @@
 from .. import common
 import popsicle as juce
 
+
 def test_empty_constructor():
     a = juce.Identifier()
     assert a.isNull()
@@ -15,6 +16,7 @@ def test_empty_constructor():
     assert c != a
     assert c != b
 
+
 def test_constructor_python_str():
     a = juce.Identifier("abc")
     assert not a.isNull()
@@ -23,6 +25,7 @@ def test_constructor_python_str():
     b = juce.Identifier("abc")
     assert a == b
 
+
 def test_constructor_copy():
     a = juce.Identifier("abc")
     b = juce.Identifier(a)
@@ -30,13 +33,15 @@ def test_constructor_copy():
     assert a.isValid() == b.isValid()
     assert a.toString() == b.toString()
 
+
 def test_constructor_juce_String():
-    a = juce.Identifier(juce.String("abc"))
+    a = juce.Identifier("abc")
     assert not a.isNull()
     assert a.isValid()
 
     b = juce.Identifier("abc")
     assert a == b
+
 
 def test_comparisons():
     a = juce.Identifier("abc")
@@ -54,6 +59,7 @@ def test_comparisons():
     assert a < c
     assert not (a > c)
 
+
 def test_toString():
     a = juce.Identifier("abc")
     b = juce.Identifier("abc")
@@ -61,6 +67,7 @@ def test_toString():
 
     c = juce.Identifier("123")
     assert a.toString() != c.toString()
+
 
 def test_isValidIdentifier():
     assert not juce.Identifier.isValidIdentifier("")

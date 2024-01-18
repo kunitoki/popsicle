@@ -80,8 +80,10 @@ class Application(juce.JUCEApplication):
 	def getApplicationVersion(self):
 		return "1.0"
 
-	def initialise(self, commandLineParameters: juce.String):
+	def initialise(self, commandLineParameters: str):
 		self.window = MainWindow()
+
+		juce.MessageManager.callAsync(lambda: juce.Process.makeForegroundProcess())
 
 	def shutdown(self):
 		if self.window:
