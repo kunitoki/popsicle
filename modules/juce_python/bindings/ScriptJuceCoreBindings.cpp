@@ -25,6 +25,8 @@
 #define JUCE_PYTHON_INCLUDE_PYBIND11_FUNCTIONAL
 #include "../utilities/PyBind11Includes.h"
 
+#include <string_view>
+
 namespace PYBIND11_NAMESPACE {
 namespace detail {
 
@@ -533,17 +535,14 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     m.def ("juce_isfinite", &juce_isfinite<double>);
     m.def ("exactlyEqual", &exactlyEqual<float>);
     m.def ("exactlyEqual", &exactlyEqual<double>);
-    //m.def ("absoluteTolerance", &absoluteTolerance<float>);
-    //m.def ("absoluteTolerance", &absoluteTolerance<double>);
-    //m.def ("relativeTolerance", &relativeTolerance<float>);
-    //m.def ("relativeTolerance", &relativeTolerance<double>);
-    //m.def ("approximatelyEqual", &approximatelyEqual<char>);
-    //m.def ("approximatelyEqual", &approximatelyEqual<uint8>);
-    //m.def ("approximatelyEqual", &approximatelyEqual<short>);
-    //m.def ("approximatelyEqual", &approximatelyEqual<int>);
-    //m.def ("approximatelyEqual", &approximatelyEqual<int64>);
-    //m.def ("approximatelyEqual", &approximatelyEqual<float>);
-    //m.def ("approximatelyEqual", &approximatelyEqual<double>);
+    m.def ("absoluteTolerance", &absoluteTolerance<float>);
+    m.def ("absoluteTolerance", &absoluteTolerance<double>);
+    m.def ("relativeTolerance", &relativeTolerance<float>);
+    m.def ("relativeTolerance", &relativeTolerance<double>);
+    m.def ("approximatelyEqual", [](int a, int b) { return approximatelyEqual (a, b); });
+    m.def ("approximatelyEqual", [](int64 a, int64 b) { return approximatelyEqual (a, b); });
+    m.def ("approximatelyEqual", [](float a, float b) { return approximatelyEqual (a, b); });
+    m.def ("approximatelyEqual", [](double a, double b) { return approximatelyEqual (a, b); });
     m.def ("nextFloatUp", &nextFloatUp<float>);
     m.def ("nextFloatUp", &nextFloatUp<double>);
     m.def ("nextFloatDown", &nextFloatDown<float>);
@@ -832,6 +831,15 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
             return Uuid (static_cast<const uint8*> (info.ptr));
         }))
         .def (py::init<const String&>())
+        .def (py::init ([](py::object obj)
+        {
+            auto uuid = py::module_::import ("uuid").attr ("UUID");
+            if (! py::isinstance (obj, uuid))
+                py::pybind11_fail ("Invalid object to construct a Uuid class, only uuid.UUID is supported");
+
+            auto buffer = obj.attr ("bytes").cast<py::bytes>();
+            return Uuid (reinterpret_cast<const uint8*> (static_cast<std::string_view> (buffer).data()));
+        }))
         .def ("isNull", &Uuid::isNull)
         .def_static ("null", &Uuid::null)
         .def (py::self == py::self)
@@ -884,6 +892,8 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def (py::self -= py::self)
         .def (py::self += double())
         .def (py::self -= double())
+        .def ("__repr__", &RelativeTime::getDescription)
+        .def ("__str__", &RelativeTime::getDescription)
     ;
 
     // ============================================================================================ juce::Time
@@ -934,6 +944,8 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def_static ("highResolutionTicksToSeconds", &Time::highResolutionTicksToSeconds)
         .def_static ("secondsToHighResolutionTicks", &Time::secondsToHighResolutionTicks)
         .def_static ("getCompilationDate", &Time::getCompilationDate)
+        .def ("__repr__", &Time::toISO8601)
+        .def ("__str__", &Time::toISO8601)
     ;
 
     // ============================================================================================ juce::Range<>
@@ -1722,7 +1734,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def (py::init<File>())
         .def (py::self == py::self)
         .def (py::self != py::self)
-        .def ("toString", &URL::toString)
+        .def ("toString", &URL::toString, "includeGetParameters"_a)
         .def ("isEmpty", &URL::isEmpty)
         .def ("isWellFormed", &URL::isWellFormed)
         .def ("getDomain", &URL::getDomain)
@@ -1761,7 +1773,8 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def_static ("addEscapeChars", &URL::addEscapeChars)
         .def_static ("removeEscapeChars", &URL::removeEscapeChars)
         .def_static ("createWithoutParsing", &URL::createWithoutParsing)
-        .def ("__str__", &URL::toString)
+        .def ("__repr__", [](const URL& self) { return self.toString(true); })
+        .def ("__str__", [](const URL& self) { return self.toString(true); })
     ;
 
     py::class_<URL::InputStreamOptions> classURLInputStreamOptions (classURL, "InputStreamOptions");
