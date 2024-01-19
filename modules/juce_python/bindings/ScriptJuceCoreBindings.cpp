@@ -233,7 +233,7 @@ bool type_caster<juce::var>::load (handle src, bool convert)
         if (! bytes)
             return false;
 
-        value = juce::var (bytes, static_cast<int> (PYBIND11_BYTES_SIZE (source)));
+        value = juce::var (bytes, static_cast<size_t> (PYBIND11_BYTES_SIZE (source)));
     }
 
     else if (PyByteArray_Check (source))
@@ -242,7 +242,7 @@ bool type_caster<juce::var>::load (handle src, bool convert)
         if (! bytearray)
             return false;
 
-        value = juce::var (bytearray, static_cast<int> (PyByteArray_Size (source)));
+        value = juce::var (bytearray, static_cast<size_t> (PyByteArray_Size (source)));
     }
 
     else if (PyTuple_Check (source))
