@@ -1,3 +1,5 @@
+import pytest
+
 import popsicle as juce
 
 
