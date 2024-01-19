@@ -1,6 +1,5 @@
 import pytest
 
-from .. import common
 import popsicle as juce
 
 
@@ -139,7 +138,7 @@ def test_remove_section():
 
 
 def test_copy_from():
-    destination = juce.MemoryBlock(5)
+    destination = juce.MemoryBlock(5, True)
     destination.copyFrom(bytes([1, 2, 3]), 1)
     assert destination.getSize() == 5
     assert destination.getData() == bytes([0, 1, 2, 3, 0])

@@ -1,7 +1,6 @@
 
 import sys
 
-from .. import common
 import popsicle as juce
 
 

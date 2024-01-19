@@ -84,11 +84,14 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
     using namespace juce;
 
     namespace py = pybind11;
+    using namespace py::literals;
 
     // ============================================================================================ juce::UndoableAction
 
     struct PyUndoableAction : public UndoableAction
     {
+        using UndoableAction::UndoableAction;
+
         bool perform() override
         {
             PYBIND11_OVERRIDE_PURE (bool, UndoableAction, perform);
@@ -113,6 +116,7 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
     py::class_<UndoableAction, PyUndoableAction> classUndoableAction (m, "UndoableAction");
 
     classUndoableAction
+        .def (py::init<>())
         .def ("perform", &UndoableAction::perform)
         .def ("undo", &UndoableAction::undo)
         .def ("getSizeInUnits", &UndoableAction::getSizeInUnits)
@@ -124,6 +128,7 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
     py::class_<UndoManager> classUndoManager (m, "UndoManager");
 
     classUndoManager
+        .def (py::init<int, int>(), "maxNumberOfUnitsToKeep"_a = 30000, "minimumTransactionsToKeep"_a = 30)
         .def ("clearUndoHistory", &UndoManager::clearUndoHistory)
         .def ("getNumberOfUnitsTakenUpByStoredCommands", &UndoManager::getNumberOfUnitsTakenUpByStoredCommands)
         .def ("setMaxNumberOfStoredUnits", &UndoManager::setMaxNumberOfStoredUnits)
@@ -184,6 +189,7 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
         .def (py::init<>())
         .def (py::init<const var&>())
         .def (py::init<Value::ValueSource*>())
+        .def (py::init<const Value&>())
         .def ("getValue", &Value::getValue)
         .def ("toString", &Value::toString)
         .def ("setValue", &Value::setValue)
