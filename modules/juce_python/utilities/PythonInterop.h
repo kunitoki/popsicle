@@ -43,35 +43,7 @@ auto makeVoidPointerAndSizeCallable (F&& func)
 {
     namespace py = pybind11;
 
-    if constexpr (std::is_invocable_v<F, T&, void*, size_t>)
-    {
-        return [func](T* self, py::buffer data)
-        {
-            auto info = data.request (true);
-
-            using return_value = std::invoke_result_t<F, T&, void*, size_t>;
-
-            if constexpr (std::is_void_v<return_value>)
-                std::invoke (func, self, info.ptr, static_cast<size_t> (info.size));
-            else
-                return std::invoke (func, self, info.ptr, static_cast<size_t> (info.size));
-        };
-    }
-    else if constexpr (std::is_invocable_v<F, const T&, void*, size_t>)
-    {
-        return [func](const T* self, py::buffer data)
-        {
-            auto info = data.request (true);
-
-            using return_value = std::invoke_result_t<F, T&, void*, size_t>;
-
-            if constexpr (std::is_void_v<return_value>)
-                std::invoke (func, self, info.ptr, static_cast<size_t> (info.size));
-            else
-                return std::invoke (func, self, info.ptr, static_cast<size_t> (info.size));
-        };
-    }
-    else if constexpr (std::is_invocable_v<F, T&, const void*, size_t>)
+    if constexpr (std::is_invocable_v<F, T&, const void*, size_t>)
     {
         return [func](T* self, py::buffer data)
         {
@@ -92,6 +64,34 @@ auto makeVoidPointerAndSizeCallable (F&& func)
             const auto info = data.request();
 
             using return_value = std::invoke_result_t<F, const T&, const void*, size_t>;
+
+            if constexpr (std::is_void_v<return_value>)
+                std::invoke (func, self, info.ptr, static_cast<size_t> (info.size));
+            else
+                return std::invoke (func, self, info.ptr, static_cast<size_t> (info.size));
+        };
+    }
+    else if constexpr (std::is_invocable_v<F, T&, void*, size_t>)
+    {
+        return [func](T* self, py::buffer data)
+        {
+            auto info = data.request (true);
+
+            using return_value = std::invoke_result_t<F, T&, void*, size_t>;
+
+            if constexpr (std::is_void_v<return_value>)
+                std::invoke (func, self, info.ptr, static_cast<size_t> (info.size));
+            else
+                return std::invoke (func, self, info.ptr, static_cast<size_t> (info.size));
+        };
+    }
+    else if constexpr (std::is_invocable_v<F, const T&, void*, size_t>)
+    {
+        return [func](const T* self, py::buffer data)
+        {
+            auto info = data.request (true);
+
+            using return_value = std::invoke_result_t<F, T&, void*, size_t>;
 
             if constexpr (std::is_void_v<return_value>)
                 std::invoke (func, self, info.ptr, static_cast<size_t> (info.size));

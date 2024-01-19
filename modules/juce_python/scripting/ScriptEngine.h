@@ -38,14 +38,14 @@ class ScriptEngine
 {
 public:
     /**
-     * @brief Construct a new ScriptEngine object
+     * @brief Construct a new ScriptEngine object.
      *
      * Initializes a ScriptEngine object.
      */
     ScriptEngine();
 
     /**
-     * @brief Construct a new ScriptEngine object
+     * @brief Construct a new ScriptEngine object.
      *
      * Initializes a ScriptEngine object with the specified custom modules.
      *
@@ -56,7 +56,7 @@ public:
     ScriptEngine (juce::StringArray modules);
 
     /**
-     * @brief Destroy the ScriptEngine object
+     * @brief Destroy the ScriptEngine object.
      *
      * Cleans up resources associated with the ScriptEngine object.
      */
@@ -91,7 +91,7 @@ public:
 private:
     juce::Result runScriptInternal (const juce::String& code, pybind11::dict locals, pybind11::dict globals);
 
-    pybind11::scoped_interpreter& pythonEngine;
+    pybind11::scoped_interpreter pythonInterpreter;
     juce::StringArray customModules;
     juce::String currentScriptCode;
     juce::File currentScriptFile;

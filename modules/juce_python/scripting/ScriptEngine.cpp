@@ -66,22 +66,13 @@ namespace {
 
 //=================================================================================================
 
-inline py::scoped_interpreter& getMainPythonEngine()
-{
-    static py::scoped_interpreter pythonEngine;
-    return pythonEngine;
-}
-
-//=================================================================================================
-
 ScriptEngine::ScriptEngine ()
     : ScriptEngine (juce::StringArray{})
 {
 }
 
 ScriptEngine::ScriptEngine (juce::StringArray modules)
-    : pythonEngine (getMainPythonEngine())
-    , customModules (std::move (modules))
+    : customModules (std::move (modules))
 {
     py::set_shared_data ("_ENGINE", this);
 }

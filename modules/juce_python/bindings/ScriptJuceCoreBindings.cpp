@@ -968,13 +968,31 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
 
     classMemoryBlock
         .def (py::init<>())
-        .def (py::init<const size_t, bool>())
-        .def (py::init<const MemoryBlock&>())
+        .def (py::init<const size_t, bool>(), "initialSize"_a, "initialiseToZero"_a = false)
+        .def (py::init ([](py::list list)
+        {
+            auto mb = MemoryBlock (list.size());
+
+            if (list.size() > 0)
+            {
+                char* data = reinterpret_cast<char*> (mb.getData());
+
+                if (py::isinstance<py::int_> (list[0]))
+                    for (const auto& item : list)
+                        *data++ = static_cast<char> (item.cast<int>());
+                else
+                    for (const auto& item : list)
+                        *data++ = item.cast<char>();
+            }
+
+            return mb;
+        }))
         .def (py::init ([](py::buffer data)
         {
             auto info = data.request();
             return MemoryBlock (info.ptr, static_cast<size_t> (info.size));
         }))
+        .def (py::init<const MemoryBlock&>())
         .def (py::self == py::self)
         .def (py::self != py::self)
         .def ("matches", Helpers::makeVoidPointerAndSizeCallable<MemoryBlock> (&MemoryBlock::matches))
@@ -988,10 +1006,11 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         }, py::return_value_policy::reference_internal)
         .def ("__getitem__", [](const MemoryBlock& self, int index) { return self[index]; })
         .def ("__setitem__", [](MemoryBlock* self, int index, char value) { self->operator[](index) = value; })
+        .def ("__setitem__", [](MemoryBlock* self, int index, int value) { self->operator[](index) = static_cast<char> (value); })
         .def ("isEmpty", &MemoryBlock::isEmpty)
         .def ("getSize", &MemoryBlock::getSize)
-        .def ("setSize", &MemoryBlock::setSize)
-        .def ("ensureSize", &MemoryBlock::ensureSize)
+        .def ("setSize", &MemoryBlock::setSize, "newSize"_a, "initialiseNewSpaceToZero"_a = false)
+        .def ("ensureSize", &MemoryBlock::ensureSize, "newSize"_a, "initialiseNewSpaceToZero"_a = false)
         .def ("reset", &MemoryBlock::reset)
         .def ("fillWith", &MemoryBlock::fillWith)
         .def ("append", Helpers::makeVoidPointerAndSizeCallable<MemoryBlock> (&MemoryBlock::append))
