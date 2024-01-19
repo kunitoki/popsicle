@@ -152,21 +152,16 @@ bool type_caster<juce::Identifier>::load (handle src, bool convert)
         return true;
     }
 
-    PyObject* source = src.ptr();
+    if (! PyUnicode_Check (src.ptr()))
+        return load_raw(src);
 
-    auto baseType = Py_TYPE (source)->tp_base;
-    if (baseType == &PyUnicode_Type)
-    {
-        Py_ssize_t size = -1;
-        const auto* buffer = reinterpret_cast<const char*> (PyUnicode_AsUTF8AndSize (source, &size));
-        if (! buffer)
-            return false;
+    Py_ssize_t size = -1;
+    const auto* buffer = reinterpret_cast<const char*> (PyUnicode_AsUTF8AndSize (src.ptr(), &size));
+    if (buffer == nullptr)
+        return false;
 
-        value = juce::Identifier (juce::String::fromUTF8 (buffer, static_cast<int> (size)));
-        return true;
-    }
-
-    return false;
+    value = juce::Identifier (juce::String::fromUTF8 (buffer, static_cast<int> (size)));
+    return true;
 }
 
 handle type_caster<juce::Identifier>::cast (const juce::Identifier& src, return_value_policy policy, handle parent)
@@ -179,29 +174,78 @@ handle type_caster<juce::Identifier>::cast (const juce::Identifier& src, return_
     return make_caster<juce::String>::cast (src.toString(), policy, parent);
 }
 
+bool type_caster<juce::Identifier>::load_raw (handle src)
+{
+    if (PYBIND11_BYTES_CHECK (src.ptr()))
+    {
+        const char* bytes = PYBIND11_BYTES_AS_STRING (src.ptr());
+        if (! bytes)
+            pybind11_fail ("Unexpected PYBIND11_BYTES_AS_STRING() failure.");
+
+        value = juce::Identifier (juce::String::fromUTF8 (bytes, static_cast<int> (PYBIND11_BYTES_SIZE (src.ptr()))));
+        return true;
+    }
+
+    if (PyByteArray_Check (src.ptr()))
+    {
+        const char* bytearray = PyByteArray_AsString (src.ptr());
+        if (! bytearray)
+            pybind11_fail ("Unexpected PyByteArray_AsString() failure.");
+
+        value = juce::Identifier (juce::String::fromUTF8 (bytearray, static_cast<int> (PyByteArray_Size (src.ptr()))));
+        return true;
+    }
+
+    return false;
+}
+
 //=================================================================================================
 
 bool type_caster<juce::var>::load (handle src, bool convert)
 {
     PyObject* source = src.ptr();
-    auto baseType = Py_TYPE (source)->tp_base;
 
     if (PyNone_Check(source))
         value = juce::var::undefined();
 
-    else if (baseType == &PyBool_Type)
+    else if (PyBool_Check(source))
         value = PyObject_IsTrue (source) ? true : false;
 
-    else if (baseType == &PyLong_Type)
+    else if (PyLong_Check (source))
         value = static_cast<int> (PyLong_AsLong (source));
 
-    else if (baseType == &PyFloat_Type)
+    else if (PyFloat_Check (source))
         value = PyFloat_AsDouble (source);
 
-    else if (baseType == &PyUnicode_Type)
-        value = juce::String::fromUTF8 (PyUnicode_AsUTF8 (source));
+    else if (PyUnicode_Check (source))
+    {
+        Py_ssize_t size = -1;
+        const auto* buffer = reinterpret_cast<const char*> (PyUnicode_AsUTF8AndSize (src.ptr(), &size));
+        if (buffer == nullptr)
+            return false;
 
-    else if (baseType == &PyTuple_Type)
+        value = juce::String::fromUTF8 (buffer, static_cast<int> (size));
+    }
+
+    else if (PYBIND11_BYTES_CHECK (source))
+    {
+        const char* bytes = PYBIND11_BYTES_AS_STRING (source);
+        if (! bytes)
+            return false;
+
+        value = juce::var (bytes, static_cast<int> (PYBIND11_BYTES_SIZE (source)));
+    }
+
+    else if (PyByteArray_Check (source))
+    {
+        const char* bytearray = PyByteArray_AsString (source);
+        if (! bytearray)
+            return false;
+
+        value = juce::var (bytearray, static_cast<int> (PyByteArray_Size (source)));
+    }
+
+    else if (PyTuple_Check (source))
     {
         value = juce::var();
 
@@ -217,7 +261,7 @@ bool type_caster<juce::var>::load (handle src, bool convert)
         }
     }
 
-    else if (baseType == &PyList_Type)
+    else if (PyList_Check (source))
     {
         value = juce::var();
 
@@ -233,8 +277,39 @@ bool type_caster<juce::var>::load (handle src, bool convert)
         }
     }
 
+    else if (PyDict_Check (source))
+    {
+        juce::DynamicObject::Ptr obj = new juce::DynamicObject;
+
+        value = juce::var (obj.get());
+
+        PyObject* key;
+        PyObject* value;
+        Py_ssize_t pos = 0;
+
+        while (PyDict_Next (source, &pos, &key, &value))
+        {
+            make_caster<juce::Identifier> convKey;
+            make_caster<juce::var> convValue;
+
+            if (! convKey.load (key, convert) || ! convValue.load (value, convert))
+                return false;
+
+            obj->setProperty (
+                cast_op<juce::Identifier&&> (std::move (convKey)),
+                cast_op<juce::var&&> (std::move (convValue)));
+        }
+    }
+
+    else if (isinstance<juce::MemoryBlock&> (src))
+    {
+        value = juce::var (src.cast<juce::MemoryBlock&>());
+    }
+
     else
+    {
         value = juce::var::undefined();
+    }
 
     // TODO - raise
 
@@ -243,39 +318,25 @@ bool type_caster<juce::var>::load (handle src, bool convert)
 
 handle type_caster<juce::var>::cast (const juce::var& src, return_value_policy policy, handle parent)
 {
+    if (src.isVoid() || src.isUndefined())
+        return Py_None;
+
     if (src.isBool())
         return PyBool_FromLong (static_cast<bool> (src));
 
-    else if (src.isInt())
+    if (src.isInt())
         return PyLong_FromLong (static_cast<int> (src));
 
-    else if (src.isInt64())
+    if (src.isInt64())
         return PyLong_FromLongLong (static_cast<juce::int64> (src));
 
-    else if (src.isDouble())
+    if (src.isDouble())
         return PyFloat_FromDouble (static_cast<double> (src));
 
-    else if (src.isString())
+    if (src.isString())
         return make_caster<juce::String>::cast (src, policy, parent);
 
-    else if (src.isVoid() || src.isUndefined())
-        return Py_None;
-
-    else if (src.isObject())
-    {
-        auto dynamicObject = src.getDynamicObject();
-        if (dynamicObject == nullptr)
-            return Py_None;
-
-        object result;
-
-        for (const auto& props : dynamicObject->getProperties())
-            result [props.name.toString().toRawUTF8()] = props.value;
-
-        return result.release();
-    }
-
-    else if (src.isArray())
+    if (src.isArray())
     {
         list list;
 
@@ -288,13 +349,24 @@ handle type_caster<juce::var>::cast (const juce::var& src, return_value_policy p
         return list.release();
     }
 
-    else if (src.isBinaryData())
+    auto dynamicObject = src.getDynamicObject();
+    if (src.isObject() && dynamicObject != nullptr)
+    {
+        dict result;
+
+        for (const auto& props : dynamicObject->getProperties())
+            result [make_caster<juce::String>::cast (props.name.toString(), policy, parent)] = props.value;
+
+        return result.release();
+    }
+
+    if (src.isBinaryData())
     {
         if (auto data = src.getBinaryData())
             return bytes (static_cast<const char*> (data->getData()), static_cast<Py_ssize_t> (data->getSize())).release();
     }
 
-    else if (src.isMethod())
+    if (src.isMethod())
     {
         return cpp_function ([src]
         {
@@ -597,7 +669,6 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
 
     py::class_<StringArray> (m, "StringArray");
     py::class_<NamedValueSet> (m, "NamedValueSet");
-    py::class_<var> (m, "var");
 
     // ============================================================================================ juce::Identifier
 

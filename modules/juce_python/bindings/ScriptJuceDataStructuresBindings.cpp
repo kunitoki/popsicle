@@ -111,6 +111,19 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
         {
             PYBIND11_OVERRIDE (UndoableAction*, UndoableAction, createCoalescedAction, nextAction);
         }
+
+        bool isOwnershipTaken() const noexcept
+        {
+            return takenOwnership;
+        }
+
+        void markOwnershipTaken() noexcept
+        {
+            takenOwnership = true;
+        }
+
+    private:
+        bool takenOwnership = false;
     };
 
     py::class_<UndoableAction, PyUndoableAction> classUndoableAction (m, "UndoableAction");
@@ -132,8 +145,30 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
         .def ("clearUndoHistory", &UndoManager::clearUndoHistory)
         .def ("getNumberOfUnitsTakenUpByStoredCommands", &UndoManager::getNumberOfUnitsTakenUpByStoredCommands)
         .def ("setMaxNumberOfStoredUnits", &UndoManager::setMaxNumberOfStoredUnits)
-        .def ("perform", py::overload_cast<UndoableAction*> (&UndoManager::perform))
-        .def ("perform", py::overload_cast<UndoableAction*, const String&> (&UndoManager::perform))
+        .def ("perform", [](UndoManager& self, py::object action)
+        {
+            auto pyActionPtr = action.cast<PyUndoableAction*>();
+            if (pyActionPtr->isOwnershipTaken())
+                py::pybind11_fail ("Ownership of the action has already been taken by an UndoManager");
+
+            auto actionPtr = action.cast<UndoableAction*>();
+            pyActionPtr->markOwnershipTaken();
+            action.release();
+
+            return self.perform (actionPtr);
+        })
+        .def ("perform", [](UndoManager& self, py::object action, const String& transactionName)
+        {
+            auto pyActionPtr = action.cast<PyUndoableAction*>();
+            if (pyActionPtr->isOwnershipTaken())
+                py::pybind11_fail ("Ownership of the action has already been taken by an UndoManager");
+
+            auto actionPtr = action.cast<UndoableAction*>();
+            pyActionPtr->markOwnershipTaken();
+            action.release();
+
+            return self.perform (actionPtr, transactionName);
+        })
         .def ("beginNewTransaction", py::overload_cast<> (&UndoManager::beginNewTransaction))
         .def ("beginNewTransaction", py::overload_cast<const String&> (&UndoManager::beginNewTransaction))
         .def ("setCurrentTransactionName", &UndoManager::setCurrentTransactionName)
@@ -144,7 +179,17 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
         .def ("getUndoDescription", &UndoManager::getUndoDescription)
         .def ("getUndoDescriptions", &UndoManager::getUndoDescriptions)
         .def ("getTimeOfUndoTransaction", &UndoManager::getTimeOfUndoTransaction)
-        .def ("getActionsInCurrentTransaction", &UndoManager::getActionsInCurrentTransaction)
+        .def ("getActionsInCurrentTransaction", [](const UndoManager& self)
+        {
+            Array<const UndoableAction*> actions;
+            self.getActionsInCurrentTransaction (actions);
+
+            py::list list;
+            for (const auto* action : actions)
+                list.append (action);
+
+            return list;
+        }, py::return_value_policy::reference_internal)
         .def ("getNumActionsInCurrentTransaction", &UndoManager::getNumActionsInCurrentTransaction)
         .def ("canRedo", &UndoManager::canRedo)
         .def ("redo", &UndoManager::redo)

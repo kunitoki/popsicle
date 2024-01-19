@@ -87,6 +87,9 @@ public:
     bool load (handle src, bool convert);
 
     static handle cast (const juce::Identifier& src, return_value_policy policy, handle parent);
+
+private:
+    bool load_raw (handle src);
 };
 
 //=================================================================================================
