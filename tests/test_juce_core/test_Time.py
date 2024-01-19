@@ -36,6 +36,21 @@ def test_subtract_relative_time():
     assert new_time.getSeconds() == 55
 
 
+def test_comparisons():
+    today = juce.Time(2022, 1, 19, 12, 30, 0)
+    tomorrow = juce.Time(2022, 1, 20, 11, 30, 0)
+
+    assert today == today
+    assert today <= today
+    assert today >= today
+    assert today != tomorrow
+    assert tomorrow != today
+    assert today < tomorrow
+    assert today <= tomorrow
+    assert tomorrow > today
+    assert tomorrow >= today
+
+
 def test_to_milliseconds():
     time_obj = juce.Time(2022, 1, 19, 12, 30, 45)
 
