@@ -7,6 +7,7 @@ minutesInHour = 60
 hoursInDay = 24
 daysInWeek = 7
 
+#==================================================================================================
 
 def test_construct_empty():
     a = juce.RelativeTime.seconds(0)
@@ -17,6 +18,7 @@ def test_construct_empty():
     assert a.inDays() == 0
     assert a.inWeeks() == 0
 
+#==================================================================================================
 
 def test_construct_valid():
     a = juce.RelativeTime.milliseconds(1000)
@@ -67,8 +69,9 @@ def test_construct_valid():
     assert juce.approximatelyEqual (a.inDays(), daysInWeek * 2)
     assert juce.approximatelyEqual (a.inWeeks(), 2)
 
+#==================================================================================================
 
-def test_operation_getDescription():
+def test_operation_get_description():
     a = juce.RelativeTime.milliseconds(0)
     assert a.getDescription() == "0"
     assert a.getDescription("infinite") == "infinite"
@@ -97,8 +100,9 @@ def test_operation_getDescription():
     assert a.getDescription() == "1 week 1 day"
     assert a.getDescription("infinite") == "1 week 1 day"
 
+#==================================================================================================
 
-def test_operation_getApproximateDescription():
+def test_operation_get_approximate_description():
     a = juce.RelativeTime.milliseconds(0)
     assert a.getApproximateDescription() == "< 1 sec"
 

@@ -328,6 +328,30 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
     classValueTree
         .def (py::init<>())
         .def (py::init<const Identifier&>())
+        .def (py::init ([](py::str id, py::dict dict)
+        {
+            auto result = ValueTree (Identifier (static_cast<std::string> (id)));
+
+            for (auto item : dict)
+            {
+                py::detail::make_caster<Identifier> convKey;
+                py::detail::make_caster<var> convValue;
+
+                if (! convKey.load (item.first, true))
+                    py::pybind11_fail("Invalid property type of a \"ValueTree\", needs to be \"str\" or \"Identifier\"");
+
+                if (! convValue.load (item.second, true))
+                    py::pybind11_fail("Invalid property type of a \"ValueTree\", needs to be a \"var\" convertible");
+
+                result.setProperty (
+                    py::detail::cast_op<juce::Identifier&&> (std::move (convKey)),
+                    py::detail::cast_op<juce::var&&> (std::move (convValue)),
+                    nullptr);
+            }
+
+            return result;
+        }))
+        .def (py::init<const ValueTree&>())
         .def (py::self == py::self)
         .def (py::self != py::self)
         .def ("isEquivalentTo", &ValueTree::isEquivalentTo)
@@ -339,11 +363,12 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
         .def ("hasType", &ValueTree::hasType)
         .def ("getProperty", py::overload_cast<const Identifier&> (&ValueTree::getProperty, py::const_), py::return_value_policy::reference)
         .def ("getProperty", py::overload_cast<const Identifier&, const var&> (&ValueTree::getProperty, py::const_), py::return_value_policy::reference)
-        .def ("getPropertyPointer", &ValueTree::getPropertyPointer, py::return_value_policy::reference)
+    //.def ("getPropertyPointer", &ValueTree::getPropertyPointer, py::return_value_policy::reference)
         .def ("setProperty", &ValueTree::setProperty)
         .def ("hasProperty", &ValueTree::hasProperty)
         .def ("removeProperty", &ValueTree::removeProperty)
         .def ("removeAllProperties", &ValueTree::removeAllProperties)
+        .def ("getNumProperties", &ValueTree::getNumProperties)
         .def ("getPropertyName", &ValueTree::getPropertyName)
         .def ("getPropertyAsValue", &ValueTree::getPropertyAsValue)
         .def ("getNumChildren", &ValueTree::getNumChildren)

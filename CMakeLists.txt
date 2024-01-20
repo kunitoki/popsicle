@@ -108,12 +108,14 @@ _juce_initialise_target (${PROJECT_NAME} VERSION "${VERSION_NUMBER}")
 _juce_set_output_name (${PROJECT_NAME} $<TARGET_PROPERTY:${PROJECT_NAME},JUCE_PRODUCT_NAME>)
 
 # Configure code coverage
-#include (cmake/CodeCoverage.cmake)
-#append_coverage_compiler_flags()
-#set (COVERAGE_TARGET ${PROJECT_NAME}_coverage)
-#setup_target_for_coverage_lcov (
-#    NAME ${COVERAGE_TARGET}
-#    EXECUTABLE pytest -s ${CMAKE_CURRENT_LIST_DIR}/tests
-#    DEPENDENCIES ${PROJECT_NAME}
-#    LCOV_ARGS "--keep-going" "--branch-coverage" "--no-external"
-#    GENHTML_ARGS "--keep-going" "--branch-coverage")
+if (ENABLE_COVERAGE)
+    include (cmake/CodeCoverage.cmake)
+    append_coverage_compiler_flags()
+    set (COVERAGE_TARGET ${PROJECT_NAME}_coverage)
+    setup_target_for_coverage_lcov (
+        NAME ${COVERAGE_TARGET}
+        EXECUTABLE pytest -s ${CMAKE_CURRENT_LIST_DIR}/tests
+        DEPENDENCIES ${PROJECT_NAME}
+        LCOV_ARGS "--keep-going" "--branch-coverage" "--no-external"
+        GENHTML_ARGS "--keep-going" "--branch-coverage")
+endif()

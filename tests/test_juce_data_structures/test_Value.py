@@ -1,31 +1,10 @@
 import pytest
 
+from ..fixtures import juce_app
 import popsicle as juce
 
 
-@pytest.fixture
-def juce_app():
-    def yield_and_quit():
-        yield
-
-    class Application(juce.JUCEApplication):
-        def __init__(self):
-            super().__init__()
-
-        def getApplicationName(self):
-            return "TestApp"
-
-        def getApplicationVersion(self):
-            return "1.0"
-
-        def initialise(self, commandLineParameters: str):
-            juce.MessageManager.callAsync(yield_and_quit)
-
-        def shutdown(self):
-            pass
-
-    return Application
-
+#==================================================================================================
 
 def test_var_constructor():
     a = juce.Value()
@@ -72,61 +51,82 @@ def test_var_constructor():
     assert isinstance(a.getValue(), bytes)
     assert a.getValue() == b'\x01\x01\x01\x01'
 
+#==================================================================================================
+
+class ValueListener(juce.Value.Listener):
+    value = None
+
+    def valueChanged(self, value):
+        self.value = value.getValue()
+
+#==================================================================================================
 
 def test_value_listener(juce_app):
-    class ValueListener(juce.Value.Listener):
-        value = None
+    listener = ValueListener()
 
-        def valueChanged(self, value):
-            self.value = value.getValue()
+    a = juce.Value(1.0)
 
-    with juce.TestApplication(juce_app) as app:
-        listener = ValueListener()
+    a.addListener(listener)
+    assert listener.value == None
 
-        a = juce.Value(1.0)
+    a.setValue(2.0)
+    assert a.getValue() == 2.0
+    assert listener.value == None
+    juce_app.processEvents()
+    assert listener.value == a.getValue()
 
-        a.addListener(listener)
-        assert listener.value == None
+    a.removeListener(listener)
 
-        a.setValue(2.0)
-        assert listener.value == None
-        app.processEvents()
-        assert listener.value == 2.0
+    a.setValue(3.0)
+    assert a.getValue() == 3.0
+    assert listener.value == 2.0
+    juce_app.processEvents()
+    assert listener.value == 2.0
 
-        a.removeListener(listener)
+#==================================================================================================
 
-        a.setValue(3.0)
-        assert listener.value == 2.0
-        app.processEvents()
-        assert listener.value == 2.0
+class ValueSource(juce.Value.ValueSource):
+    value = 1
 
+    def setValue(self, value):
+        self.value = value * 2
+        self.sendChangeMessage(False)
+
+    def getValue(self):
+        return self.value
+
+#==================================================================================================
 
 def test_value_source(juce_app):
-    class ValueSource(juce.Value.ValueSource):
-        value = 1
+    source = ValueSource()
+    assert source.value == 1
 
-        def setValue(self, value):
-            self.value = value * 2
-            self.sendChangeMessage(False)
+    a = juce.Value(source)
+    assert a.getValue() == 1
+    assert a.getValueSource() == source
+    b = juce.Value()
+    b.referTo(a)
 
-        def getValue(self):
-            return self.value
+    assert b.refersToSameSourceAs(a)
+    assert b.getValueSource() == source
+    assert b.getValue() == 1
 
-    with juce.TestApplication(juce_app) as app:
-        source = ValueSource()
-        assert source.value == 1
+    a.setValue(2)
+    assert a.getValue() == 4
+    assert b.getValue() == 4
+    assert a.toString() == "4"
+    assert source.value == 4
 
-        a = juce.Value(source)
-        assert a.getValue() == 1
-        assert a.getValueSource() == source
-        b = juce.Value()
-        b.referTo(a)
+    a.setValue(3)
+    assert a.getValue() == 6
+    assert b.getValue() == 6
+    assert b.toString() == "6"
+    assert source.value == 6
 
-        assert b.refersToSameSourceAs(a)
-        assert b.getValue() == 1
+    listener = ValueListener()
+    a.addListener(listener)
 
-        a.setValue(2)
-        assert source.value == 4
+    a.setValue(4)
+    assert a.getValue() == 8
+    assert b.getValue() == 8
 
-        a.setValue(3)
-        assert source.value == 6

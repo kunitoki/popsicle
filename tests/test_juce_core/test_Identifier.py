@@ -1,5 +1,6 @@
 import popsicle as juce
 
+#==================================================================================================
 
 def test_empty_constructor():
     a = juce.Identifier()
@@ -15,6 +16,7 @@ def test_empty_constructor():
     assert c != a
     assert c != b
 
+#==================================================================================================
 
 def test_constructor_python_str():
     a = juce.Identifier("abc")
@@ -24,6 +26,7 @@ def test_constructor_python_str():
     b = juce.Identifier("abc")
     assert a == b
 
+#==================================================================================================
 
 def test_constructor_copy():
     a = juce.Identifier("abc")
@@ -32,6 +35,7 @@ def test_constructor_copy():
     assert a.isValid() == b.isValid()
     assert a.toString() == b.toString()
 
+#==================================================================================================
 
 def test_constructor_juce_String():
     a = juce.Identifier("abc")
@@ -41,6 +45,7 @@ def test_constructor_juce_String():
     b = juce.Identifier("abc")
     assert a == b
 
+#==================================================================================================
 
 def test_comparisons():
     a = juce.Identifier("abc")
@@ -58,8 +63,9 @@ def test_comparisons():
     assert a < c
     assert not (a > c)
 
+#==================================================================================================
 
-def test_toString():
+def test_to_string():
     a = juce.Identifier("abc")
     b = juce.Identifier("abc")
     assert a.toString() == b.toString()
@@ -67,8 +73,9 @@ def test_toString():
     c = juce.Identifier("123")
     assert a.toString() != c.toString()
 
+#==================================================================================================
 
-def test_isValidIdentifier():
+def test_is_valid_identifier():
     assert not juce.Identifier.isValidIdentifier("")
     assert not juce.Identifier.isValidIdentifier(" ")
     assert juce.Identifier.isValidIdentifier("abcf123")

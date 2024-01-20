@@ -67,7 +67,7 @@ void registerJuceEventsBindings (pybind11::module_& m)
     }
 
     auto atexit = py::module_::import ("atexit");
-    atexit.attr ("register") (py::cpp_function([&]
+    atexit.attr ("register") (py::cpp_function([]
     {
         if (--numScopedInitInstances == 0)
             shutdownJuce_GUI();

@@ -3,11 +3,14 @@ import uuid
 import popsicle as juce
 
 
+#==================================================================================================
+
 def test_construct_empty():
     a = juce.Uuid()
     assert a != ""
     assert not a.isNull()
 
+#==================================================================================================
 
 def test_construct_null():
     a = juce.Uuid.null()
@@ -16,11 +19,13 @@ def test_construct_null():
     assert a.toDashedString() == "00000000-0000-0000-0000-000000000000"
     assert a.isNull()
 
+#==================================================================================================
 
 def test_constuct_string():
     a = juce.Uuid("974cc888-0d9a-4d47-8930-913f682430cb")
     assert a.getRawData() == b"\227L\310\210\r\232MG\2110\221?h$0\313"
 
+#==================================================================================================
 
 def test_constuct_bytes():
     a = juce.Uuid(b"\227L\310\210\r\232MG\2110\221?h$0\313")
@@ -38,6 +43,7 @@ def test_constuct_bytes():
     assert b.toDashedString() == "00010203-0405-0607-0809-0a0b0c0d0e0f"
     assert b == "000102030405060708090a0b0c0d0e0f"
 
+#==================================================================================================
 
 def test_constuct_comparisons():
     a = juce.Uuid(b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f')
@@ -49,6 +55,7 @@ def test_constuct_comparisons():
     assert a <= b
     assert b >= a
 
+#==================================================================================================
 
 def test_constuct_uuid():
     a = uuid.UUID('{00010203-0405-0607-0809-0a0b0c0d0e0f}')

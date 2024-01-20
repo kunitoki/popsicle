@@ -3,6 +3,8 @@ from ctypes import c_uint32
 import popsicle as juce
 
 
+#==================================================================================================
+
 def get_big_random(r: juce.Random) -> juce.BigInteger:
     b = juce.BigInteger()
 
@@ -11,6 +13,7 @@ def get_big_random(r: juce.Random) -> juce.BigInteger:
 
     return b
 
+#==================================================================================================
 
 def test_comparisons():
     r = juce.Random.getSystemRandom()
@@ -39,6 +42,7 @@ def test_comparisons():
         b5.loadFromMemoryBlock(b3.toMemoryBlock())
         assert b3 == b5
 
+#==================================================================================================
 
 def test_bit_setting():
     r = juce.Random.getSystemRandom()

@@ -1,6 +1,8 @@
 import popsicle as juce
 
 
+#==================================================================================================
+
 def test_ok():
     result = juce.Result.ok()
     assert not result.failed()
@@ -11,6 +13,7 @@ def test_ok():
 
     if not result: assert False
 
+#==================================================================================================
 
 def test_fail():
     result = juce.Result.fail("The cricket splatted")
@@ -23,6 +26,7 @@ def test_fail():
     if not result: pass
     else: assert False
 
+#==================================================================================================
 
 def test_comparison():
     ok1 = juce.Result.ok()

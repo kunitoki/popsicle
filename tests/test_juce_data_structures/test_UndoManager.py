@@ -4,6 +4,8 @@ import pytest
 import popsicle as juce
 
 
+#==================================================================================================
+
 class CustomAction(juce.UndoableAction):
     value: list = []
     oldValue: list = []
@@ -22,6 +24,7 @@ class CustomAction(juce.UndoableAction):
         self.oldValue.clear()
         return True
 
+#==================================================================================================
 
 def test_undoable_action():
     um = juce.UndoManager()
@@ -73,6 +76,7 @@ def test_undoable_action():
     assert um.getUndoDescription() == ""
     assert um.getUndoDescriptions() == []
 
+#==================================================================================================
 
 def test_undoable_action_ownership():
     um = juce.UndoManager()

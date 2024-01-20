@@ -76,6 +76,8 @@ class CMakeExtension(Extension):
 
 
 class CMakeBuildExtension(build_ext):
+    build_for_coverage = os.environ.get("POPSICLE_COVERAGE", None) is not None
+
     def build_extension(self, ext):
         log.info("building with cmake")
 
@@ -90,7 +92,7 @@ class CMakeBuildExtension(build_ext):
         output_path = extdir.parent
         output_path.mkdir(parents=True, exist_ok=True)
 
-        config = "Debug" if self.debug else "Release"
+        config = "Debug" if self.debug or self.build_for_coverage else "Release"
         cmake_args = [
             f"-DCMAKE_BUILD_TYPE={config}",
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={output_path}",
@@ -98,6 +100,11 @@ class CMakeBuildExtension(build_ext):
             f"-DPython_INCLUDE_DIRS={get_python_includes_path()}",
             f"-DPython_LIBRARY_DIRS={get_python_lib_path()}"
         ]
+
+        if self.build_for_coverage:
+            cmake_args += [
+                "-DENABLE_COVERAGE:BOOL=ON"
+            ]
 
         if platform.system() == 'Darwin':
             cmake_args += [
@@ -117,7 +124,8 @@ class CMakeBuildExtension(build_ext):
                 build_command += ["--", f"-j{os.cpu_count()}"]
             self.spawn(build_command)
 
-            #self.spawn(["cmake", "--build", ".", "--target", f"{project_name}_coverage"])
+            if self.build_for_coverage:
+                self.spawn(["cmake", "--build", ".", "--target", f"{project_name}_coverage"])
 
         finally:
             os.chdir(str(cwd))
