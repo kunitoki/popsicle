@@ -72,10 +72,6 @@ struct polymorphic_type_hook<juce::Component>
 
 namespace juce {
 
-#if JUCE_MAC
- extern void initialiseNSApplication();
-#endif
-
 #if ! JUCE_WINDOWS
  extern const char* const* juce_argv;
  extern int juce_argc;
@@ -116,15 +112,6 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
 
         if (! applicationType)
             throw py::value_error("Argument must be a JUCEApplication subclass");
-
-        JUCEApplicationBase::createInstance = +[]() -> JUCEApplicationBase* { return nullptr; };
-
-        initialiseJuce_GUI();
-        const ScopeGuard shutdownJuceAtExit { [] { shutdownJuce_GUI(); } };
-
-#if JUCE_MAC
-        initialiseNSApplication();
-#endif
 
         JUCEApplicationBase* application = nullptr;
 
@@ -178,7 +165,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
                         if (MessageManager::getInstance()->hasStopMessageBeenSent())
                             break;
 
-                        MessageManager::getInstance()->runDispatchLoopUntil(200);
+                        MessageManager::getInstance()->runDispatchLoopUntil (200);
                     }
 
                     isErrorSignalInFlight = PyErr_CheckSignals() != 0;
@@ -205,6 +192,104 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     });
 
 #endif
+
+    // ============================================================================================ PyTestableApplication
+
+    struct PyTestableApplication
+    {
+        struct Scope
+        {
+            Scope (py::handle applicationType)
+            {
+                if (! applicationType)
+                    throw py::value_error("Argument must be a JUCEApplication subclass");
+
+                JUCEApplicationBase* application = nullptr;
+
+#if ! JUCE_WINDOWS
+                for (auto arg : py::module_::import ("sys").attr ("argv"))
+                    arguments.add (arg.cast<String>());
+
+                for (const auto& arg : arguments)
+                    argv.add (arg.toRawUTF8());
+
+                juce_argv = argv.getRawDataPointer();
+                juce_argc = argv.size();
+#endif
+
+                auto pyApplication = applicationType();
+
+                application = pyApplication.cast<JUCEApplication*>();
+                if (application == nullptr)
+                    return;
+
+                if (! application->initialiseApp())
+                    return;
+            }
+
+            ~Scope()
+            {
+            }
+
+        private:
+#if ! JUCE_WINDOWS
+            StringArray arguments;
+            Array<const char*> argv;
+#endif
+        };
+
+        PyTestableApplication (py::handle applicationType)
+            : applicationType (applicationType)
+        {
+        }
+
+        void processEvents(int milliseconds = 20)
+        {
+            try
+            {
+                JUCE_TRY
+                {
+                    py::gil_scoped_release release;
+
+                    if (MessageManager::getInstance()->hasStopMessageBeenSent())
+                        return;
+
+                    MessageManager::getInstance()->runDispatchLoopUntil (milliseconds);
+                }
+                JUCE_CATCH_EXCEPTION
+
+                bool isErrorSignalInFlight = PyErr_CheckSignals() != 0;
+                if (isErrorSignalInFlight)
+                    throw py::error_already_set();
+            }
+            catch (const py::error_already_set& e)
+            {
+                py::print (e.what());
+            }
+            catch (...)
+            {
+                py::print ("unhandled runtime error");
+            }
+        }
+
+        py::handle applicationType;
+        std::unique_ptr<Scope> applicationScope;
+    };
+
+    py::class_<PyTestableApplication> classTestableApplication (m, "TestApplication");
+    classTestableApplication
+        .def (py::init<py::handle>())
+        .def ("processEvents", &PyTestableApplication::processEvents, "milliseconds"_a = 20)
+        .def ("__enter__", [](PyTestableApplication& self)
+        {
+            self.applicationScope = std::make_unique<PyTestableApplication::Scope> (self.applicationType);
+            return std::addressof (self);
+        }, py::return_value_policy::reference)
+        .def ("__exit__", [](PyTestableApplication& self, const std::optional<py::type>&, const std::optional<py::object>&, const std::optional<py::object>&)
+        {
+            self.applicationScope.reset();
+        })
+    ;
 
     // ============================================================================================ juce::JUCEApplication
 

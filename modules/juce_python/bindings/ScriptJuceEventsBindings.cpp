@@ -31,6 +31,16 @@
 
 //=================================================================================================
 
+namespace juce {
+
+#if JUCE_MAC
+ extern void initialiseNSApplication();
+#endif
+
+} // namespace juce
+
+//=================================================================================================
+
 namespace popsicle::Bindings {
 
 void registerJuceEventsBindings (pybind11::module_& m)
@@ -39,6 +49,30 @@ void registerJuceEventsBindings (pybind11::module_& m)
 
     namespace py = pybind11;
     using namespace py::literals;
+
+    // ============================================================================================ juce::NotificationType
+
+#if ! JUCE_PYTHON_EMBEDDED_INTERPRETER
+    static int numScopedInitInstances = 0;
+
+    if (numScopedInitInstances++ == 0)
+    {
+        initialiseJuce_GUI();
+
+        JUCEApplicationBase::createInstance = +[]() -> JUCEApplicationBase* { return nullptr; };
+
+#if JUCE_MAC
+        initialiseNSApplication();
+#endif
+    }
+
+    auto atexit = py::module_::import ("atexit");
+    atexit.attr ("register") (py::cpp_function([&]
+    {
+        if (--numScopedInitInstances == 0)
+            shutdownJuce_GUI();
+    }));
+#endif
 
     // ============================================================================================ juce::NotificationType
 

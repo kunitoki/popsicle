@@ -227,13 +227,13 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
     };
 
     py::class_<Value> classValue (m, "Value");
-    py::class_<Value::ValueSource, PyValueValueSource> classValueValueSource (classValue, "ValueSource");
+    py::class_<Value::ValueSource, juce::ReferenceCountedObjectPtr<Value::ValueSource>, PyValueValueSource> classValueValueSource (classValue, "ValueSource");
     py::class_<Value::Listener, PyValueListener> classValueListener (classValue, "Listener");
 
     classValue
         .def (py::init<>())
-        .def (py::init<const var&>())
         .def (py::init<Value::ValueSource*>())
+        .def (py::init<const var&>())
         .def (py::init<const Value&>())
         .def ("getValue", &Value::getValue)
         .def ("toString", &Value::toString)
@@ -250,7 +250,7 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
     ;
 
     classValueValueSource
-        .def (py::init<>())
+        .def (py::init([] { return ReferenceCountedObjectPtr<Value::ValueSource> (new PyValueValueSource()); }))
         .def ("getValue", &Value::ValueSource::getValue)
         .def ("setValue", &Value::ValueSource::setValue)
         .def ("sendChangeMessage", &Value::ValueSource::sendChangeMessage)
