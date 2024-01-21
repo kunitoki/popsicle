@@ -119,8 +119,7 @@ if (ENABLE_COVERAGE)
         "*/juce_data_structures/juce_data_structures.*"
         "*/juce_events/juce_events.*"
         "*/juce_graphics/juce_graphics.*"
-        "*/juce_gui_basics/juce_gui_basics.*"
-        "/usr/*")
+        "*/juce_gui_basics/juce_gui_basics.*")
 
     if (APPLE)
         list (APPEND COVERAGE_EXCLUDES
@@ -128,10 +127,18 @@ if (ENABLE_COVERAGE)
             "/Library/*")
     endif()
 
+    if (APPLE OR UNIX)
+        list (APPEND COVERAGE_EXCLUDES
+            "/usr/*"
+            "/opt/*")
+    endif()
+
     setup_target_for_coverage_lcov (
         NAME ${COVERAGE_TARGET}
         EXECUTABLE pytest -s ${CMAKE_CURRENT_LIST_DIR}/tests
         DEPENDENCIES ${PROJECT_NAME}
-        LCOV_ARGS "--rc" "branch_coverage=1" "--branch-coverage" "--keep-going"
-        GENHTML_ARGS "--rc" "branch_coverage=1" "--branch-coverage" "--keep-going" "--prefix" "${CMAKE_CURRENT_LIST_DIR}")
+        LCOV_ARGS "--keep-going"
+        GENHTML_ARGS "--keep-going" "--prefix" "${CMAKE_CURRENT_LIST_DIR}")
+        #LCOV_ARGS "--rc" "branch_coverage=1" "--branch-coverage" "--keep-going"
+        #GENHTML_ARGS "--rc" "branch_coverage=1" "--branch-coverage" "--keep-going" "--prefix" "${CMAKE_CURRENT_LIST_DIR}")
 endif()
