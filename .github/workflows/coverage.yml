@@ -28,7 +28,6 @@ jobs:
           CIBW_ARCHS: x86_64
           CIBW_BUILD: cp310-manylinux_x86_64
           CIBW_TEST_SKIP: "*-manylinux_aarch64 *-macosx_universal2:arm64 *-win_arm64"
-          CIBW_TEST_REQUIRES: pytest lcov
           CIBW_ENVIRONMENT: POPSICLE_COVERAGE=1
 
       - name: Coveralls
