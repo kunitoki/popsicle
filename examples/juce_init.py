@@ -70,5 +70,4 @@ def START_JUCE_COMPONENT(ComponentClass, name):
         def systemRequestedQuit(self):
             self.quit()
 
-
     juce.START_JUCE_APPLICATION(DefaultApplication)

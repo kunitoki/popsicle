@@ -50,7 +50,7 @@ def generate_image_2(width, height):
 
 class MainContentComponent(juce.Component):
 	def __init__(self):
-		juce.Component.__init__(self)
+		super().__init__()
 
 		width = 600
 		height = 400
