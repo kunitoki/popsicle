@@ -16,7 +16,7 @@
  * OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE DISCLAIMED.
  */
 
-#if __has_include(<juce_gui_basics/juce_gui_basics.h>)
+#if JUCE_MODULE_AVAILABLE_juce_gui_basics
 
 #include "ScriptJuceGuiBasicsBindings.h"
 #include "../scripting/ScriptBindings.h"

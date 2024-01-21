@@ -34,23 +34,23 @@ PYBIND11_MODULE(popsicle, m)
     // Register juce_core bindings
     popsicle::Bindings::registerJuceCoreBindings (m);
 
-#if __has_include(<juce_events/juce_events.h>)
+#if JUCE_MODULE_AVAILABLE_juce_events
     // Register juce_events bindings
     popsicle::Bindings::registerJuceEventsBindings (m);
 #endif
 
-#if __has_include(<juce_data_structures/juce_data_structures.h>)
+#if JUCE_MODULE_AVAILABLE_juce_data_structures
     // Register juce_data_structures bindings
     popsicle::Bindings::registerJuceDataStructuresBindings (m);
 #endif
 
-#if __has_include(<juce_graphics/juce_graphics.h>)
+#if JUCE_MODULE_AVAILABLE_juce_graphics
     // Register juce_graphics bindings
     popsicle::Bindings::registerJuceGraphicsBindings (m);
 #endif
 
+#if JUCE_MODULE_AVAILABLE_juce_gui_basics
     // Register juce_gui_basics bindings
-#if __has_include(<juce_gui_basics/juce_gui_basics.h>)
     popsicle::Bindings::registerJuceGuiBasicsBindings (m);
 #endif
 }

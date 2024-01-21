@@ -18,7 +18,7 @@
 
 #pragma once
 
-#if __has_include(<juce_events/juce_events.h>)
+#if JUCE_MODULE_AVAILABLE_juce_events
 
 #include <juce_events/juce_events.h>
 

@@ -18,7 +18,7 @@
 
 #pragma once
 
-#if __has_include(<juce_graphics/juce_graphics.h>)
+#if JUCE_MODULE_AVAILABLE_juce_graphics
 
 #include <juce_graphics/juce_graphics.h>
 

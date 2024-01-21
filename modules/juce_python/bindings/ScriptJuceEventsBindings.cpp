@@ -16,7 +16,7 @@
  * OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE DISCLAIMED.
  */
 
-#if __has_include(<juce_events/juce_events.h>)
+#if JUCE_MODULE_AVAILABLE_juce_events
 
 #include "ScriptJuceEventsBindings.h"
 

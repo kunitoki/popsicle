@@ -4,6 +4,10 @@ import pytest
 import popsicle as juce
 
 
+if not hasattr(juce, "UndoManager"):
+    pytest.skip()
+
+
 #==================================================================================================
 
 class CustomAction(juce.UndoableAction):

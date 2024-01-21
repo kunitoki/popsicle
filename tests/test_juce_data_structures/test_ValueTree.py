@@ -4,6 +4,10 @@ from ..fixtures import juce_app
 import popsicle as juce
 
 
+if not hasattr(juce, "ValueTree"):
+    pytest.skip()
+
+
 #==================================================================================================
 
 def test_empty_constructor():

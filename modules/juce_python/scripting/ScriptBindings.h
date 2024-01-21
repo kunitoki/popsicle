@@ -18,7 +18,7 @@
 
 #pragma once
 
-#if __has_include(<juce_gui_basics/juce_gui_basics.h>)
+#if JUCE_MODULE_AVAILABLE_juce_gui_basics
 
 #include <juce_gui_basics/juce_gui_basics.h>
 

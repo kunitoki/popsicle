@@ -16,7 +16,7 @@
  * OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE DISCLAIMED.
  */
 
-#if __has_include(<juce_data_structures/juce_data_structures.h>)
+#if JUCE_MODULE_AVAILABLE_juce_data_structures
 
 #include "ScriptJuceDataStructuresBindings.h"
 

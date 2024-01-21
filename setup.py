@@ -159,6 +159,7 @@ class CMakeBuildExtension(build_ext):
         library_dir = os.path.dirname(library)
         temp_pyi_dir = os.path.join(library_dir, project_name)
         final_pyi_dir = os.path.join(root_dir, project_name)
+        final_pyi_file = os.path.join(root_dir, f"{project_name}.pyi")
 
         try:
             os.chdir(library_dir)
@@ -168,7 +169,11 @@ class CMakeBuildExtension(build_ext):
 
             self.spawn(["stubgen", "--output", library_dir, "-p", project_name])
 
-            shutil.copytree(project_name, final_pyi_dir)
+            if os.path.isdir(project_name):
+                shutil.copytree(project_name, final_pyi_dir)
+
+            if os.path.isfile(f"{project_name}.pyi"):
+                shutil.copyfile(f"{project_name}.pyi", final_pyi_file)
 
         finally:
             os.chdir(str(cwd))
@@ -183,6 +188,10 @@ class CustomInstallScripts(install_scripts):
         final_pyi_dir = os.path.join(root_dir, project_name)
         if os.path.isdir(final_pyi_dir):
             shutil.rmtree(final_pyi_dir, ignore_errors=True)
+
+        final_pyi_file = os.path.join(root_dir, f"{project_name}.pyi")
+        if os.path.isfile(final_pyi_file):
+            os.remove(final_pyi_file)
 
 
 with open("modules/juce_python/juce_python.h", mode="r", encoding="utf-8") as f:
