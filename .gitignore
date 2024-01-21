@@ -1,6 +1,7 @@
 __pycache__/
 .eggs/
 .vscode/
+coverage/
 dist/
 build/
 popsicle/
