@@ -164,7 +164,7 @@ foreach(LANG ${LANGUAGES})
   endif()
 endforeach()
 
-set(COVERAGE_COMPILER_FLAGS "-g --coverage"
+set(COVERAGE_COMPILER_FLAGS "-O0 -g --coverage"
     CACHE INTERNAL "")
 if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
     include(CheckCXXCompilerFlag)
@@ -734,7 +734,8 @@ function(append_coverage_compiler_flags)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${COVERAGE_COMPILER_FLAGS}" PARENT_SCOPE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COVERAGE_COMPILER_FLAGS}" PARENT_SCOPE)
     set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${COVERAGE_COMPILER_FLAGS}" PARENT_SCOPE)
-    message(STATUS "Appending code coverage compiler flags: ${COVERAGE_COMPILER_FLAGS}")
+    message(STATUS "Appending code coverage C compiler flags: ${COVERAGE_C_COMPILER_FLAGS}")
+    message(STATUS "Appending code coverage CXX compiler flags: ${COVERAGE_CXX_COMPILER_FLAGS}")
 endfunction() # append_coverage_compiler_flags
 
 # Setup coverage for specific library

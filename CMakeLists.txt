@@ -110,12 +110,27 @@ _juce_set_output_name (${PROJECT_NAME} $<TARGET_PROPERTY:${PROJECT_NAME},JUCE_PR
 # Configure code coverage
 if (ENABLE_COVERAGE)
     include (cmake/CodeCoverage.cmake)
+
     append_coverage_compiler_flags()
+
     set (COVERAGE_TARGET ${PROJECT_NAME}_coverage)
+    set (COVERAGE_EXCLUDES
+        "*/juce_core/juce_core.*"
+        "*/juce_data_structures/juce_data_structures.*"
+        "*/juce_events/juce_events.*"
+        "*/juce_graphics/juce_graphics.*"
+        "*/juce_gui_basics/juce_gui_basics.*")
+
+    if (APPLE)
+        list (APPEND COVERAGE_EXCLUDES
+            "/Applications/*"
+            "/Library/*")
+    endif()
+
     setup_target_for_coverage_lcov (
         NAME ${COVERAGE_TARGET}
         EXECUTABLE pytest -s ${CMAKE_CURRENT_LIST_DIR}/tests
         DEPENDENCIES ${PROJECT_NAME}
-        LCOV_ARGS "--keep-going" "--branch-coverage" "--no-external"
-        GENHTML_ARGS "--keep-going" "--branch-coverage")
+        LCOV_ARGS "--rc" "branch_coverage=1" "--branch-coverage" "--keep-going"
+        GENHTML_ARGS "--rc" "branch_coverage=1" "--branch-coverage" "--keep-going" "--prefix" "${CMAKE_CURRENT_LIST_DIR}")
 endif()
