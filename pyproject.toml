@@ -25,11 +25,11 @@ manylinux-i686-image = "manylinux2014"
 
 [tool.cibuildwheel.linux]
 before-build = """
-wget https://github.com/linux-test-project/lcov/releases/download/v2.0/lcov-2.0-1.noarch.rpm &&
-    rpm -i lcov-2.0-1.noarch.rpm &&
-    yum install -y zlib-devel openssl-devel freetype-devel freeglut-devel alsa-lib-devel mesa-libGL-devel  \
-        xorg-x11-proto-devel xorg-x11-proto-devel libcurl-devel libpng-devel libX11-devel libXcursor-devel \
-        libXrandr-devel libXinerama-devel libXrender-devel libXcomposite-devel libXinerama-devel libXcursor-devel
+yum install -y zlib-devel openssl-devel freetype-devel freeglut-devel alsa-lib-devel mesa-libGL-devel  \
+    xorg-x11-proto-devel xorg-x11-proto-devel libcurl-devel libpng-devel libX11-devel libXcursor-devel \
+    libXrandr-devel libXinerama-devel libXrender-devel libXcomposite-devel libXinerama-devel libXcursor-devel wget && \
+wget https://github.com/linux-test-project/lcov/releases/download/v2.0/lcov-2.0-1.noarch.rpm && \
+yum localinstall lcov-2.0-1.noarch.rpm
 """
 #repair-wheel-command = """
 #pip install auditwheel-symbols && (auditwheel repair -w {dest_dir} {wheel} || auditwheel-symbols --manylinux 2014 {wheel})
