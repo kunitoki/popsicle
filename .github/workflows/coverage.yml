@@ -40,8 +40,11 @@ jobs:
           CIBW_ARCHS: x86_64
           CIBW_BUILD: cp310-manylinux_x86_64
           CIBW_ENVIRONMENT: POPSICLE_COVERAGE=1
+          CIBW_BEFORE_TEST: |
+            mkdir -p {project}/coverage && find {project}/build -name "popsicle_coverage.info" -exec cp {} {project}/coverage/ \;
 
       - name: Coveralls
         uses: coverallsapp/github-action@master
         with:
+          path-to-lcov: ./coverage/popsicle_coverage.info
           github-token: ${{ secrets.GITHUB_TOKEN }}
