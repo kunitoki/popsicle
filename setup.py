@@ -137,11 +137,11 @@ class CMakeBuildExtension(build_ext):
 
         self.spawn(["cmake", "--build", ".", "--target", f"{project_name}_coverage"])
 
-        for m in glob.iglob(f"{cwd}/**/*.info", recursive=True):
-            shutil.rmtree(f"{root_dir}/coverage", ignore_errors=True)
-            os.makedirs(f"{root_dir}/coverage", exist_ok=True)
-            shutil.copyfile(m, f"{root_dir}/coverage/lcov.info")
-            return
+        if os.path.isdir("/wheelhouse"):
+            for m in glob.iglob(f"{cwd}/**/*.info", recursive=True):
+                log.info(f"found {m} coverage info file")
+                shutil.copyfile(m, f"/wheelhouse/lcov.info")
+                return
 
     def generate_pyi(self, cwd):
         log.info("generating pyi files")
