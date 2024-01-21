@@ -119,7 +119,8 @@ if (ENABLE_COVERAGE)
         "*/juce_data_structures/juce_data_structures.*"
         "*/juce_events/juce_events.*"
         "*/juce_graphics/juce_graphics.*"
-        "*/juce_gui_basics/juce_gui_basics.*")
+        "*/juce_gui_basics/juce_gui_basics.*"
+        "/usr/*")
 
     if (APPLE)
         list (APPEND COVERAGE_EXCLUDES

@@ -125,12 +125,23 @@ class CMakeBuildExtension(build_ext):
             self.spawn(build_command)
 
             if self.build_for_coverage:
-                self.spawn(["cmake", "--build", ".", "--target", f"{project_name}_coverage"])
+                self.generate_coverage(cwd)
 
         finally:
             os.chdir(str(cwd))
 
         self.generate_pyi(cwd)
+
+    def generate_coverage(self, cwd):
+        log.info("generating coverage files")
+
+        self.spawn(["cmake", "--build", ".", "--target", f"{project_name}_coverage"])
+
+        for m in glob.iglob(f"{cwd}/**/*.info", recursive=True):
+            shutil.rmtree(f"{root_dir}/coverage", ignore_errors=True)
+            os.makedirs(f"{root_dir}/coverage", exist_ok=True)
+            shutil.copyfile(m, f"{root_dir}/coverage/lcov.info")
+            return
 
     def generate_pyi(self, cwd):
         log.info("generating pyi files")
@@ -167,6 +178,7 @@ class CustomInstallScripts(install_scripts):
         install_scripts.run(self)
 
         log.info("cleaning up pyi files")
+
         final_pyi_dir = os.path.join(root_dir, project_name)
         if os.path.isdir(final_pyi_dir):
             shutil.rmtree(final_pyi_dir, ignore_errors=True)
