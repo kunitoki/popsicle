@@ -131,6 +131,6 @@ if (ENABLE_COVERAGE)
         NAME ${COVERAGE_TARGET}
         EXECUTABLE pytest -s ${CMAKE_CURRENT_LIST_DIR}/tests
         DEPENDENCIES ${PROJECT_NAME}
-        LCOV_ARGS "--rc" "lcov_branch_coverage=1"
-        GENHTML_ARGS "--rc" "lcov_branch_coverage=1" "--prefix" "${CMAKE_CURRENT_LIST_DIR}")
+        LCOV_ARGS "--rc" "branch_coverage=1" "--branch-coverage" "--keep-going"
+        GENHTML_ARGS "--rc" "branch_coverage=1" "--branch-coverage" "--keep-going" "--prefix" "${CMAKE_CURRENT_LIST_DIR}")
 endif()
