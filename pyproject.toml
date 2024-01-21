@@ -4,10 +4,12 @@ requires = [
     "cmake>=3.21",
     "mypy>=1.8.0",
     "pytest>=6.0",
-    "lcov",
     "wheel",
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.distutils.bdist_wheel]
+universal = false
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -25,7 +27,7 @@ manylinux-i686-image = "manylinux2014"
 before-build = """
 yum install -y zlib-devel openssl-devel freetype-devel freeglut-devel alsa-lib-devel mesa-libGL-devel xorg-x11-proto-devel \
     xorg-x11-proto-devel libcurl-devel libpng-devel libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel \
-    libXrender-devel libXcomposite-devel libXinerama-devel libXcursor-devel
+    libXrender-devel libXcomposite-devel libXinerama-devel libXcursor-devel lcov
 """
 #repair-wheel-command = """
 #pip install auditwheel-symbols && (auditwheel repair -w {dest_dir} {wheel} || auditwheel-symbols --manylinux 2014 {wheel})

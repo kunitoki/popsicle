@@ -1,6 +1,21 @@
 name: Wheels Deploy
 
-on: push
+on:
+  push:
+    paths:
+      - "**/workflows/wheels.yml"
+      - "**/cmake/**"
+      - "**/JUCE/**"
+      - "**/modules/**"
+      - "**/tests/**"
+      - ".gitmodules"
+      - "CMakeLists.txt"
+      - "LICENSE*"
+      - "MANIFEST.in"
+      - "pyproject.toml"
+      - "README.rst"
+      - "setup.py"
+
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
