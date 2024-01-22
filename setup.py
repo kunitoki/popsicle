@@ -139,8 +139,11 @@ class CMakeBuildExtension(build_ext):
 
         if os.path.isdir("/host"): # We are running in cibuildwheel container
             os.makedirs("/output", exist_ok=True)
+
             for m in glob.iglob(f"{cwd}/**/*.info", recursive=True):
                 log.info(f"found {m} coverage info file")
+
+                self.spawn(["sed", "-i", "-e", "'s|/project||g'", m])
                 shutil.copyfile(m, f"/output/lcov.info")
                 break
 
