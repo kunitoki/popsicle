@@ -18,7 +18,7 @@ Features
 
 - Easy and quick to iterate over a JUCE application, no need to setup a build environment.
 - The way it allows to write JUCE code is very similar to how you would write it in C++.
-- Ships as wheel to be used in python scripts.
+- Ships as wheel to be used in python scripts, also with **pyi** files to ease IDEs autocompletion.
 - Allows embedding in existing JUCE apps (ships as a JUCE module).
 
 -------------
@@ -209,8 +209,8 @@ Licensing
 
 It comes in two licensed flavours:
 
-- **GPLv3 License**: When used from python using the PyPi provided wheels or embedded in an OSS application
-- **Commercial License**: When embedded in a closed source application
+- **GPLv3 License**: When used from python using the PyPi provided wheels or embedded in an OSS application.
+- **Commercial License**: When embedded in a closed source application, more to come...
 
 ------------
 Installation
@@ -259,11 +259,11 @@ Install python dependencies.
 
 .. |commercial_license| image:: https://img.shields.io/badge/license-Commercial-blue
     :alt: Commercial License
-    :target: https://github.com/kunitoki/popsicle/blob/master/COMMERCIAL
+    :target: https://github.com/kunitoki/popsicle/blob/master/LICENSE.COMMERCIAL
 
 .. |pypi_license| image:: https://img.shields.io/pypi/l/popsicle
-    :alt: PyPI - Open Source License
-    :target: https://github.com/kunitoki/popsicle/blob/master/LICENSE
+    :alt: Open Source License
+    :target: https://github.com/kunitoki/popsicle/blob/master/LICENSE.GPLv3
 
 .. |pypi_status| image:: https://img.shields.io/pypi/status/popsicle
     :alt: PyPI - Status
