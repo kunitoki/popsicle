@@ -75,7 +75,7 @@ class Application(juce.JUCEApplication):
 		super().__init__()
 
 	def getApplicationName(self):
-		return "MyApp"
+		return "JUCE-o-matic"
 
 	def getApplicationVersion(self):
 		return "1.0"

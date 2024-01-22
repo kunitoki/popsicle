@@ -114,6 +114,9 @@ A single 80 lines script is better than thousand of words:
 
 As easy as that ! You will find more example on JUCE usage in the *examples* folder.
 
+.. image:: https://github.com/kunitoki/popsicle/raw/master/images/juce_o_matic.png
+    :target: https://github.com/kunitoki/popsicle/blob/master/examples/juce_o_matic.py
+
 -----------------
 Supported Modules
 -----------------
@@ -195,15 +198,15 @@ Example Applications
 
 Some images of JUCE tutorials and other small apps ported to *popsicle*.
 
-Super Simple Animated Graphics
-
-.. image:: https://github.com/kunitoki/popsicle/raw/master/images/juce_o_matic.png
-    :target: https://github.com/kunitoki/popsicle/blob/master/examples/juce_o_matic.py
-
 Advanced GUI layout techniques (https://docs.juce.com/master/tutorial_rectangle_advanced.html)
 
 .. image:: https://github.com/kunitoki/popsicle/raw/master/images/layout_rectangles.png
     :target: https://github.com/kunitoki/popsicle/blob/master/examples/layout_rectangles.py
+
+Matplotlib Integration
+
+.. image:: https://github.com/kunitoki/popsicle/raw/master/images/matplotlib_integration.png
+    :target: https://github.com/kunitoki/popsicle/blob/master/examples/juce_matplotlib_image.py
 
 ---------
 Licensing
