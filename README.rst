@@ -2,9 +2,11 @@
     :alt: popsicle
     :target: https://github.com/kunitoki/popsicle
 
-|linux_builds| |macos_builds| |windows_builds| |coveralls| |pypi_version| |pypi_downloads|
+|linux_builds| |macos_builds| |windows_builds| |pypi_version| |pypi_downloads|
 
 |pypi_status| |pypi_license| |commercial_license|
+
+|coveralls|
 
 ========
 popsicle
@@ -257,6 +259,10 @@ Install python dependencies.
     :alt: Windows Builds Status
     :target: https://github.com/kunitoki/popsicle/actions
 
+.. |coveralls| image:: https://coveralls.io/repos/github/kunitoki/popsicle/badge.svg?branch=dev/reworked_version_1
+    :alt: Coveralls - Code Coverage
+    :target: https://coveralls.io/github/kunitoki/popsicle?branch=dev/reworked_version_1
+
 .. |commercial_license| image:: https://img.shields.io/badge/license-Commercial-blue
     :alt: Commercial License
     :target: https://github.com/kunitoki/popsicle/blob/master/LICENSE.COMMERCIAL
@@ -276,7 +282,3 @@ Install python dependencies.
 .. |pypi_downloads| image:: https://img.shields.io/pypi/dm/popsicle
     :alt: PyPI - Downloads
     :target: https://pypi.org/project/popsicle/
-
-.. |coveralls| image:: https://coveralls.io/repos/github/kunitoki/popsicle/badge.svg?branch=dev/reworked_version_1
-    :alt: Coveralls - Code Coverage
-    :target: https://coveralls.io/github/kunitoki/popsicle?branch=dev/reworked_version_1
