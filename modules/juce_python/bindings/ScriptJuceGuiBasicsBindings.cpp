@@ -16,7 +16,11 @@
  * OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE DISCLAIMED.
  */
 
-#if JUCE_MODULE_AVAILABLE_juce_gui_basics
+#if !JUCE_MODULE_AVAILABLE_juce_gui_basics
+ #error This binding file requires adding the juce_gui_basics module in the project
+#endif
+
+#include <juce_gui_basics/juce_gui_basics.h>
 
 #include "ScriptJuceGuiBasicsBindings.h"
 #include "../scripting/ScriptBindings.h"
@@ -1935,5 +1939,3 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
 }
 
 } // namespace popsicle::Bindings
-
-#endif

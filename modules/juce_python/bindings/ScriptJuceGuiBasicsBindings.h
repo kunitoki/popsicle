@@ -18,10 +18,6 @@
 
 #pragma once
 
-#if JUCE_MODULE_AVAILABLE_juce_gui_basics
-
-#include <juce_gui_basics/juce_gui_basics.h>
-
 #include "../utilities/PyBind11Includes.h"
 
 //=================================================================================================
@@ -31,5 +27,3 @@ namespace popsicle::Bindings {
 void registerJuceGuiBasicsBindings (pybind11::module_& m);
 
 } // namespace popsicle::Bindings
-
-#endif

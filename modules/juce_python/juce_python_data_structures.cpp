@@ -16,6 +16,10 @@
  * OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE DISCLAIMED.
  */
 
+#if JUCE_MODULE_AVAILABLE_juce_data_structures
+
 #include "juce_python.h"
 
 #include "bindings/ScriptJuceDataStructuresBindings.cpp"
+
+#endif

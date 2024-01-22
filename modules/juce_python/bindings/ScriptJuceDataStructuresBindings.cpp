@@ -16,7 +16,11 @@
  * OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE DISCLAIMED.
  */
 
-#if JUCE_MODULE_AVAILABLE_juce_data_structures
+#if !JUCE_MODULE_AVAILABLE_juce_data_structures
+ #error This binding file requires adding the juce_data_structures module in the project
+#endif
+
+#include <juce_data_structures/juce_data_structures.h>
 
 #include "ScriptJuceDataStructuresBindings.h"
 
@@ -532,5 +536,3 @@ void registerJuceDataStructuresBindings (pybind11::module_& m)
 }
 
 } // namespace popsicle::Bindings
-
-#endif

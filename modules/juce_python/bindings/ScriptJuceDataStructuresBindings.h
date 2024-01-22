@@ -18,10 +18,6 @@
 
 #pragma once
 
-#if JUCE_MODULE_AVAILABLE_juce_data_structures
-
-#include <juce_data_structures/juce_data_structures.h>
-
 #include "../utilities/PyBind11Includes.h"
 
 //=================================================================================================
@@ -31,5 +27,3 @@ namespace popsicle::Bindings {
 void registerJuceDataStructuresBindings (pybind11::module_& m);
 
 } // namespace popsicle::Bindings
-
-#endif

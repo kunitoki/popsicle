@@ -16,7 +16,11 @@
  * OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE DISCLAIMED.
  */
 
-#if JUCE_MODULE_AVAILABLE_juce_events
+#if !JUCE_MODULE_AVAILABLE_juce_events
+ #error This binding file requires adding the juce_events module in the project
+#endif
+
+#include <juce_events/juce_events.h>
 
 #include "ScriptJuceEventsBindings.h"
 
@@ -342,5 +346,3 @@ void registerJuceEventsBindings (pybind11::module_& m)
 }
 
 } // namespace popsicle::Bindings
-
-#endif

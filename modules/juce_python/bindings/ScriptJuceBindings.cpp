@@ -19,16 +19,28 @@
 #include "../utilities/PyBind11Includes.h"
 
 #include "ScriptJuceCoreBindings.h"
+
+#if JUCE_MODULE_AVAILABLE_juce_events
 #include "ScriptJuceEventsBindings.h"
+#endif
+
+#if JUCE_MODULE_AVAILABLE_juce_data_structures
 #include "ScriptJuceDataStructuresBindings.h"
+#endif
+
+#if JUCE_MODULE_AVAILABLE_juce_graphics
 #include "ScriptJuceGraphicsBindings.h"
+#endif
+
+#if JUCE_MODULE_AVAILABLE_juce_gui_basics
 #include "ScriptJuceGuiBasicsBindings.h"
+#endif
 
 //=================================================================================================
 #if JUCE_PYTHON_EMBEDDED_INTERPRETER
-PYBIND11_EMBEDDED_MODULE(popsicle, m)
+PYBIND11_EMBEDDED_MODULE (popsicle, m)
 #else
-PYBIND11_MODULE(popsicle, m)
+PYBIND11_MODULE (popsicle, m)
 #endif
 {
     // Register juce_core bindings

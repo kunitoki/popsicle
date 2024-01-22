@@ -37,8 +37,6 @@ void registerJuceCoreBindings (pybind11::module_& m);
 
 } // namespace popsicle::Bindings
 
-//=================================================================================================
-
 namespace PYBIND11_NAMESPACE {
 namespace detail {
 

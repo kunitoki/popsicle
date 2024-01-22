@@ -1,11 +1,5 @@
-import pytest
-
 from ..fixtures import juce_app
 import popsicle as juce
-
-
-if not hasattr(juce, "ValueTree"):
-    pytest.skip()
 
 
 #==================================================================================================
@@ -75,8 +69,6 @@ def test_properties():
     assert a.hasProperty("property1")
     p1 = a.getProperty("property1")
     assert p1 == "abc"
-
-
 
 #==================================================================================================
 

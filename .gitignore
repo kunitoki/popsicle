@@ -9,3 +9,4 @@ popsicle/
 
 .DS_Store
 *.pyc
+*.pyi

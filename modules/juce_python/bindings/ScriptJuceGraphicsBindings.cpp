@@ -16,7 +16,11 @@
  * OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE DISCLAIMED.
  */
 
-#if JUCE_MODULE_AVAILABLE_juce_graphics
+#if !JUCE_MODULE_AVAILABLE_juce_graphics
+ #error This binding file requires adding the juce_graphics module in the project
+#endif
+
+#include <juce_graphics/juce_graphics.h>
 
 #include "ScriptJuceGraphicsBindings.h"
 #include "../utilities/ClassDemangling.h"
@@ -1366,5 +1370,3 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
 }
 
 } // namespace popsicle::Bindings
-
-#endif

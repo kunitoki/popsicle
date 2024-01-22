@@ -18,10 +18,6 @@
 
 #pragma once
 
-#if JUCE_MODULE_AVAILABLE_juce_events
-
-#include <juce_events/juce_events.h>
-
 #include "../utilities/PyBind11Includes.h"
 
 //=================================================================================================
@@ -31,5 +27,3 @@ namespace popsicle::Bindings {
 void registerJuceEventsBindings (pybind11::module_& m);
 
 } // namespace popsicle::Bindings
-
-#endif

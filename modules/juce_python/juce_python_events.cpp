@@ -16,6 +16,10 @@
  * OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE DISCLAIMED.
  */
 
+#if JUCE_MODULE_AVAILABLE_juce_events
+
 #include "juce_python.h"
 
 #include "bindings/ScriptJuceEventsBindings.cpp"
+
+#endif
