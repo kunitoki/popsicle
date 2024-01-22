@@ -41,12 +41,12 @@ def test_construct_and_start_stop():
     a.addListener(listener)
 
     a.startThread()
-    assert a.isThreadRunning()
     assert not a.isRealtime()
 
     if not a.wait(10000):
         assert False
 
+    assert a.isThreadRunning()
     assert a.threadID is not None and threadID != a.threadID
     assert a.getThreadName() == "abc"
 
@@ -64,14 +64,15 @@ def test_construct_and_start_signal_stop():
     a.startRealtimeThread(juce.Thread.RealtimeOptions()
         .withProcessingTimeMs(100)
         .withPriority(juce.Thread.Priority.highest))
-    assert a.isThreadRunning()
-    assert a.isRealtime()
 
     listener = ThreadListener()
     a.addListener(listener)
 
     if not a.wait(10000):
         assert False
+
+    assert a.isThreadRunning()
+    assert a.isRealtime()
 
     a.removeListener(listener)
 
