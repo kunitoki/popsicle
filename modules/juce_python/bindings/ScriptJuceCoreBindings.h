@@ -29,11 +29,39 @@
 #include <type_traits>
 #include <utility>
 
-//=================================================================================================
-
 namespace popsicle::Bindings {
 
+//=================================================================================================
+
 void registerJuceCoreBindings (pybind11::module_& m);
+
+//=================================================================================================
+
+struct PyThreadID
+{
+    explicit PyThreadID (juce::Thread::ThreadID value) noexcept
+        : value (value)
+    {
+    }
+
+    operator juce::Thread::ThreadID() const noexcept
+    {
+        return value;
+    }
+
+    bool operator==(const PyThreadID& other) const noexcept
+    {
+        return value == other.value;
+    }
+
+    bool operator!=(const PyThreadID& other) const noexcept
+    {
+        return value != other.value;
+    }
+
+private:
+    juce::Thread::ThreadID value;
+};
 
 } // namespace popsicle::Bindings
 

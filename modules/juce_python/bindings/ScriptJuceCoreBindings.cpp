@@ -689,7 +689,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("isValid", &Identifier::isValid)
         .def ("isNull", &Identifier::isNull)
         .def_static ("isValidIdentifier", &Identifier::isValidIdentifier)
-        .def ("__repr__", &Identifier::toString)
+        .def ("__repr__", Helpers::makeRepr<Identifier> (&Identifier::toString))
         .def ("__str__", &Identifier::toString)
     ;
 
@@ -846,7 +846,12 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("parseString", &BigInteger::parseString)
         .def ("toMemoryBlock", &BigInteger::toMemoryBlock)
         .def ("loadFromMemoryBlock", &BigInteger::loadFromMemoryBlock)
-        .def ("__repr__", &BigInteger::toString)
+        .def ("__repr__", [](const BigInteger& self)
+        {
+            String result;
+            result << Helpers::pythonizeModuleClassName (PythonModuleName, typeid (self).name()) << "('" << self.toString (16) << "')";
+            return result;
+        })
         .def ("__str__", &BigInteger::toString)
     ;
 
@@ -934,8 +939,13 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         {
             return py::memoryview::from_memory (self.getRawData(), 16);
         }, py::return_value_policy::reference_internal)
-        .def ("__repr__", &Uuid::toString)
-        .def ("__str__", &Uuid::toString)
+        .def ("__repr__", [](const Uuid& self)
+        {
+            String result;
+            result << Helpers::pythonizeModuleClassName (PythonModuleName, typeid (self).name()) << "('{" << self.toDashedString () << "}')";
+            return result;
+        })
+        .def ("__str__", &Uuid::toDashedString)
     ;
 
     // ============================================================================================ juce::RelativeTime
@@ -965,7 +975,12 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def (py::self -= py::self)
         .def (py::self += double())
         .def (py::self -= double())
-        .def ("__repr__", [](const RelativeTime& self) { return self.getDescription(); })
+        .def ("__repr__", [](const RelativeTime& self)
+        {
+            String result;
+            result << Helpers::pythonizeModuleClassName (PythonModuleName, typeid (self).name()) << "('" << self.getDescription() << "')";
+            return result;
+        })
         .def ("__str__", [](const RelativeTime& self) { return self.getDescription(); })
     ;
 
@@ -1025,8 +1040,13 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def (py::self <= py::self)
         .def (py::self > py::self)
         .def (py::self >= py::self)
-        .def ("__repr__", [](const Time& self) { return self.toISO8601(false); })
-        .def ("__str__", [](const Time& self) { return self.toISO8601(false); })
+        .def ("__repr__", [](const Time& self)
+        {
+            String result;
+            result << Helpers::pythonizeModuleClassName (PythonModuleName, typeid (self).name()) << "('" << self.toISO8601 (false) << "')";
+            return result;
+        })
+        .def ("__str__", [](const Time& self) { return self.toISO8601 (false); })
     ;
 
     // ============================================================================================ juce::Range<>
@@ -1076,8 +1096,8 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
             return py::memoryview::from_memory (self->getData(), static_cast<ssize_t> (self->getSize()));
         }, py::return_value_policy::reference_internal)
         .def ("__getitem__", [](const MemoryBlock& self, int index) { return self[index]; })
-        .def ("__setitem__", [](MemoryBlock* self, int index, char value) { self->operator[](index) = value; })
-        .def ("__setitem__", [](MemoryBlock* self, int index, int value) { self->operator[](index) = static_cast<char> (value); })
+        .def ("__setitem__", [](MemoryBlock* self, int index, char value) { self->operator[] (index) = value; })
+        .def ("__setitem__", [](MemoryBlock* self, int index, int value) { self->operator[] (index) = static_cast<char> (value); })
         .def ("isEmpty", &MemoryBlock::isEmpty)
         .def ("getSize", &MemoryBlock::getSize)
         .def ("setSize", &MemoryBlock::setSize, "newSize"_a, "initialiseNewSpaceToZero"_a = false)
@@ -1109,7 +1129,20 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("getBitRange", &MemoryBlock::getBitRange)
         .def ("toBase64Encoding", &MemoryBlock::toBase64Encoding)
         .def ("fromBase64Encoding", &MemoryBlock::fromBase64Encoding)
-        .def ("__repr__", &MemoryBlock::toString)
+        .def ("__repr__", [](const MemoryBlock& self)
+        {
+            String result;
+            result << Helpers::pythonizeModuleClassName (PythonModuleName, typeid (self).name()) << "(b'";
+
+            for (size_t index = 0; index < jmin (size_t (8), self.getSize()); ++index)
+                result << "\\x" << String::toHexString (self[index]).paddedLeft(L'0', 2);
+
+            if (self.getSize() > 8)
+                result << "...";
+
+            result << "')";
+            return result;
+        })
         .def ("__str__", &MemoryBlock::toString)
     ;
 
@@ -1873,8 +1906,13 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def_static ("addEscapeChars", &URL::addEscapeChars)
         .def_static ("removeEscapeChars", &URL::removeEscapeChars)
         .def_static ("createWithoutParsing", &URL::createWithoutParsing)
-        .def ("__repr__", [](const URL& self) { return self.toString(true); })
-        .def ("__str__", [](const URL& self) { return self.toString(true); })
+        .def ("__repr__", [](const URL& self)
+        {
+            String result;
+            result << Helpers::pythonizeModuleClassName (PythonModuleName, typeid (self).name()) << "('" << self.toString (true) << "')";
+            return result;
+        })
+        .def ("__str__", [](const URL& self) { return self.toString (true); })
     ;
 
     py::class_<URL::InputStreamOptions> classURLInputStreamOptions (classURL, "InputStreamOptions");
@@ -2120,24 +2158,14 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def_static ("yield", &Thread::yield, py::call_guard<py::gil_scoped_release>())
         .def ("wait", &Thread::wait, py::call_guard<py::gil_scoped_release>())
         .def ("notify", &Thread::notify)
-        .def_static ("getCurrentThreadId", &Thread::getCurrentThreadId)
+        .def_static ("getCurrentThreadId", [] { return PyThreadID (Thread::getCurrentThreadId()); })
         .def_static ("getCurrentThread", &Thread::getCurrentThread, py::return_value_policy::reference)
-        .def ("getThreadId", &Thread::getThreadId)
+        .def ("getThreadId", [](const Thread& self) { return PyThreadID (self.getThreadId()); })
         .def ("getThreadName", &Thread::getThreadName)
         .def_static ("setCurrentThreadName", &Thread::setCurrentThreadName)
     //.def ("getPriority", &Thread::getPriority)
     //.def ("setPriority", &Thread::setPriority)
     ;
-
-    struct PyThreadID
-    {
-        explicit PyThreadID (Thread::ThreadID value) noexcept
-            : value (value)
-        {
-        }
-
-        Thread::ThreadID value;
-    };
 
     py::class_<PyThreadID> classThreadID (classThread, "ThreadID");
 
@@ -2148,8 +2176,14 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         }))
         .def (py::init([](const PyThreadID& other)
         {
-            return PyThreadID (other.value);
+            return PyThreadID (static_cast<Thread::ThreadID> (other));
         }))
+        .def (py::self == py::self)
+        .def (py::self != py::self)
+        .def ("__str__", [](const PyThreadID& self)
+        {
+            return String::formatted ("%p", static_cast<Thread::ThreadID> (self));
+        })
     ;
 
     // ============================================================================================ juce::ThreadPoolJob

@@ -88,4 +88,17 @@ juce::String pythonizeCompoundClassName (juce::StringRef prefixName, juce::Strin
     return result;
 }
 
+//=================================================================================================
+
+juce::String pythonizeModuleClassName (juce::StringRef moduleName, juce::StringRef className)
+{
+    const auto pythonizedName = pythonizeClassName (className);
+
+    juce::String result;
+
+    result << moduleName << "." << pythonizedName;
+
+    return result;
+}
+
 } // namespace popsicle::Helpers

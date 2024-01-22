@@ -93,8 +93,18 @@ def test_is_empty():
 
 def test_set_size():
     memory_block = juce.MemoryBlock([1, 2, 3, 4, 5])
+
     memory_block.setSize(3)
     assert memory_block.getSize() == 3
+    assert not memory_block.isEmpty()
+
+    memory_block.setSize(0)
+    assert memory_block.getSize() == 0
+    assert memory_block.isEmpty()
+
+    memory_block.setSize(10)
+    assert memory_block.getSize() == 10
+    assert all(value == 0 for value in memory_block.getData())
 
 #==================================================================================================
 
@@ -149,16 +159,21 @@ def test_insert():
 
 def test_remove_section():
     memory_block = juce.MemoryBlock([1, 2, 3, 4, 5])
-    remove_start = 1
-    remove_length = 3
-    memory_block.removeSection(remove_start, remove_length)
+
+    memory_block.removeSection(1, 3)
     assert memory_block.getSize() == 2
     assert memory_block.getData() == bytes([1, 5])
+
+    memory_block.removeSection(10, 2)
+    assert memory_block.getSize() == 10
+    assert memory_block.getData()[0] == 1
+    assert memory_block.getData()[1] == 5
 
 #==================================================================================================
 
 def test_copy_from():
     destination = juce.MemoryBlock(5, True)
+
     destination.copyFrom(bytes([1, 2, 3]), 1)
     assert destination.getSize() == 5
     assert destination.getData() == bytes([0, 1, 2, 3, 0])
@@ -166,9 +181,9 @@ def test_copy_from():
 #==================================================================================================
 
 def test_copy_to():
-    source_data = bytes([1, 2, 3, 4, 5])
-    source = juce.MemoryBlock(source_data)
+    source = juce.MemoryBlock(bytes([1, 2, 3, 4, 5]))
     destination = bytearray(3)
+
     source.copyTo(destination, 1)
     assert len(destination) == 3
     assert destination == bytes([2, 3, 4])
@@ -232,7 +247,7 @@ def test_from_base64_encoding():
 
 def test_repr():
     memory_block = juce.MemoryBlock([1, 2, 3, 4, 5])
-    assert repr(memory_block) == "\x01\x02\x03\x04\x05"
+    assert repr(memory_block) == "popsicle.MemoryBlock(b'\\x01\\x02\\x03\\x04\\x05')"
 
 #==================================================================================================
 

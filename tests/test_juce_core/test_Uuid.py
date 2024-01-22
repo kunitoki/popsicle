@@ -61,3 +61,9 @@ def test_constuct_uuid():
     a = uuid.UUID('{00010203-0405-0607-0809-0a0b0c0d0e0f}')
     b = juce.Uuid(a)
     assert a.bytes == b.getRawData()
+
+#==================================================================================================
+
+def test_repr():
+    a = juce.Uuid('{00010203-0405-0607-0809-0a0b0c0d0e0f}')
+    assert repr(a) == "popsicle.Uuid('{00010203-0405-0607-0809-0a0b0c0d0e0f}')"

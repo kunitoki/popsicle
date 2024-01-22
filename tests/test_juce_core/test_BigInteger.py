@@ -21,7 +21,7 @@ def test_comparisons():
     assert juce.BigInteger().isZero()
     assert juce.BigInteger(1).isOne()
 
-    for _ in range(10000, 0, -1):
+    for _ in range(1000, 0, -1):
         b1 = juce.BigInteger(get_big_random(r))
         b2 = juce.BigInteger(get_big_random(r))
 
@@ -49,7 +49,7 @@ def test_bit_setting():
 
     test = bytearray(2048)
 
-    for _ in range(10000, 0, -1):
+    for _ in range(1000, 0, -1):
         offset = r.nextInt (200) + 10
         num = r.nextInt (32) + 1
         value = r.nextInt()

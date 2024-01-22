@@ -38,9 +38,9 @@
 
 //=================================================================================================
 #if JUCE_PYTHON_EMBEDDED_INTERPRETER
-PYBIND11_EMBEDDED_MODULE (popsicle, m)
+PYBIND11_EMBEDDED_MODULE (JUCE_PYTHON_MODULE_NAME, m)
 #else
-PYBIND11_MODULE (popsicle, m)
+PYBIND11_MODULE (JUCE_PYTHON_MODULE_NAME, m)
 #endif
 {
     // Register juce_core bindings

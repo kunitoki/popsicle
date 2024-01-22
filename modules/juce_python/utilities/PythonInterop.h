@@ -18,9 +18,10 @@
 
 #pragma once
 
-#include <juce_core/juce_core.h>
+#include <juce_python/juce_python.h>
 
 #include "PyBind11Includes.h"
+#include "ClassDemangling.h"
 
 #include <functional>
 
@@ -29,6 +30,27 @@
 PYBIND11_DECLARE_HOLDER_TYPE(T, juce::ReferenceCountedObjectPtr<T>, true)
 
 namespace popsicle::Helpers {
+
+//=================================================================================================
+
+template <class T, class F>
+auto makeRepr (F&& func)
+{
+    static_assert (std::is_invocable_v<F, const T&>);
+
+    namespace py = pybind11;
+
+    return [func](const T& instance)
+    {
+        juce::String result;
+
+        result
+            << pythonizeCompoundClassName (PythonModuleName, typeid (instance).name())
+            << "('" << std::invoke (func, instance) << "')";
+
+        return result;
+    };
+}
 
 //=================================================================================================
 

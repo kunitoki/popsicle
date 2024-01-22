@@ -1079,6 +1079,23 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         }
     };
 
+    struct PyModalComponentManagerCallbackCallable : public ModalComponentManager::Callback
+    {
+        explicit PyModalComponentManagerCallbackCallable (py::function f)
+            : fn (std::move (f))
+        {
+        }
+
+        void modalStateFinished (int result) override
+        {
+            if (fn)
+                fn (result);
+        }
+
+    private:
+        py::function fn;
+    };
+
     py::class_<ModalComponentManager::Callback, PyModalComponentManagerCallback> classModalComponentManagerCallback (classModalComponentManager, "Callback");
 
     classModalComponentManagerCallback
@@ -1097,29 +1114,74 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("isFrontModalComponent", &ModalComponentManager::isFrontModalComponent)
         .def ("attachCallback", [](ModalComponentManager& self, Component* component, py::function callback)
         {
-            struct PyCallable : public ModalComponentManager::Callback
-            {
-                explicit PyCallable (py::function&& f)
-                    : fn (std::move (f))
-                {
-                }
-
-                void modalStateFinished (int result) override
-                {
-                    if (fn)
-                        fn (result);
-                }
-
-                py::function fn;
-            };
-
-            self.attachCallback (component, new PyCallable (std::move (callback)));
+            self.attachCallback (component, new PyModalComponentManagerCallbackCallable (std::move (callback)));
         })
         .def ("bringModalComponentsToFront", &ModalComponentManager::bringModalComponentsToFront, "topOneShouldGrabFocus"_a = true)
         .def ("cancelAllModalComponents", &ModalComponentManager::cancelAllModalComponents)
 #if JUCE_MODAL_LOOPS_PERMITTED
         .def ("runEventLoopForCurrentComponent", &ModalComponentManager::runEventLoopForCurrentComponent)
 #endif
+    ;
+
+    // ============================================================================================ juce::ComponentListener
+
+    class PyComponentListener : public ComponentListener
+    {
+        using ComponentListener::ComponentListener;
+
+        void componentMovedOrResized (Component& component, bool wasMoved, bool wasResized) override
+        {
+            PYBIND11_OVERRIDE (void, ComponentListener, componentMovedOrResized, component, wasMoved, wasResized);
+        }
+
+        void componentBroughtToFront (Component& component) override
+        {
+            PYBIND11_OVERRIDE (void, ComponentListener, componentBroughtToFront, component);
+        }
+
+        void componentVisibilityChanged (Component& component) override
+        {
+            PYBIND11_OVERRIDE (void, ComponentListener, componentVisibilityChanged, component);
+        }
+
+        void componentChildrenChanged (Component& component) override
+        {
+            PYBIND11_OVERRIDE (void, ComponentListener, componentChildrenChanged, component);
+        }
+
+        void componentParentHierarchyChanged (Component& component) override
+        {
+            PYBIND11_OVERRIDE (void, ComponentListener, componentParentHierarchyChanged, component);
+        }
+
+        void componentNameChanged (Component& component) override
+        {
+            PYBIND11_OVERRIDE (void, ComponentListener, componentNameChanged, component);
+        }
+
+        void componentBeingDeleted (Component& component) override
+        {
+            PYBIND11_OVERRIDE (void, ComponentListener, componentBeingDeleted, component);
+        }
+
+        void componentEnablementChanged (Component& component) override
+        {
+            PYBIND11_OVERRIDE (void, ComponentListener, componentEnablementChanged, component);
+        }
+    };
+
+    py::class_<ComponentListener, PyComponentListener> classComponentListener (m, "ComponentListener");
+
+    classComponentListener
+        .def (py::init<>())
+        .def ("componentMovedOrResized", &ComponentListener::componentMovedOrResized)
+        .def ("componentBroughtToFront", &ComponentListener::componentBroughtToFront)
+        .def ("componentVisibilityChanged", &ComponentListener::componentVisibilityChanged)
+        .def ("componentChildrenChanged", &ComponentListener::componentChildrenChanged)
+        .def ("componentParentHierarchyChanged", &ComponentListener::componentParentHierarchyChanged)
+        .def ("componentNameChanged", &ComponentListener::componentNameChanged)
+        .def ("componentBeingDeleted", &ComponentListener::componentBeingDeleted)
+        .def ("componentEnablementChanged", &ComponentListener::componentEnablementChanged)
     ;
 
     // ============================================================================================ juce::Component
@@ -1352,6 +1414,11 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .value ("focusChangedDirectly", Component::FocusChangeType::focusChangedDirectly)
         .export_values();
 
+    py::enum_<Component::FocusContainerType> (classComponent, "FocusContainerType")
+        .value ("none", Component::FocusContainerType::none)
+        .value ("focusContainer", Component::FocusContainerType::focusContainer)
+        .value ("keyboardFocusContainer", Component::FocusContainerType::keyboardFocusContainer);
+
     py::enum_<Component::FocusChangeDirection> (classComponent, "FocusChangeDirection")
         .value ("unknown", Component::FocusChangeDirection::unknown)
         .value ("forward", Component::FocusChangeDirection::forward)
@@ -1367,7 +1434,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("isVisible", &Component::isVisible)
         .def ("visibilityChanged", &Component::visibilityChanged)
         .def ("isShowing", &Component::isShowing)
-    //.def ("addToDesktop", &Component::addToDesktop)
+        .def ("addToDesktop", [](Component& self, int windowStyleFlags) { self.addToDesktop (windowStyleFlags); })
         .def ("removeFromDesktop", &Component::removeFromDesktop)
         .def ("isOnDesktop", &Component::isOnDesktop)
         .def ("getDesktopScaleFactor", &Component::getDesktopScaleFactor)
@@ -1453,8 +1520,8 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("isPaintingUnclipped", &Component::isPaintingUnclipped)
     //.def ("setComponentEffect", &Component::setComponentEffect)
     //.def ("getComponentEffect", &Component::getComponentEffect)
-    //.def ("getLookAndFeel", &Component::getLookAndFeel)
-    //.def ("setLookAndFeel", &Component::setLookAndFeel)
+        .def ("getLookAndFeel", &Component::getLookAndFeel, py::return_value_policy::reference)
+        .def ("setLookAndFeel", &Component::setLookAndFeel)
         .def ("lookAndFeelChanged", &Component::lookAndFeelChanged)
         .def ("sendLookAndFeelChange", &Component::sendLookAndFeelChange)
         .def ("setOpaque", &Component::setOpaque)
@@ -1463,7 +1530,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("isBroughtToFrontOnMouseClick", &Component::isBroughtToFrontOnMouseClick)
         .def ("setExplicitFocusOrder", &Component::setExplicitFocusOrder)
         .def ("getExplicitFocusOrder", &Component::getExplicitFocusOrder)
-    //.def ("setFocusContainerType", &Component::setFocusContainerType)
+        .def ("setFocusContainerType", &Component::setFocusContainerType)
         .def ("isFocusContainer", &Component::isFocusContainer)
         .def ("isKeyboardFocusContainer", &Component::isKeyboardFocusContainer)
         .def ("findFocusContainer", &Component::findFocusContainer, py::return_value_policy::reference)
@@ -1506,11 +1573,11 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("setRepaintsOnMouseActivity", &Component::setRepaintsOnMouseActivity)
         .def ("addMouseListener", &Component::addMouseListener)
         .def ("removeMouseListener", &Component::removeMouseListener)
-    //.def ("addKeyListener", &Component::addKeyListener)
-    //.def ("removeKeyListener", &Component::removeKeyListener)
-    //.def ("keyPressed", &Component::keyPressed)
-    //.def ("keyStateChanged", &Component::keyStateChanged)
-    //.def ("modifierKeysChanged", &Component::modifierKeysChanged)
+        .def ("addKeyListener", &Component::addKeyListener)
+        .def ("removeKeyListener", &Component::removeKeyListener)
+        .def ("keyPressed", &Component::keyPressed)
+        .def ("keyStateChanged", &Component::keyStateChanged)
+        .def ("modifierKeysChanged", &Component::modifierKeysChanged)
         .def ("isMouseOver", &Component::isMouseOver)
         .def ("isMouseButtonDown", &Component::isMouseButtonDown)
         .def ("isMouseOverOrDragging", &Component::isMouseOverOrDragging)
@@ -1521,15 +1588,18 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("childBoundsChanged", &Component::childBoundsChanged)
         .def ("parentSizeChanged", &Component::parentSizeChanged)
         .def ("broughtToFront", &Component::broughtToFront)
-    //.def ("addComponentListener", &Component::addComponentListener)
-    //.def ("removeComponentListener", &Component::removeComponentListener)
+        .def ("addComponentListener", &Component::addComponentListener)
+        .def ("removeComponentListener", &Component::removeComponentListener)
         .def ("postCommandMessage", &Component::postCommandMessage)
         .def ("handleCommandMessage", &Component::handleCommandMessage)
 #if JUCE_MODAL_LOOPS_PERMITTED
         .def ("runModalLoop", &Component::runModalLoop)
 #endif
-    //.def ("enterModalState", &Component::enterModalState)
-    //.def ("exitModalState", &Component::exitModalState)
+        .def ("enterModalState", [](Component& self, bool takeKeyboardFocus, py::function callback, bool deleteWhenDismissed)
+        {
+            self.enterModalState (takeKeyboardFocus, new PyModalComponentManagerCallbackCallable (std::move (callback)), deleteWhenDismissed);
+        }, "takeKeyboardFocus"_a = true, "callback"_a = py::none(), "deleteWhenDismissed"_a = false)
+        .def ("exitModalState", &Component::exitModalState)
         .def ("isCurrentlyModal", &Component::isCurrentlyModal)
         .def_static ("getNumCurrentlyModalComponents", &Component::getNumCurrentlyModalComponents)
         .def_static ("getCurrentlyModalComponent", &Component::getCurrentlyModalComponent)

@@ -24,7 +24,7 @@ PYBIND11_EMBEDDED_MODULE(custom, m)
 {
     namespace py = pybind11;
 
-    py::module_::import ("popsicle");
+    py::module_::import (popsicle::PythonModuleName);
 
     py::class_<PopsicleDemo, juce::Component> (m, "PopsicleDemo")
         .def_readwrite ("text", &PopsicleDemo::text);
@@ -37,7 +37,7 @@ PopsicleDemo::PopsicleDemo()
 {
     pybind11::dict locals;
     locals["custom"] = pybind11::module_::import ("custom");
-    locals["juce"] = pybind11::module_::import ("popsicle");
+    locals["juce"] = pybind11::module_::import (popsicle::PythonModuleName);
     locals["this"] = pybind11::cast (this);
 
     auto result = engine.runScript (R"(

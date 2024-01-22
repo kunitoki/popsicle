@@ -23,6 +23,7 @@
 #include <juce_events/juce_events.h>
 
 #include "ScriptJuceEventsBindings.h"
+#include "ScriptJuceCoreBindings.h"
 
 #define JUCE_PYTHON_INCLUDE_PYBIND11_OPERATORS
 #define JUCE_PYTHON_INCLUDE_PYBIND11_FUNCTIONAL
@@ -222,7 +223,7 @@ void registerJuceEventsBindings (pybind11::module_& m)
     //.def ("callFunctionOnMessageThread", &MessageManager::callFunctionOnMessageThread)
         .def ("isThisTheMessageThread", &MessageManager::isThisTheMessageThread)
         .def ("setCurrentThreadAsMessageThread", &MessageManager::setCurrentThreadAsMessageThread)
-        .def ("getCurrentMessageThread", &MessageManager::getCurrentMessageThread)
+        .def ("getCurrentMessageThread", [](const MessageManager& self) { return PyThreadID (self.getCurrentMessageThread()); })
         .def ("currentThreadHasLockedMessageManager", &MessageManager::currentThreadHasLockedMessageManager)
         .def_static ("existsAndIsLockedByCurrentThread", &MessageManager::existsAndIsLockedByCurrentThread)
         .def_static ("existsAndIsCurrentThread", &MessageManager::existsAndIsCurrentThread)

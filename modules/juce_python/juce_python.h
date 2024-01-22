@@ -62,6 +62,26 @@
  #define JUCE_PYTHON_SCRIPT_CATCH_EXCEPTION 1
 #endif
 
+//==============================================================================
+
+#include "utilities/MacroHelpers.h"
+
+/**
+ * Custom module name.
+ */
+#ifndef JUCE_PYTHON_MODULE_NAME
+ #define JUCE_PYTHON_MODULE_NAME popsicle
+#endif
+
+/**
+ * Custom python module name as string.
+ */
+namespace popsicle {
+static inline constexpr const char* const PythonModuleName = JUCE_PYTHON_STRINGIFY (JUCE_PYTHON_MODULE_NAME);
+} // namespace popsicle
+
+//==============================================================================
+
 #include "scripting/ScriptException.h"
 #include "scripting/ScriptEngine.h"
 #include "scripting/ScriptBindings.h"
