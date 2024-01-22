@@ -406,7 +406,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("isInitialising", &JUCEApplication::isInitialising)
     ;
 
-    // ============================================================================================ juce::MouseInputSource
+    // ============================================================================================ juce::ModifierKeys
 
     py::class_<ModifierKeys> classModifierKeys (m, "ModifierKeys");
 
@@ -450,6 +450,138 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def_readonly_static ("currentModifiers", &ModifierKeys::currentModifiers, py::return_value_policy::copy)
         .def_static ("getCurrentModifiers", &ModifierKeys::getCurrentModifiers)
         .def_static ("getCurrentModifiersRealtime", &ModifierKeys::getCurrentModifiersRealtime)
+    ;
+
+    // ============================================================================================ juce::KeyPress
+
+    py::class_<KeyPress> classKeyPress (m, "KeyPress");
+
+    classKeyPress
+        .def (py::init<>())
+        .def (py::init<int>())
+        .def (py::init<int, ModifierKeys, juce_wchar>())
+        .def (py::init<const KeyPress&>())
+        .def (py::self == py::self)
+        .def (py::self != py::self)
+        .def (py::self == int())
+        .def (py::self != int())
+        .def ("isValid", &KeyPress::isValid)
+        .def ("getKeyCode", &KeyPress::getKeyCode)
+        .def ("getModifiers", &KeyPress::getModifiers)
+        .def ("getTextCharacter", &KeyPress::getTextCharacter)
+        .def ("isKeyCode", &KeyPress::isKeyCode)
+        .def_static ("createFromDescription", &KeyPress::createFromDescription)
+        .def ("getTextDescription", &KeyPress::getTextDescription)
+        .def ("getTextDescriptionWithIcons", &KeyPress::getTextDescriptionWithIcons)
+        .def ("isCurrentlyDown", &KeyPress::isCurrentlyDown)
+        .def_static ("isKeyCurrentlyDown", &KeyPress::isKeyCurrentlyDown)
+    ;
+
+    classKeyPress.attr ("spaceKey") = py::int_ (KeyPress::spaceKey);
+    classKeyPress.attr ("escapeKey") = py::int_ (KeyPress::escapeKey);
+    classKeyPress.attr ("returnKey") = py::int_ (KeyPress::returnKey);
+    classKeyPress.attr ("tabKey") = py::int_ (KeyPress::tabKey);
+    classKeyPress.attr ("deleteKey") = py::int_ (KeyPress::deleteKey);
+    classKeyPress.attr ("backspaceKey") = py::int_ (KeyPress::backspaceKey);
+    classKeyPress.attr ("insertKey") = py::int_ (KeyPress::insertKey);
+    classKeyPress.attr ("upKey") = py::int_ (KeyPress::upKey);
+    classKeyPress.attr ("downKey") = py::int_ (KeyPress::downKey);
+    classKeyPress.attr ("leftKey") = py::int_ (KeyPress::leftKey);
+    classKeyPress.attr ("rightKey") = py::int_ (KeyPress::rightKey);
+    classKeyPress.attr ("pageUpKey") = py::int_ (KeyPress::pageUpKey);
+    classKeyPress.attr ("pageDownKey") = py::int_ (KeyPress::pageDownKey);
+    classKeyPress.attr ("homeKey") = py::int_ (KeyPress::homeKey);
+    classKeyPress.attr ("endKey") = py::int_ (KeyPress::endKey);
+    classKeyPress.attr ("F1Key") = py::int_ (KeyPress::F1Key);
+    classKeyPress.attr ("F2Key") = py::int_ (KeyPress::F2Key);
+    classKeyPress.attr ("F3Key") = py::int_ (KeyPress::F3Key);
+    classKeyPress.attr ("F4Key") = py::int_ (KeyPress::F4Key);
+    classKeyPress.attr ("F5Key") = py::int_ (KeyPress::F5Key);
+    classKeyPress.attr ("F6Key") = py::int_ (KeyPress::F6Key);
+    classKeyPress.attr ("F7Key") = py::int_ (KeyPress::F7Key);
+    classKeyPress.attr ("F8Key") = py::int_ (KeyPress::F8Key);
+    classKeyPress.attr ("F9Key") = py::int_ (KeyPress::F9Key);
+    classKeyPress.attr ("F10Key") = py::int_ (KeyPress::F10Key);
+    classKeyPress.attr ("F11Key") = py::int_ (KeyPress::F11Key);
+    classKeyPress.attr ("F12Key") = py::int_ (KeyPress::F12Key);
+    classKeyPress.attr ("F13Key") = py::int_ (KeyPress::F13Key);
+    classKeyPress.attr ("F14Key") = py::int_ (KeyPress::F14Key);
+    classKeyPress.attr ("F15Key") = py::int_ (KeyPress::F15Key);
+    classKeyPress.attr ("F16Key") = py::int_ (KeyPress::F16Key);
+    classKeyPress.attr ("F17Key") = py::int_ (KeyPress::F17Key);
+    classKeyPress.attr ("F18Key") = py::int_ (KeyPress::F18Key);
+    classKeyPress.attr ("F19Key") = py::int_ (KeyPress::F19Key);
+    classKeyPress.attr ("F20Key") = py::int_ (KeyPress::F20Key);
+    classKeyPress.attr ("F21Key") = py::int_ (KeyPress::F21Key);
+    classKeyPress.attr ("F22Key") = py::int_ (KeyPress::F22Key);
+    classKeyPress.attr ("F23Key") = py::int_ (KeyPress::F23Key);
+    classKeyPress.attr ("F24Key") = py::int_ (KeyPress::F24Key);
+    classKeyPress.attr ("F25Key") = py::int_ (KeyPress::F25Key);
+    classKeyPress.attr ("F26Key") = py::int_ (KeyPress::F26Key);
+    classKeyPress.attr ("F27Key") = py::int_ (KeyPress::F27Key);
+    classKeyPress.attr ("F28Key") = py::int_ (KeyPress::F28Key);
+    classKeyPress.attr ("F29Key") = py::int_ (KeyPress::F29Key);
+    classKeyPress.attr ("F30Key") = py::int_ (KeyPress::F30Key);
+    classKeyPress.attr ("F31Key") = py::int_ (KeyPress::F31Key);
+    classKeyPress.attr ("F32Key") = py::int_ (KeyPress::F32Key);
+    classKeyPress.attr ("F33Key") = py::int_ (KeyPress::F33Key);
+    classKeyPress.attr ("F34Key") = py::int_ (KeyPress::F34Key);
+    classKeyPress.attr ("F35Key") = py::int_ (KeyPress::F35Key);
+    classKeyPress.attr ("numberPad0") = py::int_ (KeyPress::numberPad0);
+    classKeyPress.attr ("numberPad1") = py::int_ (KeyPress::numberPad1);
+    classKeyPress.attr ("numberPad2") = py::int_ (KeyPress::numberPad2);
+    classKeyPress.attr ("numberPad3") = py::int_ (KeyPress::numberPad3);
+    classKeyPress.attr ("numberPad4") = py::int_ (KeyPress::numberPad4);
+    classKeyPress.attr ("numberPad5") = py::int_ (KeyPress::numberPad5);
+    classKeyPress.attr ("numberPad6") = py::int_ (KeyPress::numberPad6);
+    classKeyPress.attr ("numberPad7") = py::int_ (KeyPress::numberPad7);
+    classKeyPress.attr ("numberPad8") = py::int_ (KeyPress::numberPad8);
+    classKeyPress.attr ("numberPad9") = py::int_ (KeyPress::numberPad9);
+    classKeyPress.attr ("numberPadAdd") = py::int_ (KeyPress::numberPadAdd);
+    classKeyPress.attr ("numberPadSubtract") = py::int_ (KeyPress::numberPadSubtract);
+    classKeyPress.attr ("numberPadMultiply") = py::int_ (KeyPress::numberPadMultiply);
+    classKeyPress.attr ("numberPadDivide") = py::int_ (KeyPress::numberPadDivide);
+    classKeyPress.attr ("numberPadSeparator") = py::int_ (KeyPress::numberPadSeparator);
+    classKeyPress.attr ("numberPadDecimalPoint") = py::int_ (KeyPress::numberPadDecimalPoint);
+    classKeyPress.attr ("numberPadEquals") = py::int_ (KeyPress::numberPadEquals);
+    classKeyPress.attr ("numberPadDelete") = py::int_ (KeyPress::numberPadDelete);
+    classKeyPress.attr ("playKey") = py::int_ (KeyPress::playKey);
+    classKeyPress.attr ("stopKey") = py::int_ (KeyPress::stopKey);
+    classKeyPress.attr ("fastForwardKey") = py::int_ (KeyPress::fastForwardKey);
+    classKeyPress.attr ("rewindKey") = py::int_ (KeyPress::rewindKey);
+
+    // ============================================================================================ juce::KeyListener
+
+    class PyKeyListener : public KeyListener
+    {
+        using KeyListener::KeyListener;
+
+        bool keyPressed (const KeyPress& key, Component* originatingComponent) override
+        {
+            PYBIND11_OVERRIDE_PURE (bool, KeyListener, keyPressed, key, originatingComponent);
+        }
+
+        bool keyStateChanged (bool isKeyDown, Component* originatingComponent) override
+        {
+            PYBIND11_OVERRIDE (bool, KeyListener, keyStateChanged, isKeyDown, originatingComponent);
+        }
+    };
+
+    py::class_<KeyListener, PyKeyListener> classKeyListener (m, "KeyListener");
+
+    classKeyListener
+        .def (py::init<>())
+        .def ("keyPressed", &KeyListener::keyPressed)
+        .def ("keyStateChanged", &KeyListener::keyStateChanged)
+    ;
+
+    // ============================================================================================ juce::SystemClipboard
+
+    py::class_<SystemClipboard> classSystemClipboard (m, "SystemClipboard");
+
+    classSystemClipboard
+        .def_static ("copyTextToClipboard", &SystemClipboard::copyTextToClipboard)
+        .def_static ("getTextFromClipboard", &SystemClipboard::getTextFromClipboard)
     ;
 
     // ============================================================================================ juce::MouseInputSource
@@ -815,6 +947,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     // ============================================================================================ juce::Desktop
 
     py::class_<ComponentAnimator> classComponentAnimator (m, "ComponentAnimator");
+
     classComponentAnimator
         .def (py::init<>())
         .def ("animateComponent", &ComponentAnimator::animateComponent)
@@ -825,6 +958,110 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("getComponentDestination", &ComponentAnimator::getComponentDestination)
         .def ("isAnimating", py::overload_cast<Component*> (&ComponentAnimator::isAnimating, py::const_))
         .def ("isAnimating", py::overload_cast<> (&ComponentAnimator::isAnimating, py::const_))
+    ;
+
+    // ============================================================================================ juce::ComponentTraverser
+
+    class PyComponentTraverser : public ComponentTraverser
+    {
+        using ComponentTraverser::ComponentTraverser;
+
+        Component* getDefaultComponent (Component* parentComponent) override
+        {
+            PYBIND11_OVERRIDE_PURE (Component*, ComponentTraverser, getDefaultComponent, parentComponent);
+        }
+
+        Component* getNextComponent (Component* current) override
+        {
+            PYBIND11_OVERRIDE_PURE (Component*, ComponentTraverser, getNextComponent, current);
+        }
+
+        Component* getPreviousComponent (Component* current) override
+        {
+            PYBIND11_OVERRIDE_PURE (Component*, ComponentTraverser, getPreviousComponent, current);
+        }
+
+        std::vector<Component*> getAllComponents (Component* parentComponent) override
+        {
+            PYBIND11_OVERRIDE_PURE (std::vector<Component*>, ComponentTraverser, getAllComponents, parentComponent);
+        }
+    };
+
+    py::class_<ComponentTraverser, PyComponentTraverser> classComponentTraverser (m, "ComponentTraverser");
+
+    classComponentTraverser
+        .def (py::init<>())
+        .def ("getDefaultComponent", &ComponentTraverser::getDefaultComponent, py::return_value_policy::reference)
+        .def ("getNextComponent", &ComponentTraverser::getNextComponent, py::return_value_policy::reference)
+        .def ("getPreviousComponent", &ComponentTraverser::getPreviousComponent, py::return_value_policy::reference)
+        .def ("getDefaultComponent", [](ComponentTraverser& self, Component* parentComponent)
+        {
+            py::list allComponents;
+
+            for (auto component : self.getAllComponents (parentComponent))
+                allComponents.append (py::cast (component, py::return_value_policy::reference));
+
+            return allComponents;
+        })
+    ;
+
+    py::class_<FocusTraverser, ComponentTraverser> (m, "FocusTraverser");
+
+    // ============================================================================================ juce::ModalComponentManager
+
+    py::class_<ModalComponentManager, std::unique_ptr<ModalComponentManager, py::nodelete>> classModalComponentManager (m, "ModalComponentManager");
+
+    struct PyModalComponentManagerCallback : ModalComponentManager::Callback
+    {
+        using ModalComponentManager::Callback::Callback;
+
+        void modalStateFinished (int returnValue) override
+        {
+            PYBIND11_OVERRIDE_PURE (void, ModalComponentManager::Callback, modalStateFinished, returnValue);
+        }
+    };
+
+    py::class_<ModalComponentManager::Callback, PyModalComponentManagerCallback> classModalComponentManagerCallback (classModalComponentManager, "Callback");
+
+    classModalComponentManagerCallback
+        .def (py::init<>())
+        .def ("modalStateFinished", &ModalComponentManager::Callback::modalStateFinished)
+    ;
+
+    classModalComponentManager
+        .def_static ("getInstance", &ModalComponentManager::getInstance, py::return_value_policy::reference)
+        .def_static ("getInstanceWithoutCreating", &ModalComponentManager::getInstanceWithoutCreating, py::return_value_policy::reference)
+        .def_static ("deleteInstance", &ModalComponentManager::deleteInstance)
+        .def ("getNumModalComponents", &ModalComponentManager::getNumModalComponents)
+        .def ("getModalComponent", &ModalComponentManager::getModalComponent, py::return_value_policy::reference)
+        .def ("getNumModalComponents", &ModalComponentManager::getNumModalComponents)
+        .def ("isModal", &ModalComponentManager::isModal)
+        .def ("isFrontModalComponent", &ModalComponentManager::isFrontModalComponent)
+        .def ("attachCallback", [](ModalComponentManager& self, Component* component, py::function callback)
+        {
+            struct PyCallable : public ModalComponentManager::Callback
+            {
+                explicit PyCallable (py::function&& f)
+                    : fn (std::move (f))
+                {
+                }
+
+                void modalStateFinished (int result) override
+                {
+                    if (fn)
+                        fn (result);
+                }
+
+                py::function fn;
+            };
+
+            self.attachCallback (component, new PyCallable (std::move (callback)));
+        })
+        .def ("bringModalComponentsToFront", &ModalComponentManager::bringModalComponentsToFront, "topOneShouldGrabFocus"_a = true)
+        .def ("cancelAllModalComponents", &ModalComponentManager::cancelAllModalComponents)
+#if JUCE_MODAL_LOOPS_PERMITTED
+        .def ("runEventLoopForCurrentComponent", &ModalComponentManager::runEventLoopForCurrentComponent)
+#endif
     ;
 
     // ============================================================================================ juce::Component
@@ -1280,11 +1517,186 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         })
     ;
 
+    // ============================================================================================ juce::Drawable
+
+    struct PyDrawable : Drawable
+    {
+        using Drawable::Drawable;
+
+        std::unique_ptr<Drawable> createCopy() const override
+        {
+            //PYBIND11_OVERRIDE_PURE (std::unique_ptr<Drawable>, Drawable, createCopy);
+            return nullptr; // TODO
+        }
+
+        Path getOutlineAsPath() const override
+        {
+            PYBIND11_OVERRIDE_PURE (Path, Drawable, getOutlineAsPath);
+        }
+
+        Rectangle<float> getDrawableBounds() const override
+        {
+            PYBIND11_OVERRIDE_PURE (Rectangle<float>, Drawable, getDrawableBounds);
+        }
+
+        bool replaceColour (Colour originalColour, Colour replacementColour) override
+        {
+            PYBIND11_OVERRIDE (bool, Drawable, replaceColour, originalColour, replacementColour);
+        }
+    };
+
+    py::class_<Drawable, Component, PyDrawable> classDrawable (m, "Drawable");
+
+    classDrawable
+        .def (py::init<>())
+        .def ("draw", &Drawable::draw, "g"_a, "opacity"_a, "transform"_a = AffineTransform())
+        .def ("drawAt", &Drawable::drawAt)
+        .def ("drawWithin", &Drawable::drawWithin)
+        .def ("setOriginWithOriginalSize", &Drawable::setOriginWithOriginalSize)
+        .def ("setTransformToFit", &Drawable::setTransformToFit)
+        .def ("getParent", &Drawable::getParent, py::return_value_policy::reference)
+    //.def ("setClipPath", &Drawable::setClipPath)
+    //.def_static ("createFromImageData", &Drawable::createFromImageData)
+        .def_static ("createFromImageDataStream", &Drawable::createFromImageDataStream)
+        .def_static ("createFromImageFile", &Drawable::createFromImageFile)
+        .def_static ("createFromSVG", &Drawable::createFromSVG)
+        .def_static ("createFromSVGFile", &Drawable::createFromSVGFile)
+        .def_static ("parseSVGPath", &Drawable::parseSVGPath)
+        .def ("getDrawableBounds", &Drawable::getDrawableBounds)
+        .def ("replaceColour", &Drawable::replaceColour)
+        .def ("setDrawableTransform", &Drawable::setDrawableTransform)
+    ;
+
+    py::class_<DrawableComposite, Drawable> classDrawableComposite (m, "DrawableComposite");
+
+    classDrawableComposite
+        .def (py::init<>())
+        .def (py::init<const DrawableComposite&>())
+    //.def ("setBoundingBox", &DrawableComposite::setBoundingBox)
+        .def ("setBoundingBox", py::overload_cast<Rectangle<float>> (&DrawableComposite::setBoundingBox))
+    //.def ("getBoundingBox", &DrawableComposite::getBoundingBox)
+        .def ("resetBoundingBoxToContentArea", &DrawableComposite::resetBoundingBoxToContentArea)
+        .def ("getContentArea", &DrawableComposite::getContentArea)
+        .def ("setContentArea", &DrawableComposite::setContentArea)
+        .def ("resetContentAreaAndBoundingBoxToFitChildren", &DrawableComposite::resetContentAreaAndBoundingBoxToFitChildren)
+    ;
+
+    py::class_<DrawableImage, Drawable> classDrawableImage (m, "DrawableImage");
+
+    classDrawableImage
+        .def (py::init<>())
+        .def (py::init<const Image&>())
+        .def (py::init<const DrawableImage&>())
+    //.def ("setBoundingBox", py::overload_cast<Parallelogram<float>> (&DrawableImage::setBoundingBox))
+        .def ("setBoundingBox", py::overload_cast<Rectangle<float>> (&DrawableImage::setBoundingBox))
+    //.def ("getBoundingBox", &DrawableImage::getBoundingBox)
+        .def ("setImage", &DrawableImage::setImage)
+        .def ("getImage", &DrawableImage::getImage)
+        .def ("setOpacity", &DrawableImage::setOpacity)
+        .def ("getOpacity", &DrawableImage::getOpacity)
+        .def ("setOverlayColour", &DrawableImage::setOverlayColour)
+        .def ("getOverlayColour", &DrawableImage::getOverlayColour)
+    //.def ("setBoundingBox", py::overload_cast<Parallelogram<float>> (&DrawableImage::setBoundingBox))
+        .def ("setBoundingBox", py::overload_cast<Rectangle<float>> (&DrawableImage::setBoundingBox))
+    //.def ("getBoundingBox", &DrawableImage::getBoundingBox)
+    ;
+
+    py::class_<DrawablePath, Drawable> classDrawablePath (m, "DrawablePath");
+
+    classDrawablePath
+        .def (py::init<>())
+        .def (py::init<const DrawablePath&>())
+        .def ("setPath", py::overload_cast<const Path&> (&DrawablePath::setPath))
+        .def ("getPath", &DrawablePath::getPath)
+        .def ("getStrokePath", &DrawablePath::getStrokePath)
+    ;
+
+    py::class_<DrawableRectangle, Drawable> classDrawableRectangle (m, "DrawableRectangle");
+
+    classDrawableRectangle
+        .def (py::init<>())
+        .def (py::init<const DrawableRectangle&>())
+    //.def ("setRectangle", &DrawableRectangle::setRectangle)
+    //.def ("getRectangle", &DrawableRectangle::getRectangle)
+        .def ("getCornerSize", &DrawableRectangle::getCornerSize)
+        .def ("setCornerSize", &DrawableRectangle::setCornerSize)
+    ;
+
+    struct PyDrawableShape : DrawableShape
+    {
+        using DrawableShape::DrawableShape;
+
+        std::unique_ptr<Drawable> createCopy() const override
+        {
+            //PYBIND11_OVERRIDE_PURE (std::unique_ptr<Drawable>, Drawable, createCopy);
+            return nullptr; // TODO
+        }
+
+        /*
+        Path getOutlineAsPath() const override
+        {
+            PYBIND11_OVERRIDE_PURE (Path, Drawable, getOutlineAsPath);
+        }
+
+        Rectangle<float> getDrawableBounds() const override
+        {
+            PYBIND11_OVERRIDE_PURE (Rectangle<float>, Drawable, getDrawableBounds);
+        }
+
+        bool replaceColour (Colour originalColour, Colour replacementColour) override
+        {
+            PYBIND11_OVERRIDE (bool, Drawable, replaceColour, originalColour, replacementColour);
+        }
+        */
+    };
+
+    py::class_<DrawableShape, Drawable, PyDrawableShape> classDrawableShape (m, "DrawableShape");
+
+    classDrawableShape
+        .def (py::init<>())
+        //.def (py::init<const DrawableShape&>())
+        .def ("setFill", &DrawableShape::setFill)
+        .def ("getFill", &DrawableShape::getFill)
+        .def ("setStrokeFill", &DrawableShape::setStrokeFill)
+        .def ("getStrokeFill", &DrawableShape::getStrokeFill)
+        .def ("setStrokeType", &DrawableShape::setStrokeType)
+        .def ("setStrokeThickness", &DrawableShape::setStrokeThickness)
+        .def ("getStrokeType", &DrawableShape::getStrokeType)
+        .def ("setDashLengths", &DrawableShape::setDashLengths)
+        .def ("getDashLengths", &DrawableShape::getDashLengths)
+    ;
+
+    py::class_<DrawableText, Drawable> classDrawableText (m, "DrawableText");
+
+    classDrawableText
+        .def (py::init<>())
+        .def (py::init<const DrawableText&>())
+        .def ("setText", &DrawableText::setText)
+        .def ("getText", &DrawableText::getText)
+        .def ("setColour", &DrawableText::setColour)
+        .def ("getColour", &DrawableText::getColour)
+    //.def ("setFont", &DrawableText::setFont)
+    //.def ("getFont", &DrawableText::getFont)
+        .def ("setJustification", &DrawableText::setJustification)
+        .def ("getJustification", &DrawableText::getJustification)
+    //.def ("getBoundingBox", &DrawableText::getBoundingBox)
+    //.def ("setBoundingBox", &DrawableText::setBoundingBox)
+        .def ("getFontHeight", &DrawableText::getFontHeight)
+        .def ("setFontHeight", &DrawableText::setFontHeight)
+        .def ("getFontHorizontalScale", &DrawableText::getFontHorizontalScale)
+        .def ("setFontHorizontalScale", &DrawableText::setFontHorizontalScale)
+    ;
+
     // ============================================================================================ juce::Button
 
     struct PyButton : Button
     {
         using Button::Button;
+
+        explicit PyButton (const String& name)
+            : Button (name)
+        {
+        }
 
         void triggerClick() override
         {
@@ -1360,6 +1772,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     ;
 
     classButton
+        .def (py::init<const String&>())
         .def ("setButtonText", &Button::setButtonText)
         .def ("getButtonText", &Button::getButtonText)
         .def ("isDown", &Button::isDown)

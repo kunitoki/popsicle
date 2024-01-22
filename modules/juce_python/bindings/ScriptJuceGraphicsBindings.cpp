@@ -1014,7 +1014,7 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
 
     // ============================================================================================ juce::ImageCache
 
-    py::class_<ImageCache, std::unique_ptr<ImageCache, Helpers::NoopDeleter<ImageCache>>> classImageCache (m, "ImageCache");
+    py::class_<ImageCache, std::unique_ptr<ImageCache, py::nodelete>> classImageCache (m, "ImageCache");
 
     classImageCache
         .def_static ("getFromFile", &ImageCache::getFromFile)

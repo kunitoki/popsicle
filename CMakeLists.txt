@@ -142,12 +142,10 @@ if (ENABLE_COVERAGE)
             #"--branch-coverage"
             "--keep-going"
             "--ignore-errors" "inconsistent"
-            "--ignore-errors" "gcov,gcov"
         GENHTML_ARGS
             #"--rc" "branch_coverage=1"
             #"--branch-coverage"
             "--keep-going"
             "--ignore-errors" "inconsistent"
-            "--ignore-errors" "gcov,gcov"
             "--prefix" "${CMAKE_CURRENT_LIST_DIR}")
 endif()
