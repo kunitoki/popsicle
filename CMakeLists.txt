@@ -47,7 +47,9 @@ set_target_properties (${PROJECT_NAME} PROPERTIES PREFIX "")
 if (APPLE)
     set_target_properties (${PROJECT_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
     set_target_properties (${PROJECT_NAME} PROPERTIES SUFFIX ".so")
+
     target_link_options (${PROJECT_NAME} PRIVATE "-Wl,-weak_reference_mismatches,weak")
+
     #set (LTO_CONFIGURATION "juce::juce_recommended_lto_flags")
     set (LTO_CONFIGURATION "")
 elseif (WIN32)
@@ -56,6 +58,7 @@ elseif (WIN32)
     if (CMAKE_BUILD_TYPE STREQUAL "Debug")
         set_target_properties (${PROJECT_NAME} PROPERTIES OUTPUT_NAME "${PROJECT_NAME}_d")
     endif()
+
     set (LTO_CONFIGURATION "")
 endif()
 
@@ -114,6 +117,7 @@ if (ENABLE_COVERAGE)
     append_coverage_compiler_flags()
 
     set (COVERAGE_TARGET ${PROJECT_NAME}_coverage)
+
     set (COVERAGE_EXCLUDES
         "*/juce_core/juce_core.*"
         "*/juce_data_structures/juce_data_structures.*"
@@ -122,23 +126,28 @@ if (ENABLE_COVERAGE)
         "*/juce_gui_basics/juce_gui_basics.*")
 
     if (APPLE)
-        list (APPEND COVERAGE_EXCLUDES
-            "/Applications/*"
-            "/Library/*")
+        list (APPEND COVERAGE_EXCLUDES "/Applications/*" "/Library/*")
     endif()
 
     if (APPLE OR UNIX)
-        list (APPEND COVERAGE_EXCLUDES
-            "/usr/*"
-            "/opt/*")
+        list (APPEND COVERAGE_EXCLUDES "/usr/*" "/opt/*")
     endif()
 
     setup_target_for_coverage_lcov (
         NAME ${COVERAGE_TARGET}
         EXECUTABLE pytest -s ${CMAKE_CURRENT_LIST_DIR}/tests
         DEPENDENCIES ${PROJECT_NAME}
-        LCOV_ARGS "--keep-going"
-        GENHTML_ARGS "--keep-going" "--prefix" "${CMAKE_CURRENT_LIST_DIR}")
-        #LCOV_ARGS "--rc" "branch_coverage=1" "--branch-coverage" "--keep-going"
-        #GENHTML_ARGS "--rc" "branch_coverage=1" "--branch-coverage" "--keep-going" "--prefix" "${CMAKE_CURRENT_LIST_DIR}")
+        LCOV_ARGS
+            #"--rc" "branch_coverage=1"
+            #"--branch-coverage"
+            "--keep-going"
+            "--ignore-errors" "inconsistent"
+            "--ignore-errors" "gcov,gcov"
+        GENHTML_ARGS
+            #"--rc" "branch_coverage=1"
+            #"--branch-coverage"
+            "--keep-going"
+            "--ignore-errors" "inconsistent"
+            "--ignore-errors" "gcov,gcov"
+            "--prefix" "${CMAKE_CURRENT_LIST_DIR}")
 endif()
