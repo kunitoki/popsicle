@@ -143,7 +143,7 @@ class CMakeBuildExtension(build_ext):
         for m in glob.iglob(f"{cwd}/**/*.info", recursive=True):
             log.info(f"found {m} coverage info file")
 
-            self.spawn(["sed", "-i", "\"s:/project::g\"", m])
+            self.spawn(["sed", "-i", "s:/project::g", m])
 
             os.makedirs("/output", exist_ok=True)
             shutil.copyfile(m, f"/output/lcov.info")

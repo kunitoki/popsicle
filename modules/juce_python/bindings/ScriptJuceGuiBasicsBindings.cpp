@@ -857,19 +857,21 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         //    PYBIND11_OVERRIDE_PURE(void, LookAndFeel, drawSpinningWaitAnimation, g, colour, x, y, w, h);
         //}
 
-        //void getMouseCursorFor(Component& c) override
-        //{
-        //    PYBIND11_OVERRIDE(MouseCursor, LookAndFeel, getMouseCursorFor, c);
-        //}
+        MouseCursor getMouseCursorFor(Component& c) override
+        {
+            PYBIND11_OVERRIDE (MouseCursor, LookAndFeel, getMouseCursorFor, c);
+        }
 
         void playAlertSound() override
         {
-            PYBIND11_OVERRIDE(void, LookAndFeel, playAlertSound);
+            PYBIND11_OVERRIDE (void, LookAndFeel, playAlertSound);
         }
     };
 
-    py::class_<LookAndFeel, PyLookAndFeel> (m, "LookAndFeel")
-    //.def (py::init<>())
+    py::class_<LookAndFeel, PyLookAndFeel> classLookAndFeel (m, "LookAndFeel");
+
+    classLookAndFeel
+        //.def (py::init<>())
         .def_static ("getDefaultLookAndFeel", &LookAndFeel::getDefaultLookAndFeel, py::return_value_policy::reference)
         .def_static ("setDefaultLookAndFeel", &LookAndFeel::setDefaultLookAndFeel)
         .def ("findColour", &LookAndFeel::findColour)
@@ -888,6 +890,62 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("getMouseCursorFor", &LookAndFeel::getMouseCursorFor)
     //.def ("createGraphicsContext", &LookAndFeel::createGraphicsContext)
         .def ("playAlertSound", &LookAndFeel::playAlertSound)
+    ;
+
+    py::class_<LookAndFeel_V2, LookAndFeel> classLookAndFeel_V2 (m, "LookAndFeel_V2");
+    py::class_<LookAndFeel_V1, LookAndFeel_V2> classLookAndFeel_V1  (m, "LookAndFeel_V1");
+    py::class_<LookAndFeel_V3, LookAndFeel_V2> classLookAndFeel_V3 (m, "LookAndFeel_V3");
+    py::class_<LookAndFeel_V4, LookAndFeel_V3> classLookAndFeel_V4 (m, "LookAndFeel_V4");
+
+    py::class_<LookAndFeel_V4::ColourScheme> classLookAndFeel_V4ColourScheme (classLookAndFeel_V4, "ColourScheme");
+
+    classLookAndFeel_V4ColourScheme
+        .def (py::init ([](py::args coloursToUse)
+        {
+            if (coloursToUse.size() != static_cast<size_t> (LookAndFeel_V4::ColourScheme::numColours))
+                py::pybind11_fail ("Must supply one colour for each UIColour item");
+
+            std::tuple<Colour, Colour, Colour, Colour, Colour, Colour, Colour, Colour, Colour> colours;
+
+            std::get<0> (colours) = coloursToUse[0].cast<Colour>();
+            std::get<1> (colours) = coloursToUse[1].cast<Colour>();
+            std::get<2> (colours) = coloursToUse[2].cast<Colour>();
+            std::get<3> (colours) = coloursToUse[3].cast<Colour>();
+            std::get<4> (colours) = coloursToUse[4].cast<Colour>();
+            std::get<5> (colours) = coloursToUse[5].cast<Colour>();
+            std::get<6> (colours) = coloursToUse[6].cast<Colour>();
+            std::get<7> (colours) = coloursToUse[7].cast<Colour>();
+            std::get<8> (colours) = coloursToUse[8].cast<Colour>();
+
+            return std::apply ([](auto... c) { return LookAndFeel_V4::ColourScheme(c...); }, colours);
+        }))
+        .def (py::init<const LookAndFeel_V4::ColourScheme&>())
+        .def ("getUIColour", &LookAndFeel_V4::ColourScheme::getUIColour)
+        .def ("setUIColour", &LookAndFeel_V4::ColourScheme::setUIColour)
+        .def (py::self == py::self)
+        .def (py::self != py::self)
+    ;
+
+    classLookAndFeel_V4ColourScheme.attr ("windowBackground") = py::int_ (static_cast<int> (LookAndFeel_V4::ColourScheme::windowBackground));
+    classLookAndFeel_V4ColourScheme.attr ("widgetBackground") = py::int_ (static_cast<int> (LookAndFeel_V4::ColourScheme::widgetBackground));
+    classLookAndFeel_V4ColourScheme.attr ("menuBackground") = py::int_ (static_cast<int> (LookAndFeel_V4::ColourScheme::menuBackground));
+    classLookAndFeel_V4ColourScheme.attr ("outline") = py::int_ (static_cast<int> (LookAndFeel_V4::ColourScheme::outline));
+    classLookAndFeel_V4ColourScheme.attr ("defaultText") = py::int_ (static_cast<int> (LookAndFeel_V4::ColourScheme::defaultText));
+    classLookAndFeel_V4ColourScheme.attr ("defaultFill") = py::int_ (static_cast<int> (LookAndFeel_V4::ColourScheme::defaultFill));
+    classLookAndFeel_V4ColourScheme.attr ("highlightedText") = py::int_ (static_cast<int> (LookAndFeel_V4::ColourScheme::highlightedText));
+    classLookAndFeel_V4ColourScheme.attr ("highlightedFill") = py::int_ (static_cast<int> (LookAndFeel_V4::ColourScheme::highlightedFill));
+    classLookAndFeel_V4ColourScheme.attr ("menuText") = py::int_ (static_cast<int> (LookAndFeel_V4::ColourScheme::menuText));
+    classLookAndFeel_V4ColourScheme.attr ("numColours") = py::int_ (static_cast<int> (LookAndFeel_V4::ColourScheme::numColours));
+
+    classLookAndFeel_V4
+        .def (py::init<>())
+        .def (py::init<LookAndFeel_V4::ColourScheme>())
+        .def ("setColourScheme", &LookAndFeel_V4::setColourScheme)
+        .def ("getCurrentColourScheme", &LookAndFeel_V4::getCurrentColourScheme, py::return_value_policy::reference)
+        .def_static ("getDarkColourScheme", &LookAndFeel_V4::getDarkColourScheme)
+        .def_static ("getMidnightColourScheme", &LookAndFeel_V4::getMidnightColourScheme)
+        .def_static ("getGreyColourScheme", &LookAndFeel_V4::getGreyColourScheme)
+        .def_static ("getLightColourScheme", &LookAndFeel_V4::getLightColourScheme)
     ;
 
     // ============================================================================================ juce::Desktop
@@ -1631,23 +1689,6 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
             //PYBIND11_OVERRIDE_PURE (std::unique_ptr<Drawable>, Drawable, createCopy);
             return nullptr; // TODO
         }
-
-        /*
-        Path getOutlineAsPath() const override
-        {
-            PYBIND11_OVERRIDE_PURE (Path, Drawable, getOutlineAsPath);
-        }
-
-        Rectangle<float> getDrawableBounds() const override
-        {
-            PYBIND11_OVERRIDE_PURE (Rectangle<float>, Drawable, getDrawableBounds);
-        }
-
-        bool replaceColour (Colour originalColour, Colour replacementColour) override
-        {
-            PYBIND11_OVERRIDE (bool, Drawable, replaceColour, originalColour, replacementColour);
-        }
-        */
     };
 
     py::class_<DrawableShape, Drawable, PyDrawableShape> classDrawableShape (m, "DrawableShape");
