@@ -274,6 +274,11 @@ Example Applications
 
 Some images of JUCE tutorials and other small apps ported to *popsicle*.
 
+- Hot Reloading (`hotreload_main.py <examples/hotreload_main.py>`_ and `hotreload_component.py <examples/hotreload_component.py>`_)
+
+   .. image:: images/hot_reloading_video.png
+       :target: https://www.youtube.com/watch?v=nZUL_1Tnyy8
+
 - Animated Component (https://docs.juce.com/master/tutorial_animation.html)
 
    .. image:: images/animated_component.png
