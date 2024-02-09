@@ -1,33 +1,62 @@
 name: macOS Builds
 
-on: push
+on:
+  push:
+    paths:
+      - "**/workflows/build_macos.yml"
+      - "**/cmake/**"
+      - "**/JUCE/**"
+      - "**/modules/**"
+      - "**/tests/**"
+      - ".gitmodules"
+      - "CMakeLists.txt"
+      - "MANIFEST.in"
+      - "pyproject.toml"
+      - "setup.py"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
-  macos_build:
-    runs-on: macos-latest
+  build-macos:
+    name: Build cp${{matrix.python}}-${{ matrix.platform_id }}
+    runs-on: ${{ matrix.os }}
+    continue-on-error: false
 
     strategy:
+      fail-fast: true
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10']
+        include:
+        - { os: macos-latest, python: 310, platform_id: macosx_universal2, cibw_archs: universal2 }
 
     steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: true
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
+      - name: Setup and install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-    - name: Install Python Dependencies
-      shell: bash
-      run: |
-        python3 -m pip install --upgrade pip
-        pip3 install setuptools wheel
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.16.5
+        env:
+          CIBW_ARCHS: ${{matrix.cibw_archs}}
+          CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
+          CIBW_TEST_SKIP: "*-macosx_universal2:arm64"
 
-    - name: Build Python Wheel
-      shell: bash
-      run: |
-        python3 setup.py clean --all
-        python3 setup.py bdist_wheel
+      - name: Store failures artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compare-data
+          path: |
+            tests/compare_data/
+            !tests/compare_data/.gitignore
+          if-no-files-found: ignore
+          retention-days: 5
+          compression-level: 0
+          overwrite: true

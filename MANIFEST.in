@@ -1,5 +1,7 @@
-include CMakeLists.txt
-include VERSION.txt
-include LICENSE
+include README.rst
+include LICENSE LICENSE.GPLv3 LICENSE.COMMERCIAL
 
-global-exclude *.py[cod] __pycache__ .DS_Store
+graft popsicle
+graft popsicle.pyi
+
+global-exclude *.py[cod] __pycache__ .DS_Store CMakeLists.txt

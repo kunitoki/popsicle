@@ -1,10 +1,5 @@
-import sys
-sys.path.insert(0, "../")
-
-import math
-
-from popsicle import juce_gui_basics
-from popsicle import juce, START_JUCE_COMPONENT
+from juce_init import START_JUCE_COMPONENT
+import popsicle as juce
 
 
 class MainContentComponent(juce.Component):

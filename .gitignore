@@ -1,12 +1,12 @@
 __pycache__/
 .eggs/
 .vscode/
+coverage/
 dist/
 build/
-cxxbuild/
-repro/
-*.pyc
-.DS_Store
+popsicle/
+*.egg-info/
 
-popsicle/data/
-popsicle.egg-info/
+.DS_Store
+*.pyc
+*.pyi

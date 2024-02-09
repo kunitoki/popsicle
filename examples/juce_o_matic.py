@@ -1,83 +1,97 @@
-import sys
-sys.path.insert(0, "../")
-
-from popsicle import juce_gui_basics
-from popsicle import juce, juce_multi, START_JUCE_APPLICATION
+import juce_init
+import popsicle as juce
 
 
-class MainContentComponent(juce_multi(juce.Component, juce.Timer)):
-    def __init__(self):
-        super().__init__((), ())
+class MainContentComponent(juce.Component, juce.Timer):
+	def __init__(self):
+		juce.Component.__init__(self)
+		juce.Timer.__init__(self)
 
-        self.setSize(600, 400)
-        self.startTimerHz(60)
+		self.setSize(600, 400)
+		self.setOpaque(True)
+		self.startTimerHz(60)
 
-    def __del__(self):
-        self.stopTimer()
+	def paint(self, g: juce.Graphics):
+		g.fillAll(juce.Colours.black)
 
-    def paint(self, g):
-        g.fillAll(juce.Colours.black)
+		random = juce.Random.getSystemRandom()
+		rect = juce.Rectangle[int](0, 0, 20, 20)
 
-        random = juce.Random.getSystemRandom()
-        rect = juce.Rectangle[int](0, 0, 20, 20)
+		for _ in range(100):
+			g.setColour(juce.Colour.fromRGBA(
+				random.nextInt(255),
+				random.nextInt(255),
+				random.nextInt(255),
+				255))
 
-        for _ in range(100):
-            g.setColour(juce.Colour(
-                random.nextInt(256),
-                random.nextInt(256),
-                random.nextInt(256)))
+			rect.setCentre(random.nextInt(self.getWidth()), random.nextInt(self.getHeight()))
+			g.drawRect(rect, 1)
 
-            rect.setCentre(random.nextInt(self.getWidth()), random.nextInt(self.getHeight()))
-            g.drawRect(rect)
+	def mouseDown(self, event: juce.MouseEvent):
+		print("mouseDown", event)
 
-    def timerCallback(self):
-        if self.isVisible():
-            self.repaint()
+	def mouseMove(self, event: juce.MouseEvent):
+		print("mouseMove", event.position.x, event.position.y)
+
+	def mouseUp(self, event: juce.MouseEvent):
+		print("mouseUp", event)
+
+	def timerCallback(self):
+		self.repaint()
 
 
 class MainWindow(juce.DocumentWindow):
-    component = None
+	component = None
 
-    def __init__(self):
-        super().__init__(
-            juce.JUCEApplication.getInstance().getApplicationName(),
-            juce.Colours.black,
-            juce.DocumentWindow.allButtons,
-            True)
+	def __init__(self):
+		super().__init__(
+			juce.JUCEApplication.getInstance().getApplicationName(),
+			juce.Desktop.getInstance().getDefaultLookAndFeel()
+				.findColour(juce.ResizableWindow.backgroundColourId),
+			juce.DocumentWindow.allButtons,
+			True)
 
-        self.component = MainContentComponent()
+		self.component = MainContentComponent()
 
-        self.setResizable(True, True)
-        self.setContentNonOwned(self.component, True)
-        self.centreWithSize(800, 600)
-        self.setVisible(True)
+		self.setResizable(True, True)
+		self.setContentNonOwned(self.component, True)
+		self.centreWithSize(800, 600)
+		self.setVisible(True)
 
-    def __del__(self):
-        if self.component:
-            self.component.__del__()
-            self.component = None
+	def __del__(self):
+		self.clearContentComponent()
 
-    def closeButtonPressed(self):
-        juce.JUCEApplication.getInstance().systemRequestedQuit()
+		if self.component:
+			del self.component
+
+	def closeButtonPressed(self):
+		juce.JUCEApplication.getInstance().systemRequestedQuit()
 
 
 class Application(juce.JUCEApplication):
-    window = None
+	window = None
 
-    def getApplicationName(self):
-        return "JUCE-o-matic"
+	def __init__(self):
+		super().__init__()
 
-    def getApplicationVersion(self):
-        return "1.0"
+	def getApplicationName(self):
+		return "JUCE-o-matic"
 
-    def initialise(self, commandLine):
-        self.window = MainWindow()
+	def getApplicationVersion(self):
+		return "1.0"
 
-    def shutdown(self):
-        if self.window:
-            self.window.__del__()
-            self.window = None
+	def initialise(self, commandLineParameters: str):
+		self.window = MainWindow()
+
+		juce.MessageManager.callAsync(lambda: juce.Process.makeForegroundProcess())
+
+	def shutdown(self):
+		if self.window:
+			del self.window
+
+	def systemRequestedQuit(self):
+		self.quit()
 
 
 if __name__ == "__main__":
-    START_JUCE_APPLICATION(Application)
+	juce.START_JUCE_APPLICATION(Application)

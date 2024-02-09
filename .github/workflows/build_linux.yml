@@ -1,42 +1,69 @@
 name: Linux Builds
 
-on: push
+on:
+  push:
+    paths:
+      - "**/workflows/build_linux.yml"
+      - "**/cmake/**"
+      - "**/JUCE/**"
+      - "**/modules/**"
+      - "**/tests/**"
+      - ".gitmodules"
+      - "CMakeLists.txt"
+      - "MANIFEST.in"
+      - "pyproject.toml"
+      - "setup.py"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
-  linux_build:
-    runs-on: ubuntu-20.04
+  build-linux:
+    name: Build cp${{matrix.python}}-${{ matrix.platform_id }}
+    runs-on: ${{ matrix.os }}
+    continue-on-error: false
 
     strategy:
+      fail-fast: true
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10']
+        include:
+        - { os: ubuntu-latest, python: 310, platform_id: manylinux_x86_64, cibw_archs: x86_64 }
+        - { os: ubuntu-latest, python: 310, platform_id: manylinux_aarch64, cibw_archs: aarch64 }
 
     steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: true
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-    - name: Set up Linux Dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get -y install zlib1g-dev libpng-dev libcurl3-dev
-        sudo apt-get -y install libasound2-dev libfreetype6-dev libxcomposite-dev libxcursor-dev
-        sudo apt-get -y install libxinerama-dev libxrandr-dev libxrender-dev libx11-dev
-        sudo apt-get -y install x11proto-randr-dev x11proto-render-dev x11proto-xinerama-dev
-        sudo apt-get -y install freeglut3-dev mesa-common-dev
+      - name: Set up QEMU
+        if: matrix.cibw_archs == 'aarch64'
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
+      - name: Setup and install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-    - name: Install Python Dependencies
-      shell: bash
-      run: |
-        python3 -m pip install --upgrade pip
-        pip3 install setuptools wheel
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.16.5
+        env:
+          CIBW_ARCHS: ${{matrix.cibw_archs}}
+          CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
+          CIBW_TEST_SKIP: "*-manylinux_aarch64"
 
-    - name: Build Python Wheel
-      shell: bash
-      run: |
-        python3 setup.py clean --all
-        python3 setup.py bdist_wheel
+      - name: Store failures artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compare-data
+          path: |
+            ./wheelhouse/compare_data/
+            !./wheelhouse/compare_data/.gitignore
+          if-no-files-found: ignore
+          retention-days: 5
+          compression-level: 0
+          overwrite: true

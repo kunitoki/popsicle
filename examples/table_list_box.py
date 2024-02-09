@@ -1,10 +1,8 @@
-import sys
-sys.path.insert(0, "../")
+import os
+import re
 
-import cppyy
-
-from popsicle import juce_gui_basics, juce_gui_extra
-from popsicle import juce, juce_multi, START_JUCE_COMPONENT
+from juce_init import START_JUCE_COMPONENT
+import popsicle as juce
 
 
 def forEachXmlChildElement(parentXmlElement):
@@ -14,7 +12,18 @@ def forEachXmlChildElement(parentXmlElement):
         childElementVariableName = childElementVariableName.getNextElement()
 
 
-class EditableTextCustomComponent(juce.Label):
+def compareNatural(x, y):
+     x = [int(c) if c.isdigit() else c for c in re.split(r'(\d+)', x)]
+     y = [int(c) if c.isdigit() else c for c in re.split(r'(\d+)', y)]
+     if x == y:
+          return 0
+     elif x > y:
+          return 1
+     else:
+          return -1
+
+
+class EditableLabel(juce.Label):
     def __init__(self, td):
         super().__init__()
 
@@ -35,7 +44,23 @@ class EditableTextCustomComponent(juce.Label):
     def setRowAndColumn(self, newRow, newColumn):
         self.row = newRow
         self.columnId = newColumn
-        self.setText(self.owner.getText(self.columnId, self.row), juce.dontSendNotification)
+
+        text = self.owner.getText(self.columnId, self.row)
+        self.setText(text, juce.dontSendNotification)
+
+
+class EditableTextCustomComponent(juce.Component):
+    def __init__(self, td):
+        super().__init__()
+
+        self.label = EditableLabel(td)
+        self.addAndMakeVisible(self.label)
+
+    def resized(self):
+        self.label.setBounds(self.getLocalBounds())
+
+    def setRowAndColumn(self, newRow, newColumn):
+        self.label.setRowAndColumn(newRow, newColumn)
 
 
 class SelectionColumnCustomComponent(juce.Component):
@@ -51,9 +76,7 @@ class SelectionColumnCustomComponent(juce.Component):
         self.addAndMakeVisible(self.toggleButton)
 
     def resized(self):
-        #self.toggleButton.setBoundsInset(juce.BorderSize[int](2))
-        #self.toggleButton.setBounds(0, 0, self.getWidth(), self.getHeight())
-        pass
+        self.toggleButton.setBoundsInset(juce.BorderSize[int](2))
 
     def setRowAndColumn(self, newRow, newColumn):
         self.row = newRow
@@ -62,31 +85,35 @@ class SelectionColumnCustomComponent(juce.Component):
         self.toggleButton.setToggleState(self.owner.getSelection(self.row), juce.dontSendNotification)
 
 
-class TutorialDataSorter(object):
+class TutorialDataSorter(juce.XmlElement.Comparator):
     def __init__(self, attributeToSortBy, forwards):
+        super().__init__()
         self.attributeToSort = attributeToSortBy
         self.direction = 1 if forwards else -1
 
     def compareElements(self, first, second):
         sortWith = second.getStringAttribute(self.attributeToSort)
-        result = first.getStringAttribute(self.attributeToSort).compareNatural(sortWith)
+        result = compareNatural(first.getStringAttribute(self.attributeToSort), sortWith)
 
         if result == 0:
-            result = first.getStringAttribute("ID").compareNatural(second.getStringAttribute("ID"))
+            result = compareNatural(first.getStringAttribute("ID"), second.getStringAttribute("ID"))
 
         return self.direction * result
 
 
-class TableTutorialComponent(juce_multi(juce.Component, juce.TableListBoxModel)):
+class TableTutorialComponent(juce.Component, juce.TableListBoxModel):
     font = juce.Font(14.0)
     numRows = 0
     columnList = None
     dataList = None
 
     def __init__(self):
-        super().__init__((), ())
+        juce.Component.__init__(self)
+        juce.TableListBoxModel.__init__(self)
 
-        self.loadData()
+        if not self.loadData():
+            print("Failed loading data")
+            return
 
         self.table = juce.TableListBox("Table", self)
         self.addAndMakeVisible(self.table)
@@ -125,6 +152,9 @@ class TableTutorialComponent(juce_multi(juce.Component, juce.TableListBoxModel))
         g.setColour(juce.Colours.darkblue if rowIsSelected else self.getLookAndFeel().findColour(juce.ListBox.textColourId))
         g.setFont(self.font)
 
+        if self.dataList is None or rowNumber >= self.numRows:
+            return
+
         rowElement = self.dataList.getChildElement(rowNumber)
         if rowElement:
             text = rowElement.getStringAttribute(self.getAttributeNameForColumnId(columnId))
@@ -138,7 +168,7 @@ class TableTutorialComponent(juce_multi(juce.Component, juce.TableListBoxModel))
         if newSortColumnId != 0 and self.dataList:
             sorter = TutorialDataSorter(self.getAttributeNameForColumnId(newSortColumnId), isForwards)
 
-            self.dataList.sortChildElements(lambda lhs, rhs: sorter.compareElements(lhs, rhs))
+            self.dataList.sortChildElements(sorter, True)
 
             self.table.updateContent()
 
@@ -150,7 +180,6 @@ class TableTutorialComponent(juce_multi(juce.Component, juce.TableListBoxModel))
                 selectionBox = SelectionColumnCustomComponent(self)
 
             selectionBox.setRowAndColumn(rowNumber, columnId)
-            selectionBox.__python_owns__ = False
             return selectionBox
 
         if columnId == 8:
@@ -160,11 +189,10 @@ class TableTutorialComponent(juce_multi(juce.Component, juce.TableListBoxModel))
                 textLabel = EditableTextCustomComponent(self)
 
             textLabel.setRowAndColumn(rowNumber, columnId)
-            textLabel.__python_owns__ = False
             return textLabel
 
-        assert(not existingComponentToUpdate)
-        return cppyy.nullptr
+        assert not existingComponentToUpdate
+        return None
 
     def getColumnAutoSizeWidth(self, columnId):
         if columnId == 9:
@@ -172,7 +200,7 @@ class TableTutorialComponent(juce_multi(juce.Component, juce.TableListBoxModel))
 
         widest = 32
 
-        for i in range(self.getNumRows(), 0, -1):
+        for i in range(self.numRows, 0, -1):
             rowElement = self.dataList.getChildElement(i)
             if rowElement:
                 text = rowElement.getStringAttribute(self.getAttributeNameForColumnId(columnId))
@@ -188,7 +216,9 @@ class TableTutorialComponent(juce_multi(juce.Component, juce.TableListBoxModel))
         self.dataList.getChildElement(rowNumber).setAttribute("Select", newSelection)
 
     def getText(self, columnNumber, rowNumber):
-        return self.dataList.getChildElement(rowNumber).getStringAttribute(self.getAttributeNameForColumnId(columnNumber))
+        el = self.dataList.getChildElement(rowNumber)
+        attr = self.getAttributeNameForColumnId(columnNumber)
+        return el.getStringAttribute(attr)
 
     def setText(self, columnNumber, rowNumber, newText):
         columnName = self.table.getHeader().getColumnName(columnNumber)
@@ -198,15 +228,16 @@ class TableTutorialComponent(juce_multi(juce.Component, juce.TableListBoxModel))
         self.table.setBoundsInset(juce.BorderSize[int](8))
 
     def loadData(self):
-        tableFile = juce.File.getCurrentWorkingDirectory().getChildFile("table_list_box.xml")
+        tableFile = juce.File(os.path.abspath(__file__)).getSiblingFile("table_list_box.xml")
 
-        if tableFile.exists():
-            self.tutorialData = juce.XmlDocument.parse(tableFile)
+        if not tableFile.existsAsFile():
+            return False
 
-            self.dataList = self.tutorialData.getChildByName("DATA")
-            self.columnList = self.tutorialData.getChildByName("HEADERS")
-
-            self.numRows = self.dataList.getNumChildElements()
+        self.tutorialData = juce.XmlDocument.parse(tableFile)
+        self.dataList = self.tutorialData.getChildByName("DATA")
+        self.columnList = self.tutorialData.getChildByName("HEADERS")
+        self.numRows = self.dataList.getNumChildElements()
+        return True
 
     def getAttributeNameForColumnId(self, columnId):
         for columnXml in forEachXmlChildElement(self.columnList):

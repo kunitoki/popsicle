@@ -1,0 +1,50 @@
+name: Code Coverage
+
+on:
+  push:
+    paths:
+      - "**/workflows/coverage.yml"
+      - "**/cmake/**"
+      - "**/JUCE/**"
+      - "**/modules/**"
+      - "**/tests/**"
+      - ".gitmodules"
+      - "CMakeLists.txt"
+      - "MANIFEST.in"
+      - "pyproject.toml"
+      - "setup.py"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  code-coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup and install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build wheels and test
+        uses: pypa/cibuildwheel@v2.16.5
+        env:
+          CIBW_ARCHS: x86_64
+          CIBW_BUILD: cp311-manylinux_x86_64
+          CIBW_TEST_SKIP: "*manylinux*"
+          CIBW_ENVIRONMENT: POPSICLE_COVERAGE=1
+
+      - name: Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          path-to-lcov: ./wheelhouse/lcov.info
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          debug: true

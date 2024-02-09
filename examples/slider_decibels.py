@@ -1,14 +1,10 @@
-import sys
-sys.path.insert(0, "../")
-
-from popsicle import juce_gui_basics, juce_audio_utils
-from popsicle import juce, juce_set_sample_data, START_JUCE_COMPONENT
+from juce_init import START_JUCE_COMPONENT
+import popsicle as juce
 
 
 class DecibelSlider(juce.Slider):
-
     def __init__(self):
-        super().__init__()
+        juce.Slider.__init__(self)
 
     def getValueFromText(self, text):
         minusInfinitydB = -100.0
@@ -28,7 +24,7 @@ class MainContentComponent(juce.AudioAppComponent):
     level = 0.0
 
     def __init__(self):
-        super().__init__()
+        juce.AudioAppComponent.__init__(self)
 
         self.decibelSlider.setRange(-100, -12)
         self.decibelSlider.setTextBoxStyle(juce.Slider.TextBoxRight, False, 100, 20)
@@ -46,8 +42,9 @@ class MainContentComponent(juce.AudioAppComponent):
         self.setSize(600, 100)
         self.setAudioChannels(0, 2)
 
-    def __del__(self):
-        self.shutdownAudio()
+    def visibilityChanged(self):
+        if not self.isVisible():
+            self.shutdownAudio()
 
     def prepareToPlay(self, blockSize, sampleRate):
         pass
@@ -60,7 +57,7 @@ class MainContentComponent(juce.AudioAppComponent):
             buffer = bufferToFill.buffer.getWritePointer(channel, bufferToFill.startSample)
 
             for sample in range(bufferToFill.numSamples):
-                juce_set_sample_data(buffer, sample, self.random.nextFloat() * levelScale - currentLevel)
+                buffer[sample] = self.random.nextFloat() * levelScale - currentLevel
 
     def releaseResources(self):
         pass
@@ -68,6 +65,7 @@ class MainContentComponent(juce.AudioAppComponent):
     def resized(self):
         self.decibelLabel .setBounds(10, 10, 120, 20);
         self.decibelSlider.setBounds(130, 10, self.getWidth() - 140, 20);
+
 
 if __name__ == "__main__":
     START_JUCE_COMPONENT(MainContentComponent, name="Slider Decibels Example")
