@@ -388,15 +388,15 @@ Install python dependencies.
 
 .. |linux_builds| image:: https://github.com/kunitoki/popsicle/workflows/Linux%20Builds/badge.svg
     :alt: Linux Builds Status
-    :target: https://github.com/kunitoki/popsicle/actions
+    :target: https://github.com/kunitoki/popsicle/actions/workflows/build_linux.yml
 
 .. |macos_builds| image:: https://github.com/kunitoki/popsicle/workflows/macOS%20Builds/badge.svg
     :alt: macOS Builds Status
-    :target: https://github.com/kunitoki/popsicle/actions
+    :target: https://github.com/kunitoki/popsicle/actions/workflows/build_macos.yml
 
 .. |windows_builds| image:: https://github.com/kunitoki/popsicle/workflows/Windows%20Builds/badge.svg
     :alt: Windows Builds Status
-    :target: https://github.com/kunitoki/popsicle/actions
+    :target: https://github.com/kunitoki/popsicle/actions/workflows/build_windows.yml
 
 .. |coveralls| image:: https://coveralls.io/repos/github/kunitoki/popsicle/badge.svg
     :alt: Coveralls - Code Coverage
