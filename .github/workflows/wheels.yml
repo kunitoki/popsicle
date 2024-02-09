@@ -58,7 +58,7 @@ jobs:
           CIBW_ARCHS: ${{matrix.cibw_archs}}
           CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
           CIBW_TEST_SKIP: "*-manylinux_aarch64 *-macosx_universal2:arm64 *-win_arm64"
-          CIBW_ENVIRONMENT: POPSICLE_COVERAGE=1 POPSICLE_LTO=1
+          CIBW_ENVIRONMENT: POPSICLE_LTO=1
 
       - name: Upload all the dists
         uses: actions/upload-artifact@v3
