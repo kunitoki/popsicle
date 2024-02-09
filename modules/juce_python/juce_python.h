@@ -21,7 +21,7 @@
 
   ID:                 juce_python
   vendor:             kunitoki
-  version:            0.9.0
+  version:            0.9.1
   name:               Python bindings for the JUCE framework
   description:        The python bindings to create and work on JUCE apps.
   website:            http://www.straw.com
