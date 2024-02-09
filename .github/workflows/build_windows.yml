@@ -2,6 +2,8 @@ name: Windows Builds
 
 on:
   push:
+    branches:
+      - '**'
     paths:
       - "**/workflows/build_windows.yml"
       - "**/cmake/**"

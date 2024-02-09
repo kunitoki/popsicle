@@ -2,6 +2,8 @@ name: Linux Builds
 
 on:
   push:
+    branches:
+      - '**'
     paths:
       - "**/workflows/build_linux.yml"
       - "**/cmake/**"

@@ -2,6 +2,8 @@ name: macOS Builds
 
 on:
   push:
+    branches:
+      - '**'
     paths:
       - "**/workflows/build_macos.yml"
       - "**/cmake/**"
