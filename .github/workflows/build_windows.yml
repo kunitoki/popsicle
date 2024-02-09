@@ -1,33 +1,63 @@
 name: Windows Builds
 
-on: push
+on:
+  push:
+    paths:
+      - "**/workflows/build_windows.yml"
+      - "**/cmake/**"
+      - "**/JUCE/**"
+      - "**/modules/**"
+      - "**/tests/**"
+      - ".gitmodules"
+      - "CMakeLists.txt"
+      - "MANIFEST.in"
+      - "pyproject.toml"
+      - "setup.py"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
-  windows_build:
-    runs-on: windows-latest
+  build-windows:
+    name: Build cp${{matrix.python}}-${{ matrix.platform_id }}
+    runs-on: ${{ matrix.os }}
+    continue-on-error: false
 
     strategy:
+      fail-fast: true
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10']
+        include:
+        - { os: windows-latest, python: 310, platform_id: win_amd64, cibw_archs: AMD64 }
+        - { os: windows-latest, python: 310, platform_id: win_arm64, cibw_archs: ARM64 }
 
     steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: true
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
+      - name: Setup and install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-    - name: Install Python Dependencies
-      shell: bash
-      run: |
-        python -m pip install --upgrade pip
-        pip install setuptools wheel
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.16.5
+        env:
+          CIBW_ARCHS: ${{matrix.cibw_archs}}
+          CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
+          CIBW_TEST_SKIP: "*-win_arm64"
 
-    - name: Build Python Wheel
-      shell: bash
-      run: |
-        python setup.py clean --all
-        python setup.py bdist_wheel
+      - name: Store failures artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compare-data
+          path: |
+            tests/compare_data/
+            !tests/compare_data/.gitignore
+          if-no-files-found: ignore
+          retention-days: 5
+          compression-level: 0
+          overwrite: true

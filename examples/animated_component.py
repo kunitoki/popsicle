@@ -1,10 +1,8 @@
-import sys
-sys.path.insert(0, "../")
-
 import math
 
-from popsicle import juce_gui_basics, juce_gui_extra
-from popsicle import juce, START_JUCE_COMPONENT
+from juce_init import START_JUCE_COMPONENT
+import popsicle as juce
+
 
 class MainContentComponent(juce.AnimatedAppComponent):
     def __init__(self):
@@ -19,7 +17,7 @@ class MainContentComponent(juce.AnimatedAppComponent):
     def paint(self, g):
         g.fillAll(self.getLookAndFeel().findColour(juce.ResizableWindow.backgroundColourId))
 
-        g.setColour(self.getLookAndFeel().findColour(juce.Slider.thumbColourId))
+        g.setColour(juce.Colours.turquoise) # self.getLookAndFeel().findColour(juce.Slider.thumbColourId)
 
         fishLength = 15
         spinePath = juce.Path()

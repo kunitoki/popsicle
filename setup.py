@@ -1,18 +1,73 @@
 import os
 import sys
-import pathlib
-import glob
+import re
 import shutil
+import pathlib
+import platform
+import glob
 import setuptools
 
+from distutils import log
+from distutils import sysconfig
 from setuptools import Extension
-from setuptools.dist import Distribution
-from setuptools.command.install import install
 from setuptools.command.build_ext import build_ext
-from wheel.bdist_wheel import bdist_wheel, get_platform
+from setuptools.command.install_scripts import install_scripts
 
 
 project_name = "popsicle"
+root_dir = os.path.dirname(os.path.abspath(__file__))
+
+
+def glob_python_library(path):
+    for extension in [".a", ".lib", ".so", ".dylib", ".dll", ".pyd"]:
+        for m in glob.iglob(f"{path}/**/*python*{extension}", recursive=True):
+            if "site-packages" not in m:
+                return m
+    return None
+
+
+def get_python_path():
+    vars = sysconfig.get_config_vars()
+
+    if 'LIBPL' in vars and 'LIBRARY' in vars:
+        path = os.path.join(vars['LIBPL'], vars['LIBRARY'])
+        if os.path.exists(path):
+            return path
+
+    if 'SCRIPTDIR' in vars:
+        srcdir = vars['SCRIPTDIR']
+    elif 'srcdir' in vars:
+        srcdir = vars['srcdir']
+    else:
+        srcdir = None
+
+    if srcdir:
+        path = glob_python_library(srcdir)
+        if path and os.path.exists(path):
+            return path
+
+    if 'LIBDEST' in vars:
+        path = vars['LIBDEST']
+        if sys.platform in ["win32", "cygwin"]:
+            path = os.path.split(os.path.split(path)[0])[0]
+
+        path = glob_python_library(path)
+        if path and os.path.exists(path):
+            return path
+
+    log.error("cannot find static library to be linked")
+    exit(-1)
+
+
+def get_python_includes_path():
+    include_dir = sysconfig.get_config_var('CONFINCLUDEPY')
+    if include_dir and os.path.exists(include_dir):
+        return include_dir
+    return sysconfig.get_config_var('INCLUDEPY')
+
+
+def get_python_lib_path():
+    return os.path.dirname(get_python_path())
 
 
 class CMakeExtension(Extension):
@@ -20,13 +75,13 @@ class CMakeExtension(Extension):
         super().__init__(name, sources=[])
 
 
-class BuildExtension(build_ext):
-    def run(self):
-        for ext in self.extensions:
-            self.build_cmake(ext)
-        super().run()
+class CMakeBuildExtension(build_ext):
+    build_for_coverage = os.environ.get("POPSICLE_COVERAGE", None) is not None
+    build_with_lto = os.environ.get("POPSICLE_LTO", None) is not None
 
-    def build_cmake(self, ext):
+    def build_extension(self, ext):
+        log.info("building with cmake")
+
         cwd = pathlib.Path().absolute()
 
         build_temp = pathlib.Path(self.build_temp)
@@ -36,18 +91,33 @@ class BuildExtension(build_ext):
         extdir.mkdir(parents=True, exist_ok=True)
 
         output_path = extdir.parent
-        config = "Debug" if self.debug else "Release"
+        output_path.mkdir(parents=True, exist_ok=True)
+
+        config = "Debug" if self.debug or self.build_for_coverage else "Release"
         cmake_args = [
+            f"-DCMAKE_BUILD_TYPE={config}",
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={output_path}",
-            f"-DCMAKE_BUILD_TYPE={config}"
+            f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{config.upper()}={output_path}",
+            f"-DPython_INCLUDE_DIRS={get_python_includes_path()}",
+            f"-DPython_LIBRARY_DIRS={get_python_lib_path()}"
         ]
 
-        binary_dest = output_path / project_name / "data"
-        os.makedirs(binary_dest, exist_ok=True)
+        if self.build_for_coverage:
+            cmake_args += ["-DENABLE_COVERAGE:BOOL=ON"]
+
+        if self.build_with_lto:
+            cmake_args += ["-DENABLE_LTO:BOOL=ON"]
+
+        if platform.system() == 'Darwin':
+            cmake_args += [
+                "-DCMAKE_OSX_ARCHITECTURES:STRING=arm64;x86_64",
+                "-DCMAKE_OSX_DEPLOYMENT_TARGET:STRING=10.15"
+            ]
 
         try:
             os.chdir(str(build_temp))
-            self.spawn(["cmake", str(cwd)] + cmake_args)
+            make_command = ["cmake", str(cwd)] + cmake_args
+            self.spawn(make_command)
 
             if getattr(self, "dry_run"): return
 
@@ -56,95 +126,120 @@ class BuildExtension(build_ext):
                 build_command += ["--", f"-j{os.cpu_count()}"]
             self.spawn(build_command)
 
-            for f in glob.iglob("popsicle_artefacts/**/*.*"):
-                shutil.copy(f, binary_dest)
+            if self.build_for_coverage:
+                self.generate_coverage(cwd)
 
-            for f in glob.iglob("popsicle_artefacts/JuceLibraryCode/**/*.*"):
-                shutil.copy(f, binary_dest)
-
-            modules_base_dir = "JUCE/modules"
-
+        finally:
             os.chdir(str(cwd))
-            for module in glob.iglob(f"{modules_base_dir}/**"):
-                module_name = os.path.split(module)[1]
-                if not module_name.startswith("juce_"):
-                    continue
 
-                for file_path in glob.iglob(os.path.join(module, "**", "*.h"), recursive=True):
-                    path = pathlib.Path(file_path)
+        self.generate_pyi(cwd)
 
-                    new_path = binary_dest / path.relative_to(f"{modules_base_dir}/")
+    def generate_coverage(self, cwd):
+        log.info("generating coverage files")
 
-                    new_path.parent.mkdir(parents=True, exist_ok=True)
+        self.spawn(["cmake", "--build", ".", "--target", f"{project_name}_coverage"])
 
-                    shutil.copy(path.absolute(), new_path)
+        if not os.path.isdir("/host"): # We are not running in cibuildwheel container
+            return
+
+        for m in glob.iglob(f"{cwd}/**/*.info", recursive=True):
+            log.info(f"found {m} coverage info file")
+
+            self.spawn(["sed", "-i", "s:/project/::g", m])
+
+            os.makedirs("/output", exist_ok=True)
+            shutil.copyfile(m, f"/output/lcov.info")
+
+            break
+
+    def generate_pyi(self, cwd):
+        log.info("generating pyi files")
+
+        library = None
+        for extension in [".so", ".pyd"]:
+            for m in glob.iglob(f"{cwd}/**/{project_name}{extension}", recursive=True):
+                library = m
+                break
+
+        if library is None:
+            return
+
+        library_dir = os.path.dirname(library)
+        temp_pyi_dir = os.path.join(library_dir, project_name)
+        final_pyi_dir = os.path.join(root_dir, project_name)
+        final_pyi_file = os.path.join(root_dir, f"{project_name}.pyi")
+
+        try:
+            os.chdir(library_dir)
+
+            shutil.rmtree(temp_pyi_dir, ignore_errors=True)
+            shutil.rmtree(final_pyi_dir, ignore_errors=True)
+
+            self.spawn(["stubgen", "--output", library_dir, "-p", project_name])
+
+            if os.path.isdir(project_name):
+                shutil.copytree(project_name, final_pyi_dir)
+
+            if os.path.isfile(f"{project_name}.pyi"):
+                shutil.copyfile(f"{project_name}.pyi", final_pyi_file)
 
         finally:
             os.chdir(str(cwd))
 
 
-class BinaryDistribution(Distribution):
-    def has_ext_modules(self):
-        return True
+class CustomInstallScripts(install_scripts):
+    def run(self):
+        install_scripts.run(self)
+
+        log.info("cleaning up pyi files")
+
+        final_pyi_dir = os.path.join(root_dir, project_name)
+        if os.path.isdir(final_pyi_dir):
+            shutil.rmtree(final_pyi_dir, ignore_errors=True)
+
+        final_pyi_file = os.path.join(root_dir, f"{project_name}.pyi")
+        if os.path.isfile(final_pyi_file):
+            os.remove(final_pyi_file)
 
 
-class BinaryDistWheel(bdist_wheel):
-    def finalize_options(self):
-        # For some reason without this it keeps failing to generate a wheel on my local osx
-        #if sys.platform == "darwin":
-        #    self.plat_name = "macosx_10_6_intel"
-        #else:
-        #self.plat_name = get_platform(self.bdist_dir)
-        #self.universal = False
-        bdist_wheel.finalize_options(self)
-        #self.root_is_pure = True
+with open("modules/juce_python/juce_python.h", mode="r", encoding="utf-8") as f:
+    version = re.findall(r"version\:\s+(\d+\.\d+\.\d+)", f.read())[0]
 
+with open("README.rst", mode="r", encoding="utf-8") as f:
+    long_description = f.read()
 
-class InstallPlatformLibrary(install):
-    def finalize_options(self):
-        install.finalize_options(self)
-        if self.distribution.has_ext_modules():
-            self.install_lib = self.install_platlib
-
-
-with open("VERSION.txt", "r") as f: version = f.read()
-with open("README.rst", "r") as f: long_description = f.read()
+if platform.system() == 'Darwin':
+    os.environ["_PYTHON_HOST_PLATFORM"] = "macosx-10.15-universal2"
 
 
 setuptools.setup(
     name=project_name,
     version=version,
-    author="Lucio 'kRAkEn/gORe' Asnaghi",
+    author="kunitoki",
     author_email="kunitoki@gmail.com",
-    description="popsicle is JUCE Python Bindings on top of cppyy",
+    description=f"{project_name} is JUCE Python Bindings on top of pybind11",
     long_description=long_description,
     long_description_content_type="text/x-rst",
     url="https://github.com/kunitoki/popsicle",
-    packages=setuptools.find_packages(".", exclude=["examples"]),
+    packages=setuptools.find_packages(".", exclude=["*demo*", "*examples*", "*JUCE*", "*scripts*", "*tests*"]),
     include_package_data=True,
-    distclass=BinaryDistribution,
-    cmdclass={
-        "install": InstallPlatformLibrary,
-        "build_ext": BuildExtension,
-    },
-    ext_modules=[CMakeExtension("popsicle")],
+    cmdclass={"build_ext": CMakeBuildExtension, "install_scripts": CustomInstallScripts},
+    ext_modules=[CMakeExtension(project_name)],
     zip_safe=False,
-    platforms=[ "macosx", "win32", "linux" ],
-    python_requires=">=3.7",
-    setup_requires=[ "wheel" ],
-    install_requires=[ "cppyy>=3.1.2" ],
+    platforms=["macosx", "win32", "linux"],
+    python_requires=">=3.10",
     license="GPLv3",
     classifiers=[
         "Intended Audience :: Developers",
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 2 - Beta",
         "Topic :: Software Development :: Libraries :: Application Frameworks",
+        "License :: OSI Approved",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Programming Language :: C++",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: Microsoft :: Windows",
         "Operating System :: POSIX :: Linux"

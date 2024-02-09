@@ -1,13 +1,19 @@
-popsicle - Copyright (c) 2022 Lucio Asnaghi aka kRAkEn/gORe
+DUAL LICENSE NOTICE
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, version 3.
+This software is dually licensed:
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+1. GPLv3 LICENSE:
+   - The GPLv3 License is applicable for open-source projects and non-commercial use. See LICENSE.GPLv3 for details.
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
+2. COMMERCIAL LICENSE:
+   - The Commercial License is applicable for closed-source projects and commercial use. See LICENSE.COMMERCIAL for details.
+
+By using this software, you agree to adhere to the terms and conditions of either the GPLv3 License or the Commercial License, depending on your usage:
+
+- If you are developing an open-source project or using the software for non-commercial purposes, you must comply with the terms of the GPLv3 License as outlined in LICENSE.GPLv3.
+
+- If you are developing a closed-source application or using the software for commercial purposes, you must obtain a Commercial License as outlined in LICENSE.COMMERCIAL.
+
+Please carefully review the respective license file applicable to your usage scenario.
+
+For any inquiries regarding licensing or to obtain a Commercial License, please contact [kunitoki@gmail.com].

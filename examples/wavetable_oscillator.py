@@ -1,10 +1,7 @@
-import sys
-sys.path.insert(0, "../")
-
 import math
 
-from popsicle import juce_gui_basics, juce_audio_utils
-from popsicle import juce, juce_multi, START_JUCE_COMPONENT
+from juce_init import START_JUCE_COMPONENT
+import popsicle as juce
 
 
 class WavetableOscillator(object):
@@ -42,7 +39,7 @@ class WavetableOscillator(object):
         return currentSample
 
 
-class MainContentComponent(juce_multi(juce.AudioAppComponent, juce.Timer)):
+class MainContentComponent(juce.AudioAppComponent, juce.Timer):
     cpuUsageLabel = juce.Label()
     cpuUsageText = juce.Label()
 
@@ -53,7 +50,8 @@ class MainContentComponent(juce_multi(juce.AudioAppComponent, juce.Timer)):
     oscillators = []
 
     def __init__(self):
-        super().__init__((), ())
+        juce.AudioAppComponent.__init__(self)
+        juce.Timer.__init__(self)
 
         self.cpuUsageLabel.setText("CPU Usage", juce.dontSendNotification)
         self.cpuUsageText.setJustificationType(juce.Justification.right)
@@ -66,8 +64,9 @@ class MainContentComponent(juce_multi(juce.AudioAppComponent, juce.Timer)):
         self.setAudioChannels(0, 2)
         self.startTimer(50)
 
-    def __del__(self):
-        self.shutdownAudio()
+    def visibilityChanged(self):
+        if not self.isVisible():
+            self.shutdownAudio()
 
     def resized(self):
         self.cpuUsageLabel.setBounds(10, 10, self.getWidth() - 20, 20)
@@ -75,7 +74,7 @@ class MainContentComponent(juce_multi(juce.AudioAppComponent, juce.Timer)):
 
     def timerCallback(self):
         cpu = self.deviceManager.getCpuUsage() * 100
-        self.cpuUsageText.setText(juce.String(cpu, 6) + " %", juce.dontSendNotification)
+        self.cpuUsageText.setText(f"{cpu:.1f} %", juce.dontSendNotification)
 
     def createWavetable(self):
         self.sineTable.setSize(1, int(self.tableSize) + 1)
@@ -83,9 +82,8 @@ class MainContentComponent(juce_multi(juce.AudioAppComponent, juce.Timer)):
 
         samples = self.sineTable.getWritePointer(0)
 
-        harmonics = [ 1, 3, 5, 6, 7, 9, 13, 15 ]
-        harmonicWeights = [ 0.5, 0.1, 0.05, 0.125, 0.09, 0.005, 0.002, 0.001 ]
-
+        harmonics = [1, 3, 5, 6, 7, 9, 13, 15]
+        harmonicWeights = [0.5, 0.1, 0.05, 0.125, 0.09, 0.005, 0.002, 0.001]
         assert len(harmonics) == len(harmonicWeights)
 
         for harmonic in range(len(harmonics)):
@@ -102,9 +100,10 @@ class MainContentComponent(juce_multi(juce.AudioAppComponent, juce.Timer)):
     def prepareToPlay (self, samplePerBlock, sampleRate):
         numberOfOscillators = 10
 
-        for _ in range(numberOfOscillators):
+        for i in range(numberOfOscillators):
             oscillator = WavetableOscillator(self.sineTable)
 
+            #midiNote = float(i * 4) + 48.0
             midiNote = juce.Random.getSystemRandom().nextDouble() * 36.0 + 48.0
             frequency = 440.0 * math.pow(2.0, (midiNote - 69.0) / 12.0)
 
