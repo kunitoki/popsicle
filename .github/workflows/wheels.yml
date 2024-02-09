@@ -61,7 +61,7 @@ jobs:
           CIBW_ENVIRONMENT: POPSICLE_LTO=1
 
       - name: Upload all the dists
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: python-package-distributions
           path: ./wheelhouse/*.whl
