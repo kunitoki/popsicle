@@ -231,9 +231,9 @@ setuptools.setup(
     license="GPLv3",
     classifiers=[
         "Intended Audience :: Developers",
-        "Development Status :: 2 - Beta",
+        "Development Status :: 4 - Beta",
         "Topic :: Software Development :: Libraries :: Application Frameworks",
-        "License :: OSI Approved",
+        "License :: Other/Proprietary License",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Programming Language :: C++",
         "Programming Language :: Python",
