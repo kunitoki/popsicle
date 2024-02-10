@@ -35,7 +35,10 @@ before-build = [
         xorg-x11-proto-devel libcurl-devel libpng-devel libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel libXrender-devel \
         libXcomposite-devel libXinerama-devel libXcursor-devel xorg-x11-server-Xvfb wget""",
     "wget https://github.com/linux-test-project/lcov/releases/download/v2.0/lcov-2.0-1.noarch.rpm",
-    "yum localinstall -y lcov-2.0-1.noarch.rpm"
+    "wget https://rpmfind.net/linux/epel/7/x86_64/Packages/p/perl-JSON-XS-3.01-2.el7.x86_64.rpm",
+    "yum localinstall -y lcov-2.0-1.noarch.rpm",
+    "yum localinstall -y perl-JSON-XS-3.01-2.el7.x86_64.rpm",
+    "sed -i \"s/use JSON::PP/use JSON::XS/g\" /usr/bin/geninfo"
 ]
 test-command = [
     "xvfb-run -a -s \"-screen 0 1024x768x24\" pytest -s {project}/tests"
