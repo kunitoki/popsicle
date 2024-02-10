@@ -1,11 +1,11 @@
 .. image:: popsicle.jpg
-    :alt: popsicle
+    :alt: Popsicle: Python integration for JUCE with pybind11.
     :target: https://github.com/kunitoki/popsicle
 
 
-====================================
-Popsicle: Enhancing JUCE Development
-====================================
+===================================================
+Popsicle: Python integration for JUCE with pybind11
+===================================================
 
 |linux_builds| |macos_builds| |windows_builds| |pypi_version| |pypi_downloads|
 

@@ -202,11 +202,30 @@ class CustomInstallScripts(install_scripts):
             os.remove(final_pyi_file)
 
 
+def load_description():
+    with open("README.rst", mode="r", encoding="utf-8") as f:
+        long_description = f.read()
+
+    long_description = re.sub(
+        r"`([^`>]+)\s<((?!https)[^`>]+)>`_",
+        r"`\1 <https://github.com/kunitoki/popsicle/tree/master/\2>`_",
+        long_description)
+
+    long_description = re.sub(
+        r"image:: ((?!https).*)",
+        r"image:: https://raw.githubusercontent.com/kunitoki/popsicle/master/\1",
+        long_description)
+
+    long_description = re.sub(
+        r":target: ((?!https).*)",
+        r":target: https://github.com/kunitoki/popsicle/tree/master/\1",
+        long_description)
+
+    return long_description
+
+
 with open("modules/juce_python/juce_python.h", mode="r", encoding="utf-8") as f:
     version = re.findall(r"version\:\s+(\d+\.\d+\.\d+)", f.read())[0]
-
-with open("README.rst", mode="r", encoding="utf-8") as f:
-    long_description = f.read()
 
 if platform.system() == 'Darwin':
     os.environ["_PYTHON_HOST_PLATFORM"] = "macosx-10.15-universal2"
@@ -217,8 +236,8 @@ setuptools.setup(
     version=version,
     author="kunitoki",
     author_email="kunitoki@gmail.com",
-    description=f"{project_name} is JUCE Python Bindings on top of pybind11",
-    long_description=long_description,
+    description=f"{project_name}: Python integration for JUCE with pybind11.",
+    long_description=load_description(),
     long_description_content_type="text/x-rst",
     url="https://github.com/kunitoki/popsicle",
     packages=setuptools.find_packages(".", exclude=["*demo*", "*examples*", "*JUCE*", "*scripts*", "*tests*"]),
