@@ -63,7 +63,7 @@ jobs:
       - name: Upload all the dists
         uses: actions/upload-artifact@v4
         with:
-          name: python-package-distributions
+          name: artifact-cp${{ matrix.python }}-${{ matrix.platform_id }}
           path: ./wheelhouse/*.whl
 
   upload-test-pypi:
@@ -77,7 +77,6 @@ jobs:
       - name: Download all the dists
         uses: actions/download-artifact@v4
         with:
-          name: python-package-distributions
           path: dist/
           merge-multiple: true
 
@@ -97,7 +96,6 @@ jobs:
       - name: Download all the dists
         uses: actions/download-artifact@v4
         with:
-          name: python-package-distributions
           path: dist/
           merge-multiple: true
 
@@ -116,7 +114,6 @@ jobs:
       - name: Download all the dists
         uses: actions/download-artifact@v4
         with:
-          name: python-package-distributions
           path: dist/
           merge-multiple: true
 

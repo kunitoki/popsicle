@@ -21,10 +21,10 @@
 
   ID:                 juce_python
   vendor:             kunitoki
-  version:            0.9.2
+  version:            0.9.3
   name:               Python bindings for the JUCE framework
   description:        The python bindings to create and work on JUCE apps.
-  website:            http://www.straw.com
+  website:            https://github.com/kunitoki/popsicle
   license:            DUAL
   minimumCppStandard: 17
 
@@ -96,7 +96,7 @@ static inline constexpr const char* const PythonModuleName = JUCE_PYTHON_STRINGI
  * @brief Modal loops are required for juce python to work when built as a wheel.
  */
 #if ! JUCE_PYTHON_EMBEDDED_INTERPRETER && ! JUCE_MODAL_LOOPS_PERMITTED
-#error When building juce_python with JUCE_PYTHON_EMBEDDED_INTERPRETER=0 it is mandatory to also set JUCE_MODAL_LOOPS_PERMITTED=1
+ #error When building juce_python with JUCE_PYTHON_EMBEDDED_INTERPRETER=0 it is mandatory to also set JUCE_MODAL_LOOPS_PERMITTED=1
 #endif
 
 //==============================================================================
