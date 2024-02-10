@@ -136,7 +136,7 @@ Supported Platforms
 -------------------
 
 .. list-table:: List of popsicle supported platforms
-   :widths: 40 10 50
+   :widths: 40 10 10 10 20
    :header-rows: 1
 
    * - Platform
@@ -217,7 +217,7 @@ Supported Modules
    * - juce_core
      - ✅
      - 36.66%
-     -
+     - Ready
    * - juce_cryptography
      - ⛔️
      - N/A
