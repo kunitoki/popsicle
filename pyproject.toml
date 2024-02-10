@@ -36,6 +36,7 @@ before-build = [
         libXcomposite-devel libXinerama-devel libXcursor-devel xorg-x11-server-Xvfb wget cpan""",
     "wget https://github.com/linux-test-project/lcov/releases/download/v2.0/lcov-2.0-1.noarch.rpm",
     "yum localinstall -y lcov-2.0-1.noarch.rpm",
+    "((echo y;echo o conf prerequisites_policy follow;echo o conf commit)|cpan)",
     "cpan install JSON:XS",
     "sed -i \"s/use JSON::PP/use JSON::XS/g\" /usr/bin/geninfo"
 ]

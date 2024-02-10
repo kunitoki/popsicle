@@ -45,7 +45,7 @@ jobs:
           CIBW_ENVIRONMENT: POPSICLE_COVERAGE=1
 
       - name: Coveralls
-        uses: coverallsapp/github-action@master
+        uses: coverallsapp/github-action@v2
         with:
           path-to-lcov: ./wheelhouse/lcov.info
           github-token: ${{ secrets.GITHUB_TOKEN }}
