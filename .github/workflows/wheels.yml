@@ -19,21 +19,21 @@ jobs:
       fail-fast: false
       matrix:
         include:
-        - { os: macos-latest, python: 310, platform_id: macosx_universal2, cibw_archs: universal2 }
-        - { os: macos-latest, python: 311, platform_id: macosx_universal2, cibw_archs: universal2 }
-        - { os: macos-latest, python: 312, platform_id: macosx_universal2, cibw_archs: universal2 }
-        - { os: windows-latest, python: 310, platform_id: win_amd64, cibw_archs: AMD64 }
-        - { os: windows-latest, python: 311, platform_id: win_amd64, cibw_archs: AMD64 }
-        - { os: windows-latest, python: 312, platform_id: win_amd64, cibw_archs: AMD64 }
-        - { os: windows-latest, python: 310, platform_id: win_arm64, cibw_archs: ARM64 }
-        - { os: windows-latest, python: 311, platform_id: win_arm64, cibw_archs: ARM64 }
-        - { os: windows-latest, python: 312, platform_id: win_arm64, cibw_archs: ARM64 }
-        - { os: ubuntu-latest, python: 310, platform_id: manylinux_x86_64, cibw_archs: x86_64 }
-        - { os: ubuntu-latest, python: 311, platform_id: manylinux_x86_64, cibw_archs: x86_64 }
-        - { os: ubuntu-latest, python: 312, platform_id: manylinux_x86_64, cibw_archs: x86_64 }
-        - { os: ubuntu-latest, python: 310, platform_id: manylinux_aarch64, cibw_archs: aarch64 }
-        - { os: ubuntu-latest, python: 311, platform_id: manylinux_aarch64, cibw_archs: aarch64 }
-        - { os: ubuntu-latest, python: 312, platform_id: manylinux_aarch64, cibw_archs: aarch64 }
+        - { os: macos-latest, python: 310, platform_id: macosx_universal2, cibw_archs: universal2, lto: 1 }
+        - { os: macos-latest, python: 311, platform_id: macosx_universal2, cibw_archs: universal2, lto: 1 }
+        - { os: macos-latest, python: 312, platform_id: macosx_universal2, cibw_archs: universal2, lto: 1 }
+        - { os: windows-latest, python: 310, platform_id: win_amd64, cibw_archs: AMD64, lto: 1 }
+        - { os: windows-latest, python: 311, platform_id: win_amd64, cibw_archs: AMD64, lto: 1 }
+        - { os: windows-latest, python: 312, platform_id: win_amd64, cibw_archs: AMD64, lto: 1 }
+        - { os: windows-latest, python: 310, platform_id: win_arm64, cibw_archs: ARM64, lto: 1 }
+        - { os: windows-latest, python: 311, platform_id: win_arm64, cibw_archs: ARM64, lto: 1 }
+        - { os: windows-latest, python: 312, platform_id: win_arm64, cibw_archs: ARM64, lto: 1 }
+        - { os: ubuntu-latest, python: 310, platform_id: manylinux_x86_64, cibw_archs: x86_64, lto: 1 }
+        - { os: ubuntu-latest, python: 311, platform_id: manylinux_x86_64, cibw_archs: x86_64, lto: 1 }
+        - { os: ubuntu-latest, python: 312, platform_id: manylinux_x86_64, cibw_archs: x86_64, lto: 1 }
+        - { os: ubuntu-latest, python: 310, platform_id: manylinux_aarch64, cibw_archs: aarch64, lto: 0 }
+        - { os: ubuntu-latest, python: 311, platform_id: manylinux_aarch64, cibw_archs: aarch64, lto: 0 }
+        - { os: ubuntu-latest, python: 312, platform_id: manylinux_aarch64, cibw_archs: aarch64, lto: 0 }
 
     steps:
       - name: Checkout the repository
@@ -58,7 +58,7 @@ jobs:
           CIBW_ARCHS: ${{matrix.cibw_archs}}
           CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
           CIBW_TEST_SKIP: "*-manylinux_aarch64 *-macosx_universal2:arm64 *-win_arm64"
-          CIBW_ENVIRONMENT: POPSICLE_LTO=1
+          CIBW_ENVIRONMENT: POPSICLE_LTO=${{matrix.lto}}
 
       - name: Upload all the dists
         uses: actions/upload-artifact@v4

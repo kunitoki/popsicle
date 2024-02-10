@@ -49,4 +49,4 @@ jobs:
         with:
           path-to-lcov: ./wheelhouse/lcov.info
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          debug: true
+          #debug: true
