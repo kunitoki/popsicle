@@ -56,7 +56,6 @@ elseif (WIN32)
     endif()
 endif()
 
-
 if (ENABLE_DISTRIBUTION)
     if (APPLE)
         add_custom_command(
