@@ -18,6 +18,13 @@ project_name = "popsicle"
 root_dir = os.path.dirname(os.path.abspath(__file__))
 
 
+def get_environment_option(name, default=0):
+    try:
+        return int(os.environ.get(name, default))
+    except ValueError:
+        return default
+
+
 def glob_python_library(path):
     for extension in [".a", ".lib", ".so", ".dylib", ".dll", ".pyd"]:
         for m in glob.iglob(f"{path}/**/*python*{extension}", recursive=True):
@@ -76,8 +83,9 @@ class CMakeExtension(Extension):
 
 
 class CMakeBuildExtension(build_ext):
-    build_for_coverage = os.environ.get("POPSICLE_COVERAGE", None) is not None
-    build_with_lto = os.environ.get("POPSICLE_LTO", None) is not None
+    build_for_coverage = get_environment_option("POPSICLE_COVERAGE")
+    build_for_distribution = get_environment_option("POPSICLE_DISTRIBUTION")
+    build_with_lto = get_environment_option("POPSICLE_LTO")
 
     def build_extension(self, ext):
         log.info("building with cmake")
@@ -104,6 +112,9 @@ class CMakeBuildExtension(build_ext):
 
         if self.build_for_coverage:
             cmake_args += ["-DENABLE_COVERAGE:BOOL=ON"]
+
+        if self.build_for_distribution:
+            cmake_args += ["-DENABLE_DISTRIBUTION:BOOL=ON"]
 
         if self.build_with_lto:
             cmake_args += ["-DENABLE_LTO:BOOL=ON"]
