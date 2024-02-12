@@ -319,6 +319,11 @@ Some images of JUCE tutorials and other small apps ported to *popsicle*.
    .. image:: images/matplotlib_integration.png
        :target: examples/matplotlib_integration.py
 
+- Emojis Component
+
+   .. image:: images/emojis_component.png
+       :target: examples/emojis_component.py
+
 
 -------------
 Code Coverage
