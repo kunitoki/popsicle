@@ -23,6 +23,7 @@
 #include "../utilities/PyBind11Includes.h"
 
 #include <functional>
+#include <memory>
 
 namespace popsicle {
 
@@ -47,13 +48,23 @@ public:
     /**
      * @brief Construct a new ScriptEngine object.
      *
+     * @param config A custom python config to initialize the Python interpreter.
+     *
+     * Initializes a ScriptEngine object.
+     */
+    ScriptEngine (std::unique_ptr<PyConfig> config);
+
+    /**
+     * @brief Construct a new ScriptEngine object.
+     *
      * Initializes a ScriptEngine object with the specified custom modules.
      *
      * @param modules An array of module names to be imported in the Python interpreter.
+     * @param config A custom python config to initialize the Python interpreter.
      *
      * @warning Ensure that the provided modules are available and compatible with the Python interpreter.
      */
-    ScriptEngine (juce::StringArray modules);
+    ScriptEngine (juce::StringArray modules, std::unique_ptr<PyConfig> config = {});
 
     /**
      * @brief Destroy the ScriptEngine object.
@@ -88,10 +99,23 @@ public:
      */
     juce::Result runScript (const juce::File& script, pybind11::dict locals = {}, pybind11::dict globals = pybind11::globals());
 
+    /**
+     * @brief Prepare a valid python home and return the config to use.
+     *
+     * @param programName The desired program name.
+     * @param destinationFolder The destination folder to use for preparing the home.
+     * @param standardLibraryCallback The callback to provide the standard library archive.
+     * @param forceInstall If true, the home will be fully rebuilt.
+     */
+    static std::unique_ptr<PyConfig> prepareScriptingHome (
+        const juce::String& programName,
+        const juce::File& destinationFolder,
+        std::function<const void* (const char*, int&)> standardLibraryCallback,
+        bool forceInstall = false);
+
 private:
     juce::Result runScriptInternal (const juce::String& code, pybind11::dict locals, pybind11::dict globals);
 
-    pybind11::scoped_interpreter pythonInterpreter;
     juce::StringArray customModules;
     juce::String currentScriptCode;
     juce::File currentScriptFile;

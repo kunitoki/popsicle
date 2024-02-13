@@ -30,13 +30,23 @@ add_subdirectory (${MODULES_PATH} ./modules)
 # Configure python (APPLE only for now)
 set (Python_ROOT_DIR "/Library/Frameworks/Python.framework/Versions/Current")
 set (Python_USE_STATIC_LIBS TRUE)
-find_package (Python REQUIRED Development.Embed)
+find_package (Python REQUIRED Interpreter Development.Embed)
 
 juce_add_gui_app (${TARGET_NAME}
-    PRODUCT_NAME "Popsicle Demo"
+    PRODUCT_NAME "PopsicleDemo"
     VERSION "${VERSION_NUMBER}"
     BUNDLE_ID "org.kunitoki.popsicledemo")
 juce_generate_juce_header (${TARGET_NAME})
+
+add_custom_target (
+    ${TARGET_NAME}_stdlib
+    ${Python_EXECUTABLE} ${ROOT_PATH}/cmake/ArchivePythonStdlib.py
+        ${Python_ROOT_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${Python_VERSION_MAJOR} ${Python_VERSION_MINOR}
+    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}.zip)
+add_dependencies (${TARGET_NAME} ${TARGET_NAME}_stdlib)
+
+juce_add_binary_data (BinaryData SOURCES "${CMAKE_CURRENT_BINARY_DIR}/python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}.zip")
+add_dependencies (BinaryData ${TARGET_NAME}_stdlib)
 
 target_sources (${TARGET_NAME} PRIVATE
     Main.cpp
@@ -91,4 +101,5 @@ target_link_libraries (${TARGET_NAME} PRIVATE
     Python::Python
     popsicle::juce_python
     popsicle::juce_python_recommended_warning_flags
+    BinaryData
     ${LTO_CONFIGURATION})
