@@ -386,15 +386,15 @@ Install python dependencies.
   pip3 install dist/popsicle-*.whl
 
 
-.. |linux_builds| image:: https://github.com/kunitoki/popsicle/workflows/Linux%20Builds/badge.svg
+.. |linux_builds| image:: https://github.com/kunitoki/popsicle/workflows/Linux%20Builds/badge.svg?branch=master
     :alt: Linux Builds Status
     :target: https://github.com/kunitoki/popsicle/actions/workflows/build_linux.yml
 
-.. |macos_builds| image:: https://github.com/kunitoki/popsicle/workflows/macOS%20Builds/badge.svg
+.. |macos_builds| image:: https://github.com/kunitoki/popsicle/workflows/macOS%20Builds/badge.svg?branch=master
     :alt: macOS Builds Status
     :target: https://github.com/kunitoki/popsicle/actions/workflows/build_macos.yml
 
-.. |windows_builds| image:: https://github.com/kunitoki/popsicle/workflows/Windows%20Builds/badge.svg
+.. |windows_builds| image:: https://github.com/kunitoki/popsicle/workflows/Windows%20Builds/badge.svg?branch=master
     :alt: Windows Builds Status
     :target: https://github.com/kunitoki/popsicle/actions/workflows/build_windows.yml
 
