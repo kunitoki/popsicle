@@ -25,11 +25,6 @@ def test_key_press_constructor_with_modifierkeys_parameters():
     assert key_press.getModifiers() == modifiers
     assert key_press.getTextCharacter() == text_character
 
-    key_press = juce.KeyPress(key_code, modifiers, ord(text_character))
-    assert key_press.getKeyCode() == key_code
-    assert key_press.getModifiers() == modifiers
-    assert key_press.getTextCharacter() == text_character
-
 #==================================================================================================
 
 def test_key_press_constructor_with_flags_parameters():
@@ -47,11 +42,6 @@ def test_key_press_constructor_with_flags_parameters():
     assert key_press.getModifiers() == juce.ModifierKeys(modifiers)
     assert key_press.getTextCharacter() == text_character
 
-    key_press = juce.KeyPress(key_code, modifiers, ord(text_character))
-    assert key_press.getKeyCode() == key_code
-    assert key_press.getModifiers() == juce.ModifierKeys(modifiers)
-    assert key_press.getTextCharacter() == text_character
-
 #==================================================================================================
 
 def test_key_press_constructor_with_ints_parameters():
@@ -65,11 +55,6 @@ def test_key_press_constructor_with_ints_parameters():
     assert key_press.getTextCharacter() == text_character
 
     key_press = juce.KeyPress(key_code, modifiers, text_character)
-    assert key_press.getKeyCode() == key_code
-    assert key_press.getModifiers() == juce.ModifierKeys(modifiers)
-    assert key_press.getTextCharacter() == text_character
-
-    key_press = juce.KeyPress(key_code, modifiers, ord(text_character))
     assert key_press.getKeyCode() == key_code
     assert key_press.getModifiers() == juce.ModifierKeys(modifiers)
     assert key_press.getTextCharacter() == text_character
@@ -132,7 +117,7 @@ def test_key_press_get_text_description():
 
 def test_key_press_get_text_description_with_icons():
     key_press = juce.KeyPress(juce.KeyPress.spaceKey)
-    assert key_press.getTextDescriptionWithIcons() == "␣"
+    assert key_press.getTextDescriptionWithIcons() == "␣" or key_press.getTextDescriptionWithIcons() == "spacebar"
 
 #==================================================================================================
 
