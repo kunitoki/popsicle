@@ -56,10 +56,12 @@ PopsicleDemo::PopsicleDemo()
     locals["this"] = pybind11::cast (this);
 
     auto result = engine.runScript (R"(
+import sys
+
 # An example of scriptable self
 print("Scripting JUCE!")
 
-this.text = "Popsicle"
+this.text = "Popsicle " + sys.version.split(" ")[0]
 this.setOpaque(True)
 this.setSize(600, 300)
     )", locals);
