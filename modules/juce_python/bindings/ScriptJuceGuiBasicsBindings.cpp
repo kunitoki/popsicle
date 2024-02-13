@@ -279,6 +279,18 @@ void registerJuceGuiBasicsBindings (py::module_& m)
 
     classTextInputTarget
         .def (py::init<>())
+        .def ("isTextInputActive", &TextInputTarget::isTextInputActive)
+        .def ("getHighlightedRegion", &TextInputTarget::getHighlightedRegion)
+        .def ("setHighlightedRegion", &TextInputTarget::setHighlightedRegion)
+        .def ("setTemporaryUnderlining", &TextInputTarget::setTemporaryUnderlining)
+        .def ("getTextInRange", &TextInputTarget::getTextInRange)
+        .def ("insertTextAtCaret", &TextInputTarget::insertTextAtCaret)
+        .def ("getCaretPosition", &TextInputTarget::getCaretPosition)
+        .def ("getCaretRectangleForCharIndex", &TextInputTarget::getCaretRectangleForCharIndex)
+        .def ("getTotalNumChars", &TextInputTarget::getTotalNumChars)
+        .def ("getCharIndexForPoint", &TextInputTarget::getCharIndexForPoint)
+        .def ("getTextBounds", &TextInputTarget::getTextBounds)
+        .def ("getKeyboardType", &TextInputTarget::getKeyboardType)
     ;
 
     // ============================================================================================ juce::SystemClipboard
@@ -348,7 +360,9 @@ void registerJuceGuiBasicsBindings (py::module_& m)
     py::class_<MouseEvent> classMouseEvent (m, "MouseEvent");
 
     classMouseEvent
-        .def (py::init<MouseInputSource, Point<float>, ModifierKeys, float, float, float, float, float, Component*, Component*, Time, Point<float>, Time, int, bool>())
+        .def (py::init<MouseInputSource, Point<float>, ModifierKeys, float, float, float, float, float, Component*, Component*, Time, Point<float>, Time, int, bool>(),
+            "source"_a, "position"_a, "modifiers"_a, "pressure"_a, "orientation"_a, "rotation"_a, "tiltX"_a, "tiltY"_a,
+            "eventComponent"_a, "originator"_a, "eventTime"_a, "mouseDownPos"_a, "mouseDownTime"_a, "numberOfClicks"_a, "mouseWasDragged"_a)
         .def_readonly ("position", &MouseEvent::position)
         .def_readonly ("x", &MouseEvent::x)
         .def_readonly ("y", &MouseEvent::y)
@@ -512,7 +526,7 @@ void registerJuceGuiBasicsBindings (py::module_& m)
     py::class_<LookAndFeel, PyLookAndFeel<>> classLookAndFeel (m, "LookAndFeel");
 
     classLookAndFeel
-        //.def (py::init<>())
+    //.def (py::init<>())
         .def_static ("getDefaultLookAndFeel", &LookAndFeel::getDefaultLookAndFeel, py::return_value_policy::reference)
         .def_static ("setDefaultLookAndFeel", &LookAndFeel::setDefaultLookAndFeel)
         .def ("findColour", &LookAndFeel::findColour)
