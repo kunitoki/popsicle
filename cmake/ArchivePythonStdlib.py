@@ -2,21 +2,27 @@ import os
 import sys
 import shutil
 from pathlib import Path
+from argparse import ArgumentParser
 
 if __name__ == "__main__":
-    base_folder = Path(sys.argv[1])
-    output_folder = Path(sys.argv[2])
-    version_major = sys.argv[3]
-    version_minor = sys.argv[4]
+    parser = ArgumentParser()
 
-    version = f"{version_major}.{version_minor}"
-    version_nodot = f"{version_major}{version_minor}"
+    parser.add_argument("-b", "--base-folder", type=Path, help="Path to the base folder.")
+    parser.add_argument("-o", "--output-folder", type=Path, help="Path to the output folder.")
+    parser.add_argument("-M", "--version-major", type=int, help="Major version number (integer).")
+    parser.add_argument("-m", "--version-minor", type=int, help="Minor version number (integer).")
+    parser.add_argument("-i", "--ignore-patterns", type=str, default=None, help="Ignored patterns (semicolon separated list).")
 
-    final_location = output_folder / "python"
+    args = parser.parse_args()
+
+    version = f"{args.version_major}.{args.version_minor}"
+    version_nodot = f"{args.version_major}{args.version_minor}"
+
+    final_location = args.output_folder / "python"
     site_packages = final_location / "site-packages"
-    base_python = base_folder / "lib" / f"python{version}"
+    base_python = args.base_folder / "lib" / f"python{version}"
 
-    ignored_files = shutil.ignore_patterns(
+    base_patterns = [
         "*.pyc",
         "__pycache__",
         "__phello__",
@@ -33,7 +39,14 @@ if __name__ == "__main__":
         "site-packages",
         "test",
         "turtledemo",
-    )
+        "LICENSE.txt",
+    ]
+
+    if args.ignore_patterns:
+        custom_patterns = [x.strip() for x in args.ignore_patterns.split(";")]
+        base_patterns += custom_patterns
+
+    ignored_files = shutil.ignore_patterns(*base_patterns)
 
     print("cleaning up...")
     shutil.rmtree(str(final_location))
@@ -45,4 +58,4 @@ if __name__ == "__main__":
     os.makedirs(str(site_packages), exist_ok=True)
 
     print("making archive...")
-    shutil.make_archive(str(output_folder / f"python{version_nodot}"), "zip", str(final_location))
+    shutil.make_archive(str(args.output_folder / f"python{version_nodot}"), "zip", str(final_location))

@@ -23,7 +23,7 @@ add_subdirectory (${ROOT_PATH}/JUCE JUCE)
 #    SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/JUCE)
 #FetchContent_MakeAvailable (JUCE)
 
-# Add the straw modules
+# Add the popsicle modules
 get_filename_component (MODULES_PATH "${ROOT_PATH}/modules" ABSOLUTE)
 add_subdirectory (${MODULES_PATH} ./modules)
 
@@ -32,16 +32,18 @@ set (Python_ROOT_DIR "/Library/Frameworks/Python.framework/Versions/Current")
 set (Python_USE_STATIC_LIBS TRUE)
 find_package (Python REQUIRED Interpreter Development.Embed)
 
+# Setup the juce app
 juce_add_gui_app (${TARGET_NAME}
     PRODUCT_NAME "PopsicleDemo"
     VERSION "${VERSION_NUMBER}"
     BUNDLE_ID "org.kunitoki.popsicledemo")
 juce_generate_juce_header (${TARGET_NAME})
 
+# Add the binary target for the python standard library
 add_custom_target (
     ${TARGET_NAME}_stdlib
     ${Python_EXECUTABLE} ${ROOT_PATH}/cmake/ArchivePythonStdlib.py
-        ${Python_ROOT_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${Python_VERSION_MAJOR} ${Python_VERSION_MINOR}
+        -b ${Python_ROOT_DIR} -o ${CMAKE_CURRENT_BINARY_DIR} -M ${Python_VERSION_MAJOR} -m ${Python_VERSION_MINOR}
     BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}.zip)
 add_dependencies (${TARGET_NAME} ${TARGET_NAME}_stdlib)
 
