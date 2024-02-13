@@ -118,6 +118,9 @@ def test_key_press_create_from_description():
     key_press_description = "ctrl + a"
     key_press = juce.KeyPress.createFromDescription(key_press_description)
     assert key_press.isValid()
+    assert key_press.getKeyCode() == ord('A')
+    assert key_press.getModifiers() == juce.ModifierKeys(juce.ModifierKeys.ctrlModifier)
+    assert key_press.getTextCharacter() == '\x00'
 
 #==================================================================================================
 
