@@ -76,7 +76,7 @@ def test_connected_edges(juce_app):
 
 #==================================================================================================
 
-def test_connected_edges(juce_app):
+def test_button_states(juce_app):
     b = CustomButton("abc")
     assert b.getState() == juce.Button.buttonNormal
 
