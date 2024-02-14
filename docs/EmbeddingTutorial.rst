@@ -4,6 +4,7 @@ Popsicle: Embedding Guide
 
 TODO
 
+
 --------------------------------------
 Adding popsicle to the project (cmake)
 --------------------------------------
@@ -95,6 +96,7 @@ The zip file can also be embedded in the binary by using the `juce_add_binary_da
     juce::juce_audio_devices
     # More juce modules here ...
     BinaryData)
+
 
 -----------------------------------------
 Adding popsicle to the project (projucer)
