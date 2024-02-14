@@ -1,28 +1,39 @@
 import os
-import sys
+import stat
 import shutil
 import hashlib
 import zipfile
 from pathlib import Path
 from argparse import ArgumentParser
 
+
 def file_hash(file):
     h = hashlib.md5()
+
     with open(file, "rb") as f:
         h.update(f.read())
-    print(h.hexdigest())
+
     return h.hexdigest()
+
 
 def make_archive(file, directory):
     archived_files = []
     for dirname, _, files in os.walk(directory):
-        archived_files.append(dirname)
         for filename in files:
-            archived_files.append(os.path.join(dirname, filename))
+            path = os.path.join(dirname, filename)
+            archived_files.append((path, os.path.relpath(path, directory)))
 
     with zipfile.ZipFile(file, "w") as zf:
-        for filename in sorted(archived_files):
-            zf.write(filename)
+        for path, archive_path in sorted(archived_files):
+            permission = 0o555 if os.access(path, os.X_OK) else 0o444
+
+            zip_info = zipfile.ZipInfo.from_file(path, archive_path)
+            zip_info.date_time = (1999, 1, 1, 0, 0, 0)
+            zip_info.external_attr = (stat.S_IFREG | permission) << 16
+
+            with open(path, "rb") as fp:
+                zf.writestr(zip_info, fp.read(), compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
+
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -74,12 +85,12 @@ if __name__ == "__main__":
 
     print("copying library...")
     shutil.copytree(str(base_python), str(final_location), ignore=ignored_files, dirs_exist_ok=True)
-    os.makedirs(str(site_packages), exist_ok=True)
+    os.makedirs(site_packages, exist_ok=True)
 
     print("making archive...")
     if os.path.exists(final_archive):
-        make_archive(str(temp_archive.stem), str(final_location))
+        make_archive(temp_archive, final_location)
         if file_hash(temp_archive) != file_hash(final_archive):
-            shutil.copy(temp_archive, final_archive)
+            shutil.copy(str(temp_archive), str(final_archive))
     else:
-        make_archive(str(final_archive.stem), str(final_location))
+        make_archive(final_archive, final_location)

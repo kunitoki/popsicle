@@ -72,9 +72,9 @@ std::unique_ptr<PyConfig> ScriptEngine::prepareScriptingHome (
     std::function<const void*(const char*, int&)> standardLibraryCallback,
     bool forceInstall)
 {
-    juce::String pythonVersion, pythonVersionNoDot;
-    pythonVersion << "python" << PY_MAJOR_VERSION << "." << PY_MINOR_VERSION;
-    pythonVersionNoDot << "python" << PY_MAJOR_VERSION << PY_MINOR_VERSION;
+    juce::String pythonFolderName, pythonArchiveName;
+    pythonFolderName << "python" << PY_MAJOR_VERSION << "." << PY_MINOR_VERSION;
+    pythonArchiveName << "python" << PY_MAJOR_VERSION << PY_MINOR_VERSION << "_zip";
 
     if (! destinationFolder.isDirectory())
         destinationFolder.createDirectory();
@@ -83,7 +83,7 @@ std::unique_ptr<PyConfig> ScriptEngine::prepareScriptingHome (
     if (! libFolder.isDirectory())
         libFolder.createDirectory();
 
-    auto pythonFolder = libFolder.getChildFile (pythonVersion);
+    auto pythonFolder = libFolder.getChildFile (pythonFolderName);
     if (! pythonFolder.isDirectory())
         pythonFolder.createDirectory();
 
@@ -96,7 +96,7 @@ std::unique_ptr<PyConfig> ScriptEngine::prepareScriptingHome (
     if (! pythonFolder.getChildFile ("lib-dynload").isDirectory())
     {
         int dataSizeInBytes = 0;
-        const void* data = standardLibraryCallback (pythonVersionNoDot.toRawUTF8(), dataSizeInBytes);
+        const void* data = standardLibraryCallback (pythonArchiveName.toRawUTF8(), dataSizeInBytes);
 
         auto mis = juce::MemoryInputStream (data, static_cast<size_t> (dataSizeInBytes), false);
 
