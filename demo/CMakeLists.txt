@@ -40,16 +40,21 @@ juce_add_gui_app (${TARGET_NAME}
 juce_generate_juce_header (${TARGET_NAME})
 
 # Add the binary target for the python standard library
+set (ADDITIONAL_IGNORED_PYTHON_PATTERNS "lib2to3" "pydoc_data" "_xxtestfuzz*")
+set (PYTHON_STANDARD_LIBRARY "${CMAKE_CURRENT_BINARY_DIR}/python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}.zip")
+
 add_custom_target (
     ${TARGET_NAME}_stdlib
     ${Python_EXECUTABLE} ${ROOT_PATH}/cmake/ArchivePythonStdlib.py
         -b ${Python_ROOT_DIR} -o ${CMAKE_CURRENT_BINARY_DIR} -M ${Python_VERSION_MAJOR} -m ${Python_VERSION_MINOR}
-    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}.zip)
+        -i "\"${ADDITIONAL_IGNORED_PYTHON_PATTERNS}\""
+    BYPRODUCTS ${PYTHON_STANDARD_LIBRARY})
 add_dependencies (${TARGET_NAME} ${TARGET_NAME}_stdlib)
 
-juce_add_binary_data (BinaryData SOURCES "${CMAKE_CURRENT_BINARY_DIR}/python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}.zip")
+juce_add_binary_data (BinaryData SOURCES ${PYTHON_STANDARD_LIBRARY})
 add_dependencies (BinaryData ${TARGET_NAME}_stdlib)
 
+# Setup target properties
 target_sources (${TARGET_NAME} PRIVATE
     Main.cpp
     PopsicleDemo.cpp
