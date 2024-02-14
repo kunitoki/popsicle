@@ -72,6 +72,18 @@ else()
     set (LTO_CONFIGURATION "")
 endif()
 
+if (APPLE)
+    add_custom_command(
+        TARGET "${TARGET_NAME}" POST_BUILD DEPENDS "${TARGET_NAME}"
+        COMMAND $<$<CONFIG:release>:${CMAKE_STRIP}>
+        ARGS -x $<TARGET_FILE:${TARGET_NAME}>)
+elseif (UNIX)
+    add_custom_command(
+        TARGET "${TARGET_NAME}" POST_BUILD DEPENDS "${TARGET_NAME}"
+        COMMAND $<$<CONFIG:release>:${CMAKE_STRIP}>
+        ARGS --strip-all $<TARGET_FILE:${TARGET_NAME}>)
+endif()
+
 target_compile_definitions (${TARGET_NAME} PRIVATE
     JUCE_STANDALONE_APPLICATION=1
     JUCE_DISPLAY_SPLASH_SCREEN=0
