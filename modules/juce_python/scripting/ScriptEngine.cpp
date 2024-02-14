@@ -69,7 +69,7 @@ namespace {
 std::unique_ptr<PyConfig> ScriptEngine::prepareScriptingHome (
     const juce::String& programName,
     const juce::File& destinationFolder,
-    std::function<const void*(const char*, int&)> standardLibraryCallback,
+    std::function<juce::MemoryBlock (const char*)> standardLibraryCallback,
     bool forceInstall)
 {
     juce::String pythonFolderName, pythonArchiveName;
@@ -95,10 +95,9 @@ std::unique_ptr<PyConfig> ScriptEngine::prepareScriptingHome (
 
     if (! pythonFolder.getChildFile ("lib-dynload").isDirectory())
     {
-        int dataSizeInBytes = 0;
-        const void* data = standardLibraryCallback (pythonArchiveName.toRawUTF8(), dataSizeInBytes);
+        juce::MemoryBlock mb = standardLibraryCallback (pythonArchiveName.toRawUTF8());
 
-        auto mis = juce::MemoryInputStream (data, static_cast<size_t> (dataSizeInBytes), false);
+        auto mis = juce::MemoryInputStream (mb.getData(), mb.getSize(), false);
 
         auto zip = juce::ZipFile (mis);
         zip.uncompressTo (pythonFolder);

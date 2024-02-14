@@ -46,7 +46,12 @@ PopsicleDemo::PopsicleDemo()
     , engine (popsicle::ScriptEngine::prepareScriptingHome (
         juce::JUCEApplication::getInstance()->getApplicationName(),
         juce::File::getSpecialLocation (juce::File::tempDirectory),
-        &BinaryData::getNamedResource))
+        [](const char* resourceName) -> juce::MemoryBlock
+        {
+            int dataSize = 0;
+            auto data = BinaryData::getNamedResource (resourceName, dataSize);
+            return { data, static_cast<size_t> (dataSize) };
+        }))
 {
     juce::SystemStats::setApplicationCrashHandler (crashHandler);
 

@@ -110,7 +110,7 @@ public:
     static std::unique_ptr<PyConfig> prepareScriptingHome (
         const juce::String& programName,
         const juce::File& destinationFolder,
-        std::function<const void* (const char*, int&)> standardLibraryCallback,
+        std::function<juce::MemoryBlock (const char*)> standardLibraryCallback,
         bool forceInstall = false);
 
 private:
