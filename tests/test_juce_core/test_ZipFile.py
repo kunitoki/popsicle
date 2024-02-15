@@ -127,7 +127,7 @@ def test_create_stream_for_entry_by_entry(zip_file, text_file):
     mb2 = juce.MemoryBlock()
     assert stream.readIntoMemoryBlock(mb1)
     assert juce.File(text_file).loadFileAsData(mb2)
-    assert mb1.getData() == mb2.getData()
+    assert mb1.getData().tobytes() == mb2.getData().tobytes()
 
 #==================================================================================================
 
@@ -156,11 +156,11 @@ def test_uncompress_to(zip_file, text_file, image_file):
 
     assert target_file1.loadFileAsData(mb1)
     assert text_file.loadFileAsData(mb2)
-    assert mb1.getData() == mb2.getData()
+    assert mb1.getData().tobytes() == mb2.getData().tobytes()
 
     assert target_file2.loadFileAsData(mb1)
     assert image_file.loadFileAsData(mb2)
-    assert mb1.getData() == mb2.getData()
+    assert mb1.getData().tobytes() == mb2.getData().tobytes()
 
 #==================================================================================================
 
@@ -188,7 +188,7 @@ def test_uncompress_to_not_overwrite(zip_file):
 
     mb = juce.MemoryBlock()
     assert target_file2.loadFileAsData(mb)
-    assert mb.getData() == b"\x00\x00"
+    assert mb.getData().tobytes() == b"\x00\x00"
 
 #==================================================================================================
 
@@ -253,7 +253,7 @@ def test_uncompress_entry_with_overwrite_bool_true(zip_file, text_file):
     mb2 = juce.MemoryBlock()
     assert target_file.loadFileAsData(mb1)
     assert text_file.loadFileAsData(mb2)
-    assert mb1.getData() == mb2.getData()
+    assert mb1.getData().tobytes() == mb2.getData().tobytes()
 
 #==================================================================================================
 
