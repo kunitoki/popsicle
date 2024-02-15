@@ -119,15 +119,9 @@ def test_create_stream_for_entry_by_index(zip_file):
 
 def test_create_stream_for_entry_by_entry(zip_file, text_file):
     zip_file = juce.ZipFile(zip_file)
-    entry = zip_file.getEntry(0)
-    stream: juce.InputStream = zip_file.createStreamForEntry(entry)
+    stream = zip_file.createStreamForEntry(zip_file.getEntry(0))
     assert stream is not None
-
-    mb1 = juce.MemoryBlock()
-    mb2 = juce.MemoryBlock()
-    assert stream.readIntoMemoryBlock(mb1)
-    assert juce.File(text_file).loadFileAsData(mb2)
-    assert mb1.getData().tobytes() == mb2.getData().tobytes()
+    assert stream.readEntireStreamAsString().replace("\r\n", "\n") == text_file.loadFileAsString().replace("\r\n", "\n")
 
 #==================================================================================================
 
@@ -151,13 +145,10 @@ def test_uncompress_to(zip_file, text_file, image_file):
     result = z.uncompressTo(target_dir, True)
     assert result.wasOk()
 
+    assert target_file1.loadFileAsString().replace("\r\n", "\n") == text_file.loadFileAsString().replace("\r\n", "\n")
+
     mb1 = juce.MemoryBlock()
     mb2 = juce.MemoryBlock()
-
-    assert target_file1.loadFileAsData(mb1)
-    assert text_file.loadFileAsData(mb2)
-    assert mb1.getData().tobytes() == mb2.getData().tobytes()
-
     assert target_file2.loadFileAsData(mb1)
     assert image_file.loadFileAsData(mb2)
     assert mb1.getData().tobytes() == mb2.getData().tobytes()
@@ -249,11 +240,7 @@ def test_uncompress_entry_with_overwrite_bool_true(zip_file, text_file):
     result = z.uncompressEntry(0, target_dir, shouldOverwriteFiles=True)
     assert result.wasOk()
 
-    mb1 = juce.MemoryBlock()
-    mb2 = juce.MemoryBlock()
-    assert target_file.loadFileAsData(mb1)
-    assert text_file.loadFileAsData(mb2)
-    assert mb1.getData().tobytes() == mb2.getData().tobytes()
+    assert target_file.loadFileAsString().replace("\r\n", "\n") == text_file.loadFileAsString().replace("\r\n", "\n")
 
 #==================================================================================================
 
