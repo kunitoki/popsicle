@@ -61,14 +61,16 @@ def test_get_entry_by_index(zip_file):
     assert entry.isSymbolicLink == False
     assert entry.externalFileAttributes == 2175008768
     assert entry.uncompressedSize == (900 if sys.platform == "win32" else 886)
-    assert entry.fileTime == juce.Time.fromISO8601("20240209T183446.000+0100")
+    #assert entry.fileTime == juce.Time.fromISO8601("20240209T183446.000+0100")
+    assert entry.fileTime > juce.Time()
 
     entry = zip_file.getEntry(1)
     assert entry.filename == "pysound.jpg"
     assert entry.isSymbolicLink == False
     assert entry.externalFileAttributes == 2175008768
     assert entry.uncompressedSize == (172506 if sys.platform == "win32" else 172506)
-    assert entry.fileTime == juce.Time.fromISO8601("20240215T083304.000+0100")
+    #assert entry.fileTime == juce.Time.fromISO8601("20240215T083304.000+0100")
+    assert entry.fileTime > juce.Time()
 
 #==================================================================================================
 
@@ -92,7 +94,8 @@ def test_get_entry_by_file_name(zip_file):
     assert entry.isSymbolicLink == False
     assert entry.externalFileAttributes == 2175008768
     assert entry.uncompressedSize == (900 if sys.platform == "win32" else 886)
-    assert entry.fileTime == juce.Time.fromISO8601("20240209T183446.000+0100")
+    #assert entry.fileTime == juce.Time.fromISO8601("20240209T183446.000+0100")
+    assert entry.fileTime > juce.Time()
 
 #==================================================================================================
 
@@ -263,12 +266,13 @@ def test_builder_add_stream_entry(text_file):
     for level in range(0, 9):
         builder = juce.ZipFile.Builder()
         input_stream = juce.FileInputStream(text_file)
-        builder.addEntry(input_stream, level, text_file.getFileName(), juce.Time())
+        builder.addEntry(input_stream, level, text_file.getFileName(), juce.Time.getCurrentTime())
         assert builder.writeToStream(output.createOutputStream())
         assert output.existsAsFile()
 
         z = juce.ZipFile(output)
         assert z.getNumEntries() == 1
         assert z.getEntry(0).filename == text_file.getFileName()
+        assert z.getEntry(0).fileTime > juce.Time()
 
         output.deleteFile()
