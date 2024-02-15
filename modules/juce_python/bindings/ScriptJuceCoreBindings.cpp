@@ -2385,19 +2385,22 @@ void registerJuceCoreBindings (py::module_& m)
     classZipFileBuilder
         .def (py::init<>())
         .def ("addFile", &ZipFile::Builder::addFile, "fileToAdd"_a, "compressionLevel"_a, "storedPathName"_a = String())
-        .def ("addEntry", &ZipFile::Builder::addEntry, "streamToRead"_a, "compressionLevel"_a, "storedPathName"_a, "fileModificationTime"_a)
-        .def ("writeToStream", [](const ZipFile::Builder& self, OutputStream& target)
+        .def ("addEntry", [](ZipFile::Builder& self, py::object stream, int compression, const String& path, Time time)
         {
-            return self.writeToStream (target, nullptr);
-        }, "target"_a)
+            self.addEntry (stream.release().cast<InputStream*>(), compression, path, time);
+        }, "streamToRead"_a, "compressionLevel"_a, "storedPathName"_a, "fileModificationTime"_a)
+        .def ("writeToStream", [](const ZipFile::Builder& self, OutputStream& target) { return self.writeToStream (target, nullptr); }, "target"_a)
     ;
 
     classZipFile
         .def (py::init<const File&>(), "file"_a)
         .def (py::init<InputStream&>(), "inputStream"_a)
-        .def (py::init<InputSource*>(), "inputSource"_a)
+        .def (py::init ([](py::object inputSource)
+        {
+            return new ZipFile (inputSource.release().cast<InputSource*>());
+        }), "inputSource"_a)
         .def ("getNumEntries", &ZipFile::getNumEntries)
-        .def ("getIndexOfFileName", &ZipFile::getIndexOfFileName)
+        .def ("getIndexOfFileName", &ZipFile::getIndexOfFileName, "fileName"_a, "ignoreCase"_a = false)
         .def ("getEntry", py::overload_cast<int> (&ZipFile::getEntry, py::const_), "index"_a, py::return_value_policy::reference_internal)
         .def ("getEntry", py::overload_cast<const String&, bool> (&ZipFile::getEntry, py::const_), "fileName"_a, "ignoreCase"_a = false, py::return_value_policy::reference_internal)
         .def ("sortEntriesByFilename", &ZipFile::sortEntriesByFilename)
