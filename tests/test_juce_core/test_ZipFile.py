@@ -60,7 +60,7 @@ def test_get_entry_by_index(zip_file):
     assert entry.filename == "somefile.txt"
     assert entry.isSymbolicLink == False
     assert entry.externalFileAttributes == 2175008768
-    assert entry.uncompressedSize == (900 if sys.platform == "win32" else 886)
+    assert entry.uncompressedSize == 886
     #assert entry.fileTime == juce.Time.fromISO8601("20240209T183446.000+0100")
     assert entry.fileTime > juce.Time()
 
@@ -68,7 +68,7 @@ def test_get_entry_by_index(zip_file):
     assert entry.filename == "pysound.jpg"
     assert entry.isSymbolicLink == False
     assert entry.externalFileAttributes == 2175008768
-    assert entry.uncompressedSize == (172506 if sys.platform == "win32" else 172506)
+    assert entry.uncompressedSize == 172506
     #assert entry.fileTime == juce.Time.fromISO8601("20240215T083304.000+0100")
     assert entry.fileTime > juce.Time()
 
@@ -93,7 +93,7 @@ def test_get_entry_by_file_name(zip_file):
     assert entry.filename == "somefile.txt"
     assert entry.isSymbolicLink == False
     assert entry.externalFileAttributes == 2175008768
-    assert entry.uncompressedSize == (900 if sys.platform == "win32" else 886)
+    assert entry.uncompressedSize == 886
     #assert entry.fileTime == juce.Time.fromISO8601("20240209T183446.000+0100")
     assert entry.fileTime > juce.Time()
 
@@ -120,9 +120,14 @@ def test_create_stream_for_entry_by_index(zip_file):
 def test_create_stream_for_entry_by_entry(zip_file, text_file):
     zip_file = juce.ZipFile(zip_file)
     entry = zip_file.getEntry(0)
-    stream = zip_file.createStreamForEntry(entry)
+    stream: juce.InputStream = zip_file.createStreamForEntry(entry)
     assert stream is not None
-    assert stream.readEntireStreamAsString() == juce.File(text_file).loadFileAsString()
+
+    mb1 = juce.MemoryBlock()
+    mb2 = juce.MemoryBlock()
+    assert stream.readIntoMemoryBlock(mb1)
+    assert juce.File(text_file).loadFileAsData(mb2)
+    assert mb1.getData() == mb2.getData()
 
 #==================================================================================================
 
@@ -145,13 +150,17 @@ def test_uncompress_to(zip_file, text_file, image_file):
 
     result = z.uncompressTo(target_dir, True)
     assert result.wasOk()
-    assert target_file1.loadFileAsString() == text_file.loadFileAsString()
 
     mb1 = juce.MemoryBlock()
     mb2 = juce.MemoryBlock()
+
+    assert target_file1.loadFileAsData(mb1)
+    assert text_file.loadFileAsData(mb2)
+    assert mb1.getData() == mb2.getData()
+
     assert target_file2.loadFileAsData(mb1)
     assert image_file.loadFileAsData(mb2)
-    assert mb1 == mb2
+    assert mb1.getData() == mb2.getData()
 
 #==================================================================================================
 
@@ -239,7 +248,12 @@ def test_uncompress_entry_with_overwrite_bool_true(zip_file, text_file):
 
     result = z.uncompressEntry(0, target_dir, shouldOverwriteFiles=True)
     assert result.wasOk()
-    assert target_file.loadFileAsString() == text_file.loadFileAsString()
+
+    mb1 = juce.MemoryBlock()
+    mb2 = juce.MemoryBlock()
+    assert target_file.loadFileAsData(mb1)
+    assert text_file.loadFileAsData(mb2)
+    assert mb1.getData() == mb2.getData()
 
 #==================================================================================================
 
