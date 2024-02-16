@@ -25,7 +25,7 @@ To make sure everything is setup correctly, execute the following command:
 
 .. code-block:: bash
 
-  python3 -c "from popsicle import juce; print(juce.SystemStats.getJUCEVersion())"
+  python3 -c "import popsicle as juce; print(juce.SystemStats.getJUCEVersion())"
 
 Which should print something like:
 
