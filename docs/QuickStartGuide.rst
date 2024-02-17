@@ -103,7 +103,7 @@ At this point, after saving the file (called `first_app.py` or whatever it suit 
 
 .. code-block:: bash
 
-  python first_app.py 1 2 3 "test"
+  python3 first_app.py 1 2 3 "test"
 
 Will start and immediately quit, producing this output:
 
