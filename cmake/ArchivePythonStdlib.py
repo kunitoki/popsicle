@@ -48,9 +48,9 @@ if __name__ == "__main__":
     version = f"{args.version_major}.{args.version_minor}"
     version_nodot = f"{args.version_major}{args.version_minor}"
 
-    final_location = args.output_folder / "python"
+    final_location: Path = args.output_folder / "python"
     site_packages = final_location / "site-packages"
-    base_python = args.base_folder / "lib" / f"python{version}"
+    base_python: Path = args.base_folder / "lib" / f"python{version}"
     final_archive = args.output_folder / f"python{version_nodot}.zip"
     temp_archive = args.output_folder / f"temp{version_nodot}.zip"
 
@@ -81,16 +81,17 @@ if __name__ == "__main__":
     ignored_files = shutil.ignore_patterns(*base_patterns)
 
     print("cleaning up...")
-    shutil.rmtree(str(final_location))
+    if final_location.exists():
+        shutil.rmtree(final_location)
 
     print("copying library...")
-    shutil.copytree(str(base_python), str(final_location), ignore=ignored_files, dirs_exist_ok=True)
+    shutil.copytree(base_python, final_location, ignore=ignored_files, dirs_exist_ok=True)
     os.makedirs(site_packages, exist_ok=True)
 
     print("making archive...")
     if os.path.exists(final_archive):
         make_archive(temp_archive, final_location)
         if file_hash(temp_archive) != file_hash(final_archive):
-            shutil.copy(str(temp_archive), str(final_archive))
+            shutil.copy(temp_archive, final_archive)
     else:
         make_archive(final_archive, final_location)

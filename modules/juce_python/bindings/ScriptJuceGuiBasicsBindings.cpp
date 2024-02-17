@@ -532,7 +532,7 @@ void registerJuceGuiBasicsBindings (py::module_& m)
         .def ("playAlertSound", &LookAndFeel::playAlertSound)
     ;
 
-    py::class_<LookAndFeel_V2, LookAndFeel> classLookAndFeel_V2 (m, "LookAndFeel_V2");
+    py::class_<LookAndFeel_V2, LookAndFeel, PyLookAndFeel_V2<>> classLookAndFeel_V2 (m, "LookAndFeel_V2");
     py::class_<LookAndFeel_V1, LookAndFeel_V2> classLookAndFeel_V1  (m, "LookAndFeel_V1");
     py::class_<LookAndFeel_V3, LookAndFeel_V2> classLookAndFeel_V3 (m, "LookAndFeel_V3");
     py::class_<LookAndFeel_V4, LookAndFeel_V3> classLookAndFeel_V4 (m, "LookAndFeel_V4");

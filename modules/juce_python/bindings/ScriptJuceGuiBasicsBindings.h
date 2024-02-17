@@ -303,10 +303,40 @@ struct PyLookAndFeel : Base
 {
     using Base::Base;
 
-    //void drawSpinningWaitAnimation(juce::Graphics& g, const juce::Colour& colour, int x, int y, int w, int h) override
-    //{
-    //    PYBIND11_OVERRIDE_PURE (void, Base, drawSpinningWaitAnimation, g, colour, x, y, w, h);
-    //}
+    void drawSpinningWaitAnimation(juce::Graphics& g, const juce::Colour& colour, int x, int y, int w, int h) override
+    {
+        {
+            pybind11::gil_scoped_acquire gil;
+
+            if (pybind11::function override_ = pybind11::get_override (static_cast<Base*> (this), "drawSpinningWaitAnimation"))
+            {
+                override_ (std::addressof (g), colour, x, y, w, h);
+                return;
+            }
+        }
+
+        pybind11::pybind11_fail ("Tried to call pure virtual function \"LookAndFeel::drawSpinningWaitAnimation\"");
+    }
+
+    juce::Path getTickShape (float height) override
+    {
+        PYBIND11_OVERRIDE_PURE (juce::Path, Base, getTickShape, height);
+    }
+
+    juce::Path getCrossShape (float height) override
+    {
+        PYBIND11_OVERRIDE_PURE (juce::Path, Base, getCrossShape, height);
+    }
+
+    std::unique_ptr<juce::DropShadower> createDropShadowerForComponent (juce::Component&) override
+    {
+        return {}; // TODO
+    }
+
+    std::unique_ptr<juce::FocusOutline> createFocusOutlineForComponent (juce::Component&) override
+    {
+        return {}; // TODO
+    }
 
     juce::MouseCursor getMouseCursorFor (juce::Component& c) override
     {
@@ -316,6 +346,203 @@ struct PyLookAndFeel : Base
     void playAlertSound() override
     {
         PYBIND11_OVERRIDE (void, Base, playAlertSound);
+    }
+};
+
+template <class Base = juce::LookAndFeel_V2>
+struct PyLookAndFeel_V2 : PyLookAndFeel<Base>
+{
+    using PyLookAndFeel<Base>::PyLookAndFeel;
+
+    void drawButtonBackground (juce::Graphics& g, juce::Button& b, const juce::Colour& backgroundColour,
+                               bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override
+    {
+        {
+            pybind11::gil_scoped_acquire gil;
+
+            if (pybind11::function override_ = pybind11::get_override (static_cast<Base*> (this), "drawButtonBackground"))
+            {
+                override_ (std::addressof (g), std::addressof (b), backgroundColour, shouldDrawButtonAsHighlighted, shouldDrawButtonAsDown);
+                return;
+            }
+        }
+
+        Base::drawButtonBackground (g, b, backgroundColour, shouldDrawButtonAsHighlighted, shouldDrawButtonAsDown);
+    }
+
+    juce::Font getTextButtonFont (juce::TextButton& button, int buttonHeight) override
+    {
+        {
+            pybind11::gil_scoped_acquire gil;
+
+            if (pybind11::function override_ = pybind11::get_override (static_cast<Base*> (this), "getTextButtonFont"))
+            {
+                return override_ (std::addressof (button), buttonHeight).cast<juce::Font>();
+            }
+        }
+
+        return Base::getTextButtonFont (button, buttonHeight);
+    }
+
+    void drawButtonText (juce::Graphics& g, juce::TextButton& button,
+                         bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override
+    {
+        {
+            pybind11::gil_scoped_acquire gil;
+
+            if (pybind11::function override_ = pybind11::get_override (static_cast<Base*> (this), "drawButtonText"))
+            {
+                override_ (std::addressof (g), std::addressof (button), shouldDrawButtonAsHighlighted, shouldDrawButtonAsDown);
+                return;
+            }
+        }
+
+        Base::drawButtonText (g, button, shouldDrawButtonAsHighlighted, shouldDrawButtonAsDown);
+    }
+
+    int getTextButtonWidthToFitText (juce::TextButton& button, int buttonHeight) override
+    {
+        {
+            pybind11::gil_scoped_acquire gil;
+
+            if (pybind11::function override_ = pybind11::get_override(static_cast<Base*>(this), "getTextButtonWidthToFitText"))
+            {
+                return override_ (std::addressof(button), buttonHeight).cast<int>();
+            }
+        }
+
+        return Base::getTextButtonWidthToFitText(button, buttonHeight);
+    }
+
+    void drawToggleButton (juce::Graphics& g, juce::ToggleButton& button,
+                           bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override
+    {
+        {
+            pybind11::gil_scoped_acquire gil;
+
+            if (pybind11::function override_ = pybind11::get_override (static_cast<Base*> (this), "drawToggleButton"))
+            {
+                override_ (std::addressof (g), std::addressof (button), shouldDrawButtonAsHighlighted, shouldDrawButtonAsDown);
+                return;
+            }
+        }
+
+        Base::drawToggleButton (g, button, shouldDrawButtonAsHighlighted, shouldDrawButtonAsDown);
+    }
+
+    void changeToggleButtonWidthToFitText (juce::ToggleButton& button) override
+    {
+        {
+            pybind11::gil_scoped_acquire gil;
+
+            if (pybind11::function override_ = pybind11::get_override (static_cast<Base*> (this), "changeToggleButtonWidthToFitText"); override_)
+            {
+                override_ (std::addressof (button));
+                return;
+            }
+        }
+
+        Base::changeToggleButtonWidthToFitText (button);
+    }
+
+    void drawTickBox (juce::Graphics& g, juce::Component& component,
+                      float x, float y, float w, float h,
+                      bool ticked, bool isEnabled,
+                      bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override
+    {
+        {
+            pybind11::gil_scoped_acquire gil;
+
+            if (pybind11::function override_ = pybind11::get_override (static_cast<Base*> (this), "drawTickBox"); override_)
+            {
+                override_ (std::addressof (g), std::addressof (component), x, y, w, h, ticked, isEnabled, shouldDrawButtonAsHighlighted, shouldDrawButtonAsDown);
+                return;
+            }
+        }
+
+        Base::drawTickBox (g, component, x, y, w, h, ticked, isEnabled, shouldDrawButtonAsHighlighted, shouldDrawButtonAsDown);
+    }
+
+    void drawDrawableButton (juce::Graphics& g, juce::DrawableButton& button,
+                             bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override
+    {
+        {
+            pybind11::gil_scoped_acquire gil;
+
+            if (pybind11::function override_ = pybind11::get_override (static_cast<Base*> (this), "drawDrawableButton"); override_)
+            {
+                override_ (std::addressof (g), std::addressof (button), shouldDrawButtonAsHighlighted, shouldDrawButtonAsDown);
+                return;
+            }
+        }
+
+        Base::drawDrawableButton (g, button, shouldDrawButtonAsHighlighted, shouldDrawButtonAsDown);
+    }
+
+    juce::AlertWindow* createAlertWindow (const juce::String& title, const juce::String& message,
+                                          const juce::String& button1, const juce::String& button2,
+                                          const juce::String& button3, juce::MessageBoxIconType iconType,
+                                          int numButtons, juce::Component* associatedComponent) override
+    {
+        PYBIND11_OVERRIDE (juce::AlertWindow*, Base, createAlertWindow, title, message, button1, button2, button3, iconType, numButtons, associatedComponent);
+    }
+
+    void drawAlertBox (juce::Graphics& g, juce::AlertWindow& alertWindow, const juce::Rectangle<int>& textArea, juce::TextLayout& textLayout) override
+    {
+        {
+            pybind11::gil_scoped_acquire gil;
+
+            if (pybind11::function override_ = pybind11::get_override (static_cast<Base*> (this), "drawAlertBox"); override_)
+            {
+                override_ (std::addressof (g), std::addressof (alertWindow), textArea, std::addressof (textLayout));
+                return;
+            }
+        }
+
+        Base::drawAlertBox (g, alertWindow, textArea, textLayout);
+    }
+
+    int getAlertBoxWindowFlags() override
+    {
+        PYBIND11_OVERRIDE (int, Base, getAlertBoxWindowFlags);
+    }
+
+    juce::Array<int> getWidthsForTextButtons (juce::AlertWindow& alertWindow, const juce::Array<juce::TextButton*>& buttons) override
+    {
+        {
+            pybind11::gil_scoped_acquire gil;
+
+            if (pybind11::function override_ = pybind11::get_override (static_cast<Base*> (this), "getWidthsForTextButtons"); override_)
+            {
+                pybind11::list list (buttons.size());
+                for (int i = 0; i < buttons.size(); ++i)
+                    list[static_cast<size_t> (i)] = buttons.getUnchecked (i);
+
+                return override_ (std::addressof (alertWindow), list).cast<juce::Array<int>>();
+            }
+        }
+
+        return Base::drawAlertBox (alertWindow, buttons);
+    }
+
+    int getAlertWindowButtonHeight() override
+    {
+        PYBIND11_OVERRIDE (int, Base, getAlertWindowButtonHeight);
+    }
+
+    juce::Font getAlertWindowTitleFont() override
+    {
+        PYBIND11_OVERRIDE (juce::Font, Base, getAlertWindowTitleFont);
+    }
+
+    juce::Font getAlertWindowMessageFont() override
+    {
+        PYBIND11_OVERRIDE (juce::Font, Base, getAlertWindowMessageFont);
+    }
+
+    juce::Font getAlertWindowFont() override
+    {
+        PYBIND11_OVERRIDE (juce::Font, Base, getAlertWindowFont);
     }
 };
 

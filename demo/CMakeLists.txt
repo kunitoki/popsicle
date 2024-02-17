@@ -76,8 +76,9 @@ set_target_properties (${PROJECT_NAME} PROPERTIES VISIBILITY_INLINES_HIDDEN TRUE
 set_target_properties (${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
 if (APPLE)
-    set_target_properties(${TARGET_NAME} PROPERTIES OSX_ARCHITECTURES "arm64;x86_64")
-    target_link_options(${TARGET_NAME} PRIVATE "-Wl,-weak_reference_mismatches,weak")
+    #set_target_properties (${PROJECT_NAME} PROPERTIES OSX_ARCHITECTURES "arm64;x86_64")
+    #set_target_properties (BinaryData PROPERTIES OSX_ARCHITECTURES "arm64;x86_64")
+    target_link_options (${PROJECT_NAME} PRIVATE "-Wl,-weak_reference_mismatches,weak")
     #set (LTO_CONFIGURATION "juce::juce_recommended_lto_flags")
     set (LTO_CONFIGURATION "")
 else()
