@@ -154,7 +154,7 @@ struct PyJUCEApplication : juce::JUCEApplication
 
         if (globalOptions().catchExceptionsAndContinue)
         {
-            pybind11::print (e->what());
+            pybind11::print (ex->what());
             pybind11::module_::import ("traceback").attr ("print_stack")();
 
             if (const auto* e = dynamic_cast<const pybind11::error_already_set*> (ex))
