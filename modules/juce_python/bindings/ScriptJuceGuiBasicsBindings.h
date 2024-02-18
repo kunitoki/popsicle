@@ -44,6 +44,20 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m);
 
 // =================================================================================================
 
+struct Options
+{
+    bool catchExceptionsAndContinue = false;
+    bool caughtKeyboardInterrupt = false;
+};
+
+inline Options& globalOptions()
+{
+    static Options options = {};
+    return options;
+}
+
+// =================================================================================================
+
 struct PyNativeHandle
 {
     explicit PyNativeHandle (void* value) noexcept
@@ -121,30 +135,38 @@ struct PyJUCEApplication : juce::JUCEApplication
 
     void unhandledException (const std::exception* ex, const juce::String& sourceFilename, int lineNumber) override
     {
-        //PYBIND11_OVERRIDE (void, JUCEApplication, unhandledException, ex, sourceFilename, lineNumber);
+        pybind11::gil_scoped_acquire gil;
 
-        juce::ignoreUnused (ex);
-
+        if (pybind11::function override_ = pybind11::get_override (static_cast<juce::JUCEApplication*> (this), "unhandledException"); override_)
         {
-            pybind11::gil_scoped_acquire gil;
+            //juce::String code;
+            //code << "RuntimeError(\"\"\"" << (ex != nullptr ? ex->what() : "unhandled exception") << "\"\"\")";
+            //auto pyex = pybind11::eval (code.toRawUTF8());
 
-            if (pybind11::function override_ = pybind11::get_override (static_cast<juce::JUCEApplication*> (this), "unhandledException"); override_)
-            {
-                //juce::String code;
-                //code << "RuntimeError(\"\"\"" << (ex != nullptr ? ex->what() : "unhandled exception") << "\"\"\")";
-                //auto pyex = pybind11::eval (code.toRawUTF8());
+            //auto pyex = exceptionClass (ex != nullptr ? ex->what() : "unhandled exception");
 
-                //auto pyex = exceptionClass (ex != nullptr ? ex->what() : "unhandled exception");
+            auto pyex = pybind11::none();
 
-                auto pyex = pybind11::none();
+            override_ (pyex, sourceFilename, lineNumber);
 
-                override_ (pyex, sourceFilename, lineNumber);
-
-                return;
-            }
+            return;
         }
 
-        std::terminate();
+        if (globalOptions().catchExceptionsAndContinue)
+        {
+            pybind11::print (e->what());
+            pybind11::module_::import ("traceback").attr ("print_stack")();
+
+            if (const auto* e = dynamic_cast<const pybind11::error_already_set*> (ex))
+            {
+                if (PyErr_CheckSignals() != 0 || e->matches (PyExc_KeyboardInterrupt))
+                    globalOptions().caughtKeyboardInterrupt = true;
+            }
+        }
+        else
+        {
+            std::terminate();
+        }
     }
 
     void memoryWarningReceived() override
@@ -522,7 +544,7 @@ struct PyLookAndFeel_V2 : PyLookAndFeel<Base>
             }
         }
 
-        return Base::drawAlertBox (alertWindow, buttons);
+        return Base::getWidthsForTextButtons (alertWindow, buttons);
     }
 
     int getAlertWindowButtonHeight() override

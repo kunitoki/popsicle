@@ -16,10 +16,4 @@
  * OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE DISCLAIMED.
  */
 
-#if JUCE_MODULE_AVAILABLE_juce_audio_utils
-
-#include "juce_python.h"
-
-#include "bindings/ScriptJuceAudioUtilsBindings.cpp"
-
-#endif
+#include "juce_python.cpp"

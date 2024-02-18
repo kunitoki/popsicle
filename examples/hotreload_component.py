@@ -26,5 +26,5 @@ class TestComponent(juce.Component, juce.Timer):
 		p = juce.Path()
 		p.addStar(center, 20, 25, self.getWidth(), self.time)
 
-		g.setColour(juce.Colours.green)
+		g.setColour(juce.Colours.yellow)
 		g.fillPath(p)

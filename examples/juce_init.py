@@ -75,7 +75,9 @@ def START_JUCE_COMPONENT(ComponentClass, name, **kwargs):
         def systemRequestedQuit(self):
             self.quit()
 
-    juce.START_JUCE_APPLICATION(DefaultApplication)
+    juce.START_JUCE_APPLICATION(
+        DefaultApplication,
+        catchExceptionsAndContinue=kwargs.get("catchExceptionsAndContinue", False))
 
 
 def timeit(func):
