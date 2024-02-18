@@ -215,23 +215,23 @@ class CustomInstallScripts(install_scripts):
             os.remove(final_pyi_file)
 
 
-def load_description():
+def load_description(version):
     with open("README.rst", mode="r", encoding="utf-8") as f:
         long_description = f.read()
 
     long_description = re.sub(
         r"`([^`>]+)\s<((?!https)[^`>]+)>`_",
-        r"`\1 <https://github.com/kunitoki/popsicle/tree/master/\2>`_",
+        fr"`\1 <https://github.com/kunitoki/popsicle/tree/v{version}/\2>`_",
         long_description)
 
     long_description = re.sub(
         r"image:: ((?!https).*)",
-        r"image:: https://raw.githubusercontent.com/kunitoki/popsicle/master/\1",
+        fr"image:: https://raw.githubusercontent.com/kunitoki/popsicle/v{version}/\1",
         long_description)
 
     long_description = re.sub(
         r":target: ((?!https).*)",
-        r":target: https://github.com/kunitoki/popsicle/tree/master/\1",
+        fr":target: https://github.com/kunitoki/popsicle/tree/v{version}/\1",
         long_description)
 
     return long_description
@@ -240,8 +240,18 @@ def load_description():
 with open("modules/juce_python/juce_python.h", mode="r", encoding="utf-8") as f:
     version = re.findall(r"version\:\s+(\d+\.\d+\.\d+)", f.read())[0]
 
+
 if platform.system() == 'Darwin':
-    os.environ["_PYTHON_HOST_PLATFORM"] = "macosx-10.15-universal2"
+    build_osx_architectures = get_environment_option(str, "POPSICLE_OSX_ARCHITECTURES", "arm64;x86_64")
+    build_osx_deployment_target = get_environment_option(str, "POPSICLE_OSX_DEPLOYMENT_TARGET", "10.15")
+    if "arm64" in build_osx_architectures and "x86_64" in build_osx_architectures:
+        os.environ["_PYTHON_HOST_PLATFORM"] = f"macosx-{build_osx_deployment_target}-universal2"
+    elif "arm64" in build_osx_architectures:
+        os.environ["_PYTHON_HOST_PLATFORM"] = f"macosx-{build_osx_deployment_target}-arm64"
+    elif "x86_64" in build_osx_architectures:
+        os.environ["_PYTHON_HOST_PLATFORM"] = f"macosx-{build_osx_deployment_target}-x86_64"
+    else:
+        raise RuntimeError("Invalid configuration of POPSICLE_OSX_ARCHITECTURES")
 
 
 setuptools.setup(
@@ -250,10 +260,10 @@ setuptools.setup(
     author="kunitoki",
     author_email="kunitoki@gmail.com",
     description=f"{project_name}: Python integration for JUCE with pybind11.",
-    long_description=load_description(),
+    long_description=load_description(version),
     long_description_content_type="text/x-rst",
     url="https://github.com/kunitoki/popsicle",
-    packages=setuptools.find_packages(".", exclude=["*demo*", "*examples*", "*JUCE*", "*scripts*", "*tests*"]),
+    packages=setuptools.find_packages(".", exclude=["*cmake*", "*demo*", "*examples*", "*images*", "*JUCE*", "*scripts*", "*tests*"]),
     include_package_data=True,
     cmdclass={"build_ext": CMakeBuildExtension, "install_scripts": CustomInstallScripts},
     ext_modules=[CMakeExtension(project_name)],
