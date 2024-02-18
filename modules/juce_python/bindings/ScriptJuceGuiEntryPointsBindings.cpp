@@ -26,7 +26,7 @@
 #include "../utilities/WindowsIncludes.h"
 #endif
 
-#include "ScriptJuceGuiBasicsBindings.h"
+#include "ScriptJuceOptionsBindings.h"
 
 #include <functional>
 #include <string_view>

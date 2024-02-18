@@ -11,7 +11,7 @@ class TestComponent(juce.Component, juce.Timer):
 		juce.Timer.__init__(self)
 
 		self.setOpaque(True)
-		self.startTimerHz(24)
+		self.startTimerHz(25)
 
 	def timerCallback(self):
 		self.time += juce.degreesToRadians(1)

@@ -29,6 +29,8 @@
 #define JUCE_PYTHON_INCLUDE_PYBIND11_OPERATORS
 #include "../utilities/PyBind11Includes.h"
 
+#include "ScriptJuceOptionsBindings.h"
+
 #include <cstddef>
 #include <exception>
 #include <functional>
@@ -41,20 +43,6 @@ namespace popsicle::Bindings {
 // =================================================================================================
 
 void registerJuceGuiBasicsBindings (pybind11::module_& m);
-
-// =================================================================================================
-
-struct Options
-{
-    bool catchExceptionsAndContinue = false;
-    bool caughtKeyboardInterrupt = false;
-};
-
-inline Options& globalOptions()
-{
-    static Options options = {};
-    return options;
-}
 
 // =================================================================================================
 
