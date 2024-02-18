@@ -2,6 +2,7 @@ import os
 import sys
 import glob
 import time
+import traceback
 from pathlib import Path
 from functools import wraps
 
@@ -74,6 +75,14 @@ def START_JUCE_COMPONENT(ComponentClass, name, **kwargs):
 
         def systemRequestedQuit(self):
             self.quit()
+
+        # def unhandledException(self, ex: Exception, file: str, line: int):
+        #     if hasattr(ex, "__traceback__"):
+        #         print("Traceback (most recent call last):")
+        #         traceback.print_tb(ex.__traceback__)
+        #     print(ex)
+        #     if isinstance(ex, KeyboardInterrupt):
+        #         juce.JUCEApplication.getInstance().systemRequestedQuit()
 
     juce.START_JUCE_APPLICATION(
         DefaultApplication,

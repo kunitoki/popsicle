@@ -32,6 +32,7 @@ struct Options
 {
     std::atomic_bool catchExceptionsAndContinue = false;
     std::atomic_bool caughtKeyboardInterrupt = false;
+    std::atomic_int messageManagerGranularityMilliseconds = 200;
 };
 
 Options& globalOptions() noexcept;

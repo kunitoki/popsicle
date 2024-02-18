@@ -33,12 +33,21 @@ namespace popsicle::Helpers {
 
 // =================================================================================================
 
+inline void printPythonException (const pybind11::error_already_set& e)
+{
+    pybind11::print ("Traceback (most recent call last):");
+
+    pybind11::module_::import ("traceback").attr ("print_tb") (e.trace());
+
+    pybind11::print (e.what());
+}
+
+// =================================================================================================
+
 template <class T, class F>
 auto makeRepr (F&& func)
 {
     static_assert (std::is_invocable_v<F, const T&>);
-
-    namespace py = pybind11;
 
     return [func](const T& instance)
     {
@@ -92,11 +101,9 @@ pybind11::enum_<E> makeArithmeticEnum (pybind11::object& parent, const char* nam
 template <class T, class F>
 auto makeVoidPointerAndSizeCallable (F&& func)
 {
-    namespace py = pybind11;
-
     if constexpr (std::is_invocable_v<F, T&, const void*, size_t>)
     {
-        return [func](T* self, py::buffer data)
+        return [func](T* self, pybind11::buffer data)
         {
             const auto info = data.request();
 
@@ -110,7 +117,7 @@ auto makeVoidPointerAndSizeCallable (F&& func)
     }
     else if constexpr (std::is_invocable_v<F, const T&, const void*, size_t>)
     {
-        return [func](const T* self, py::buffer data)
+        return [func](const T* self, pybind11::buffer data)
         {
             const auto info = data.request();
 
@@ -124,7 +131,7 @@ auto makeVoidPointerAndSizeCallable (F&& func)
     }
     else if constexpr (std::is_invocable_v<F, T&, void*, size_t>)
     {
-        return [func](T* self, py::buffer data)
+        return [func](T* self, pybind11::buffer data)
         {
             auto info = data.request (true);
 
@@ -138,7 +145,7 @@ auto makeVoidPointerAndSizeCallable (F&& func)
     }
     else if constexpr (std::is_invocable_v<F, const T&, void*, size_t>)
     {
-        return [func](const T* self, py::buffer data)
+        return [func](const T* self, pybind11::buffer data)
         {
             auto info = data.request (true);
 

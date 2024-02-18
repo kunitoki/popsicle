@@ -66,6 +66,20 @@ void runApplication (JUCEApplicationBase* application, int milliseconds)
 
     while (! MessageManager::getInstance()->hasStopMessageBeenSent())
     {
+        if (globalOptions().catchExceptionsAndContinue)
+        {
+            try
+            {
+                py::gil_scoped_release release;
+
+                MessageManager::getInstance()->runDispatchLoopUntil (milliseconds);
+            }
+            catch (const py::error_already_set& e)
+            {
+                Helpers::printPythonException (e);
+            }
+        }
+        else
         {
             py::gil_scoped_release release;
 
@@ -132,12 +146,11 @@ void registerJuceGuiEntryPointsBindings (py::module_& m)
 
         try
         {
-            runApplication (application, 200);
+            runApplication (application, globalOptions().messageManagerGranularityMilliseconds);
         }
         catch (const py::error_already_set& e)
         {
-            py::print (e.what());
-            py::module_::import ("traceback").attr ("print_stack") ();
+            Helpers::printPythonException (e);
         }
 
         systemExit();

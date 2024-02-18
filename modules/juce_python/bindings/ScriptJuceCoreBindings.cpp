@@ -2414,6 +2414,11 @@ void registerJuceCoreBindings (py::module_& m)
     // ============================================================================================ juce::Array<>
 
     registerArray<Array, bool, int, float, String, File> (m);
+
+    // ============================================================================================ testing
+
+    m.def ("__raise_cpp_exception__", [](const juce::String& what) { throw std::runtime_error (what.toStdString()); });
+    m.def ("__terminate__", [] { std::terminate(); });
 }
 
 } // namespace popsicle::Bindings

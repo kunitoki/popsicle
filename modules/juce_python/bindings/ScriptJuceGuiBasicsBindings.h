@@ -125,29 +125,46 @@ struct PyJUCEApplication : juce::JUCEApplication
     {
         pybind11::gil_scoped_acquire gil;
 
+        const auto* pyEx = dynamic_cast<const pybind11::error_already_set*> (ex);
+        auto traceback = pybind11::module_::import ("traceback");
+
         if (pybind11::function override_ = pybind11::get_override (static_cast<juce::JUCEApplication*> (this), "unhandledException"); override_)
         {
-            //juce::String code;
-            //code << "RuntimeError(\"\"\"" << (ex != nullptr ? ex->what() : "unhandled exception") << "\"\"\")";
-            //auto pyex = pybind11::eval (code.toRawUTF8());
+            if (pyEx != nullptr)
+            {
+                auto newPyEx = pyEx->type()(pyEx->value());
+                PyException_SetTraceback (newPyEx.ptr(), pyEx->trace().ptr());
 
-            //auto pyex = exceptionClass (ex != nullptr ? ex->what() : "unhandled exception");
+                override_ (newPyEx, sourceFilename, lineNumber);
+            }
+            else
+            {
+                auto runtimeError = pybind11::module_::import ("__builtins__").attr ("RuntimeError");
+                auto newPyEx = runtimeError(ex != nullptr ? ex->what() : "unknown exception");
+                PyException_SetTraceback (newPyEx.ptr(), traceback.attr ("extract_stack")().ptr());
 
-            auto pyex = pybind11::none();
-
-            override_ (pyex, sourceFilename, lineNumber);
+                override_ (newPyEx, sourceFilename, lineNumber);
+            }
 
             return;
         }
 
         if (globalOptions().catchExceptionsAndContinue)
         {
-            pybind11::print (ex->what());
-            pybind11::module_::import ("traceback").attr ("print_stack")();
+            pybind11::print (100, ex->what());
 
-            if (const auto* e = dynamic_cast<const pybind11::error_already_set*> (ex))
+            if (pyEx != nullptr)
             {
-                if (PyErr_CheckSignals() != 0 || e->matches (PyExc_KeyboardInterrupt))
+                traceback.attr ("print_tb")(pyEx->trace());
+
+                if (pyEx->matches (PyExc_KeyboardInterrupt))
+                    globalOptions().caughtKeyboardInterrupt = true;
+            }
+            else
+            {
+                traceback.attr ("print_stack")();
+
+                if (PyErr_CheckSignals() != 0)
                     globalOptions().caughtKeyboardInterrupt = true;
             }
         }
