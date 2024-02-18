@@ -18,9 +18,9 @@ project_name = "popsicle"
 root_dir = os.path.dirname(os.path.abspath(__file__))
 
 
-def get_environment_option(name, default=0):
+def get_environment_option(typeClass, name, default=None):
     try:
-        return int(os.environ.get(name, default))
+        return typeClass(os.environ.get(name, default))
     except ValueError:
         return default
 
@@ -83,9 +83,11 @@ class CMakeExtension(Extension):
 
 
 class CMakeBuildExtension(build_ext):
-    build_for_coverage = get_environment_option("POPSICLE_COVERAGE")
-    build_for_distribution = get_environment_option("POPSICLE_DISTRIBUTION")
-    build_with_lto = get_environment_option("POPSICLE_LTO")
+    build_for_coverage = get_environment_option(int, "POPSICLE_COVERAGE", 0)
+    build_for_distribution = get_environment_option(int, "POPSICLE_DISTRIBUTION", 0)
+    build_with_lto = get_environment_option(int, "POPSICLE_LTO", 0)
+    build_osx_architectures = get_environment_option(str, "POPSICLE_OSX_ARCHITECTURES", "arm64;x86_64")
+    build_osx_deployment_target = get_environment_option(str, "POPSICLE_OSX_DEPLOYMENT_TARGET", "10.15")
 
     def build_extension(self, ext):
         log.info("building with cmake")
@@ -121,8 +123,8 @@ class CMakeBuildExtension(build_ext):
 
         if platform.system() == 'Darwin':
             cmake_args += [
-                "-DCMAKE_OSX_ARCHITECTURES:STRING=arm64;x86_64",
-                "-DCMAKE_OSX_DEPLOYMENT_TARGET:STRING=10.15"
+                f"-DCMAKE_OSX_ARCHITECTURES:STRING={self.build_osx_architectures}",
+                f"-DCMAKE_OSX_DEPLOYMENT_TARGET:STRING={self.build_osx_deployment_target}"
             ]
 
         try:
