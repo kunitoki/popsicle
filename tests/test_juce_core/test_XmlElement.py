@@ -118,6 +118,24 @@ def test_attributes(name_type):
 
 #==================================================================================================
 
+def test_compare_attributes():
+    a = juce.XmlElement("root")
+
+    a.setAttribute("test1", "123")
+    a.setAttribute("test2", "abcdef")
+
+    assert a.compareAttribute("test1", "123")
+    assert not a.compareAttribute("test1", "abcdef")
+
+    assert a.compareAttribute("test2", "abcdef")
+    assert not a.compareAttribute("test2", "ABCDEF")
+    assert a.compareAttribute("test2", "ABCDEF", True)
+
+    assert not a.compareAttribute("nonexistent", "abc", True)
+    assert not a.compareAttribute("nonexistent", "ABC", False)
+
+#==================================================================================================
+
 def test_child_elements():
     a = juce.XmlElement("root")
 
