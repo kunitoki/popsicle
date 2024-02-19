@@ -85,24 +85,49 @@ class EmojiComponent(juce.Component):
         g.setFont(self.font)
         g.setColour(self.colour)
 
+        def new_line(x, y):
+            return 0, y + font_height + 4.0
+
+        x = 0
         y = 0
         for lines in self.nodes:
-            x = 0
-            y += font_height + 2.0
-            height = int(font_height)
+            x, y = new_line(x, y)
+
+            current_text = None
 
             for node in lines:
                 if node.type == NodeType.text:
-                    text_width = self.font.getStringWidthFloat(node.content)
+                    current_text = node.content
 
-                    g.drawText(node.content,
-                               int(x), int(y), min(int(text_width), self.getWidth() - int(x)), height,
-                               juce.Justification.centredLeft, useEllipsesIfTooBig=False)
+                    while current_text:
+                        remaining_text = []
 
-                    x += text_width
+                        text_width = self.font.getStringWidthFloat(current_text)
+                        while current_text and text_width > self.getWidth() - int(x):
+                            words = current_text.split(" ")
+                            current_text = " ".join(words[:-1])
+                            if words:
+                                remaining_text.append(words[-1])
+                            text_width = self.font.getStringWidthFloat(current_text)
+
+                        if current_text:
+                            g.drawText(current_text,
+                                    int(x), int(y), min(int(text_width), self.getWidth() - int(x)), int(font_height),
+                                    juce.Justification.centredLeft, useEllipsesIfTooBig=False)
+
+                        x += text_width
+                        current_text = None
+
+                        if remaining_text:
+                            x, y = new_line(x, y)
+                            current_text = " ".join(remaining_text)
+
                 else:
                     self.draw.rectangle((0, 0, self.im.size[0], self.im.size[1]), fill=(0, 0, 0, 0))
                     self.draw.text((0, 0), node.content, embedded_color=True, font=self.unicode_font)
+
+                    if emoji_size > self.getWidth() - int(x):
+                        x, y = new_line(x, y)
 
                     g.drawImageWithin(ImageJuce(self.im), int(x), int(y), emoji_size, emoji_size,
                                       juce.RectanglePlacement.centred | juce.RectanglePlacement.onlyReduceInSize)
