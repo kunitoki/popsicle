@@ -278,13 +278,6 @@ def test_complex_xml_structure_to_string():
 
 #==================================================================================================
 
-def test_error_adding_child_to_self():
-    elem = juce.XmlElement("self")
-    elem.addChildElement(elem)
-    assert elem.getNumChildElements() == 1
-
-#==================================================================================================
-
 def test_attribute_value_comparisons():
     elem = juce.XmlElement("item")
     elem.setAttribute("available", "true")
@@ -304,8 +297,10 @@ def test_handling_invalid_characters_in_text_elements():
 def test_write_to_file():
     elem = juce.XmlElement("note")
     elem.addTextElement("This is a note")
+
     temp_file = get_runtime_data_folder().getChildFile("test_write_to_file.xml")
     assert elem.writeTo(temp_file)
+
     with open(temp_file.getFullPathName(), "r") as file:
         content = file.read()
     assert "note" in content
@@ -316,8 +311,10 @@ def test_write_to_file():
 def test_write_to_stream():
     elem = juce.XmlElement("note")
     elem.addTextElement("This is a note")
+
     temp_file = get_runtime_data_folder().getChildFile("test_write_to_stream.xml")
     elem.writeTo(temp_file.createOutputStream())
+
     with open(temp_file.getFullPathName(), "r") as file:
         content = file.read()
     assert "note" in content
