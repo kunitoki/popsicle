@@ -21,7 +21,11 @@
 #if !JUCE_MODULE_AVAILABLE_juce_graphics
  #error This binding file requires adding the juce_graphics module in the project
 #else
+ #include <juce_core/juce_core.h>
+
+ JUCE_BEGIN_IGNORE_WARNINGS_MSVC(4244)
  #include <juce_graphics/juce_graphics.h>
+ JUCE_END_IGNORE_WARNINGS_MSVC
 #endif
 
 #include "../utilities/PyBind11Includes.h"
