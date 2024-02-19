@@ -116,6 +116,15 @@ def test_attributes(name_type):
     assert a.getBoolAttribute("test_x") == False
     assert a.getBoolAttribute("test_x", True) == True
 
+    a.removeAttribute(name_type("nonexisting"))
+    assert a.getNumAttributes() == 4
+
+    a.removeAttribute(name_type("test4"))
+    assert a.getNumAttributes() == 3
+
+    a.removeAllAttributes()
+    assert a.getNumAttributes() == 0
+
 #==================================================================================================
 
 def test_compare_attributes():
@@ -142,6 +151,29 @@ def test_child_elements():
     a.addChildElement(juce.XmlElement("child"))
     a.addChildElement(juce.XmlElement("child"))
     assert a.getNumChildElements() == 2
+
+#==================================================================================================
+
+def test_text_element():
+    a = juce.XmlElement("root")
+    assert not a.isTextElement()
+
+    a.addChildElement(juce.XmlElement.createTextElement("abcdefghijklmnopqrstuvwxyz"))
+
+    child = a.getChildElement(0)
+    assert child.getTagName() == ""
+    assert child.isTextElement()
+    assert child.getText() == "abcdefghijklmnopqrstuvwxyz"
+    assert child.getAllSubText() == "abcdefghijklmnopqrstuvwxyz"
+    assert a.getAllSubText() == "abcdefghijklmnopqrstuvwxyz"
+
+    format = juce.XmlElement.TextFormat().singleLine().withoutHeader()
+    assert a.toString(format) == """<root>abcdefghijklmnopqrstuvwxyz</root>"""
+
+    child.setTagName("child")
+    assert a.toString(format) == """<root><child text="abcdefghijklmnopqrstuvwxyz"/></root>"""
+    assert a.getAllSubText() == ""
+    assert child.getAllSubText() == ""
 
 #==================================================================================================
 
