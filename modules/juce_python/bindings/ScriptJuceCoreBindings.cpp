@@ -2248,7 +2248,12 @@ void registerJuceCoreBindings (py::module_& m)
         .def ("deleteAllChildElementsWithTagName", &XmlElement::deleteAllChildElementsWithTagName)
         .def ("containsChildElement", &XmlElement::containsChildElement)
         .def ("findParentElementOf", &XmlElement::findParentElementOf, py::return_value_policy::reference_internal)
-        .def ("sortChildElements", &XmlElement::template sortChildElements<PyXmlElementComparator>)
+        .def ("sortChildElements", &XmlElement::template sortChildElements<PyXmlElementComparator>, "comparator"_a, "retainOrderOfEquivalentItems"_a = false)
+        .def ("sortChildElements", [](XmlElement& self, py::function fn, bool retainOrderOfEquivalentItems)
+        {
+            PyXmlElementCallableComparator comparator (std::move (fn));
+            return self.sortChildElements (comparator, retainOrderOfEquivalentItems);
+        }, "comparator"_a, "retainOrderOfEquivalentItems"_a = false)
         .def ("isTextElement", &XmlElement::isTextElement)
         .def ("getText", &XmlElement::getText)
         .def ("setText", &XmlElement::setText)
@@ -2258,6 +2263,16 @@ void registerJuceCoreBindings (py::module_& m)
         .def ("deleteAllTextElements", &XmlElement::deleteAllTextElements)
         .def_static ("createTextElement", &XmlElement::createTextElement)
         .def_static ("isValidXmlName", &XmlElement::isValidXmlName)
+        .def ("getChildIterator", [](const XmlElement& self)
+        {
+            auto range = self.getChildIterator();
+            return py::make_iterator (std::begin (range), std::end (range));
+        })
+        .def ("getChildIterator", [](const XmlElement& self, StringRef name)
+        {
+            auto range = self.getChildWithTagNameIterator (name);
+            return py::make_iterator (std::begin (range), std::end (range));
+        })
     ;
 
     // ============================================================================================ juce::XmlDocument

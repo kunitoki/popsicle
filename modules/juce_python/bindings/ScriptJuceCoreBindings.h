@@ -585,6 +585,31 @@ struct PyXmlElementComparator
     }
 };
 
+struct PyXmlElementCallableComparator
+{
+    explicit PyXmlElementCallableComparator(pybind11::function f)
+        : fn (std::move (f))
+    {
+    }
+
+    int compareElements (const juce::XmlElement* first, const juce::XmlElement* second)
+    {
+        pybind11::gil_scoped_acquire gil;
+
+        if (fn)
+        {
+            auto result = fn (first, second);
+
+            return result.cast<int>();
+        }
+
+        pybind11::pybind11_fail("Tried to call function \"XmlElement::Comparator::compareElements\" without a callable");
+    }
+
+private:
+    pybind11::function fn;
+};
+
 // =================================================================================================
 
 struct PyHighResolutionTimer : public juce::HighResolutionTimer

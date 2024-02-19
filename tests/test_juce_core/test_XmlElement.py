@@ -1,6 +1,7 @@
 import os
 import pytest
 
+from ..utilities import get_runtime_data_folder
 import popsicle as juce
 
 
@@ -177,13 +178,159 @@ def test_text_element():
 
 #==================================================================================================
 
-def test_construct_parse_string(xml_file, broken_xml_file):
-    el = juce.XmlDocument.parse("")
-    assert el is None
+def test_child_elements_manipulation():
+    parent = juce.XmlElement("PARENT")
+    child1 = juce.XmlElement("CHILD1")
+    child2 = juce.XmlElement("CHILD2")
 
-    el = juce.XmlDocument.parse(broken_xml_file.loadFileAsString())
-    assert el is None
+    parent.addChildElement(child1)
+    parent.prependChildElement(child2)
 
-    el = juce.XmlDocument.parse(xml_file.loadFileAsString())
-    assert el is not None
-    assert el.getTagName() == "root"
+    assert parent.getNumChildElements() == 2
+    assert parent.getFirstChildElement().getTagName() == "CHILD2"
+
+    parent.removeChildElement(child1, True)
+    assert parent.getNumChildElements() == 1
+    parent.deleteAllChildElements()
+    assert parent.getNumChildElements() == 0
+
+#==================================================================================================
+
+def test_invalid_xml_name():
+    assert not juce.XmlElement.isValidXmlName("1InvalidName")
+
+#==================================================================================================
+
+def test_namespace_handling():
+    elem = juce.XmlElement("ns:ANIMAL")
+    assert elem.getTagName() == "ns:ANIMAL"
+    assert elem.getNamespace() == "ns"
+    assert elem.getTagNameWithoutNamespace() == "ANIMAL"
+    assert elem.hasTagName("ns:ANIMAL")
+    assert elem.hasTagNameIgnoringNamespace("ANIMAL")
+
+#==================================================================================================
+
+def test_deeply_nested_elements():
+    root = juce.XmlElement("root")
+    level1 = root.createNewChildElement("level1")
+    level2 = level1.createNewChildElement("level2")
+    level3 = level2.createNewChildElement("level3")
+
+    assert root.findParentElementOf(level3) is level2
+    assert root.getNumChildElements() == 1
+    assert root.getFirstChildElement().getFirstChildElement().getTagName() == "level2"
+
+#==================================================================================================
+
+def test_sorting_child_elements():
+    root = juce.XmlElement("root")
+    for name in ["banana", "apple", "cherry"]:
+        child = root.createNewChildElement("item")
+        child.setAttribute("name", name)
+
+    class Comparator(juce.XmlElement.Comparator):
+        def compareElements(self, a, b):
+            x = a.getStringAttribute("name")
+            y = b.getStringAttribute("name")
+            if x == y: return 0
+            elif x < y: return -1
+            else: return 1
+
+    root.sortChildElements(Comparator())
+
+    names = [child.getStringAttribute("name") for child in root.getChildIterator()]
+    assert names == ["apple", "banana", "cherry"]
+
+#==================================================================================================
+
+def test_sorting_child_elements_lambda():
+    root = juce.XmlElement("root")
+    for name in ["banana", "apple", "cherry"]:
+        child = root.createNewChildElement("item")
+        child.setAttribute("name", name)
+
+    def strncmp(a, b):
+        if a == b: return 0
+        elif a < b: return -1
+        else: return 1
+
+    root.sortChildElements(lambda x, y: strncmp(x.getStringAttribute("name"), y.getStringAttribute("name")))
+
+    names = [child.getStringAttribute("name") for child in root.getChildIterator()]
+    assert names == ["apple", "banana", "cherry"]
+
+#==================================================================================================
+
+def test_complex_xml_structure_to_string():
+    root = juce.XmlElement("menu")
+    item = root.createNewChildElement("item")
+    item.setAttribute("name", "coffee")
+    item.setAttribute("price", "$1")
+    item.addTextElement("Hot and invigorating")
+
+    xml_string = root.toString()
+    assert "<menu>" in xml_string
+    assert "<item name=\"coffee\" price=\"$1\">" in xml_string
+    assert "Hot and invigorating" in xml_string
+    assert "</item>" in xml_string
+    assert "</menu>" in xml_string
+
+#==================================================================================================
+
+def test_error_adding_child_to_self():
+    elem = juce.XmlElement("self")
+    elem.addChildElement(elem)
+    assert elem.getNumChildElements() == 1
+
+#==================================================================================================
+
+def test_attribute_value_comparisons():
+    elem = juce.XmlElement("item")
+    elem.setAttribute("available", "true")
+    assert elem.compareAttribute("available", "true")
+    assert not elem.compareAttribute("available", "false")
+    assert elem.getBoolAttribute("available")
+
+#==================================================================================================
+
+def test_handling_invalid_characters_in_text_elements():
+    elem = juce.XmlElement("text")
+    elem.addTextElement("Invalid character: \u0000")
+    assert elem.getChildElement(0).getAllSubText() == "Invalid character: "
+
+#==================================================================================================
+
+def test_write_to_file():
+    elem = juce.XmlElement("note")
+    elem.addTextElement("This is a note")
+    temp_file = get_runtime_data_folder().getChildFile("test_write_to_file.xml")
+    assert elem.writeTo(temp_file)
+    with open(temp_file.getFullPathName(), "r") as file:
+        content = file.read()
+    assert "note" in content
+    assert "This is a note" in content
+
+#==================================================================================================
+
+def test_write_to_stream():
+    elem = juce.XmlElement("note")
+    elem.addTextElement("This is a note")
+    temp_file = get_runtime_data_folder().getChildFile("test_write_to_stream.xml")
+    elem.writeTo(temp_file.createOutputStream())
+    with open(temp_file.getFullPathName(), "r") as file:
+        content = file.read()
+    assert "note" in content
+    assert "This is a note" in content
+
+#==================================================================================================
+
+def test_read_from_file():
+    temp_file = get_runtime_data_folder().getChildFile("test_read_from_file.xml")
+    with open(temp_file.getFullPathName(), "w") as file:
+        file.write("<note><to>User</to><message>Hello, World!</message></note>")
+
+    root = juce.XmlDocument.parse(temp_file)
+    assert root.getTagName() == "note"
+    assert root.getChildElement(0).getAllSubText() == "User"
+    assert root.getChildElement(1).getAllSubText() == "Hello, World!"
