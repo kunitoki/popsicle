@@ -183,7 +183,7 @@ class MainContentComponent(juce.Component, juce.ChangeListener, juce.Timer):
         self.loopingToggle.setBounds(10, 100, self.getWidth() - 20, 20)
         self.currentPositionLabel.setBounds(10, 130, self.getWidth() - 20, 20)
 
-        thumbnailBounds = juce.Rectangle[int](10, 100, self.getWidth() - 20, self.getHeight() - 120)
+        thumbnailBounds = juce.Rectangle[int](10, 170, self.getWidth() - 20, self.getHeight() - 190)
         self.thumbnailComp.setBounds(thumbnailBounds)
         self.positionOverlay.setBounds(thumbnailBounds)
 
