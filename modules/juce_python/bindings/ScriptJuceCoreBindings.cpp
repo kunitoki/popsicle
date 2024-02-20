@@ -1347,7 +1347,7 @@ void registerJuceCoreBindings (py::module_& m)
     py::class_<FileInputSource, InputSource> classFileInputSource (m, "FileInputSource");
 
     classFileInputSource
-        .def (py::init<const File&, bool>())
+        .def (py::init<const File&, bool>(), "file"_a, "useFileTimeInHashGeneration"_a = false)
     ;
 
     // ============================================================================================ juce::OutputStream

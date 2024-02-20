@@ -29,7 +29,7 @@ using namespace py::literals;
 
 // ============================================================================================
 
-void registerJuceAudioUtilsBindings ([[maybe_unused]] py::module_& m)
+void registerJuceAudioUtilsBindings (py::module_& m)
 {
     // ============================================================================================ juce::AudioAppComponent
 
@@ -48,6 +48,58 @@ void registerJuceAudioUtilsBindings ([[maybe_unused]] py::module_& m)
         {
             return std::addressof (self.deviceManager);
         }, py::return_value_policy::reference)
+    ;
+
+    // ============================================================================================ juce::AudioThumbnailBase
+
+    py::class_<AudioThumbnailBase, ChangeBroadcaster, PyAudioThumbnailBase<>> classAudioThumbnailBase (m, "AudioThumbnailBase");
+
+    classAudioThumbnailBase
+        .def (py::init<>())
+        .def ("clear", &AudioThumbnailBase::clear)
+        .def ("setSource", &AudioThumbnailBase::setSource)
+        .def ("setReader", &AudioThumbnailBase::setReader)
+        .def ("loadFrom", &AudioThumbnailBase::loadFrom)
+        .def ("saveTo", &AudioThumbnailBase::saveTo)
+        .def ("getNumChannels", &AudioThumbnailBase::getNumChannels)
+        .def ("getTotalLength", &AudioThumbnailBase::getTotalLength)
+        .def ("drawChannel", &AudioThumbnailBase::drawChannel)
+        .def ("drawChannels", &AudioThumbnailBase::drawChannels)
+        .def ("isFullyLoaded", &AudioThumbnailBase::isFullyLoaded)
+        .def ("getNumSamplesFinished", &AudioThumbnailBase::getNumSamplesFinished)
+        .def ("getApproximatePeak", &AudioThumbnailBase::getApproximatePeak)
+    //.def ("getApproximateMinMax", &AudioThumbnailBase::getApproximateMinMax)
+        .def ("getHashCode", &AudioThumbnailBase::getHashCode)
+        .def ("reset", &AudioThumbnailBase::reset, "numChannels"_a, "sampleRate"_a, "totalSamplesInSource"_a = 0)
+        .def ("addBlock", &AudioThumbnailBase::addBlock, "sampleNumberInSource"_a, "newData"_a, "startOffsetInBuffer"_a, "numSamples"_a)
+    ;
+
+    // ============================================================================================ juce::AudioThumbnailCache
+
+    py::class_<AudioThumbnailCache> classAudioThumbnailCache (m, "AudioThumbnailCache");
+
+    classAudioThumbnailCache
+        .def (py::init<int>(), "maxNumThumbsToStore"_a)
+        .def ("clear", &AudioThumbnailCache::clear)
+        .def ("loadThumb", &AudioThumbnailCache::loadThumb)
+        .def ("storeThumb", &AudioThumbnailCache::storeThumb)
+        .def ("removeThumb", &AudioThumbnailCache::removeThumb)
+        .def ("readFromStream", &AudioThumbnailCache::readFromStream)
+        .def ("writeToStream", &AudioThumbnailCache::writeToStream)
+        .def ("getTimeSliceThread", &AudioThumbnailCache::getTimeSliceThread)
+    ;
+
+    // ============================================================================================ juce::AudioThumbnail
+
+    py::class_<AudioThumbnail, AudioThumbnailBase, PyAudioThumbnailBase<AudioThumbnail>> classAudioThumbnail (m, "AudioThumbnail");
+
+    classAudioThumbnail
+        .def (py::init<int, AudioFormatManager&, AudioThumbnailCache&>(), "sourceSamplesPerThumbnailSample"_a, "formatManagerToUse"_a, "cacheToUse"_a)
+        .def ("clear", &AudioThumbnail::clear)
+        .def ("setSource", [](AudioThumbnail& self, py::object newSource) { self.setSource (newSource.release().cast<InputSource*>()); }, "newSource"_a)
+        .def ("setReader", [](AudioThumbnail& self, py::object newReader, int64 hashCode) { self.setReader (newReader.release().cast<AudioFormatReader*>(), hashCode); }, "newReader"_a, "hashCode"_a)
+        .def ("setSource", py::overload_cast<const AudioBuffer<float>*, double, int64> (&AudioThumbnail::setSource), "newSource"_a, "sampleRate"_a, "hashCode"_a)
+        .def ("setSource", py::overload_cast<const AudioBuffer<int>*, double, int64> (&AudioThumbnail::setSource), "newSource"_a, "sampleRate"_a, "hashCode"_a)
     ;
 }
 

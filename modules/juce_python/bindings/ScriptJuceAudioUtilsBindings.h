@@ -62,4 +62,135 @@ struct PyAudioAppComponent : PyComponent<Base>
     }
 };
 
+// =================================================================================================
+
+template <class Base = juce::AudioThumbnailBase>
+struct PyAudioThumbnailBase : Base
+{
+    using Base::Base;
+
+    void clear() override
+    {
+        PYBIND11_OVERRIDE_PURE (void, Base, clear);
+    }
+
+    bool setSource (juce::InputSource* newSource) override
+    {
+        PYBIND11_OVERRIDE_PURE (bool, Base, setSource, newSource);
+    }
+
+    void setReader (juce::AudioFormatReader* newReader, juce::int64 hashCode) override
+    {
+        PYBIND11_OVERRIDE_PURE (void, Base, setReader, newReader, hashCode);
+    }
+
+    bool loadFrom (juce::InputStream& input) override
+    {
+        PYBIND11_OVERRIDE_PURE (bool, Base, loadFrom, input);
+    }
+
+    void saveTo (juce::OutputStream& output) const override
+    {
+        PYBIND11_OVERRIDE_PURE (void, Base, saveTo, output);
+    }
+
+    int getNumChannels() const noexcept override
+    {
+        PYBIND11_OVERRIDE_PURE (int, Base, getNumChannels);
+    }
+
+    double getTotalLength() const noexcept override
+    {
+        PYBIND11_OVERRIDE_PURE (double, Base, getTotalLength);
+    }
+
+    void drawChannel (juce::Graphics& g,
+                      const juce::Rectangle<int>& area,
+                      double startTimeSeconds,
+                      double endTimeSeconds,
+                      int channelNum,
+                      float verticalZoomFactor) override
+    {
+        pybind11::gil_scoped_acquire gil;
+
+        if (pybind11::function override_ = pybind11::get_override (static_cast<Base*> (this), "drawChannel"); override_)
+        {
+            override_ (std::addressof (g), area, startTimeSeconds, endTimeSeconds, channelNum, verticalZoomFactor);
+
+            return;
+        }
+
+        pybind11::pybind11_fail("Tried to call pure virtual function \"AudioThumbnailBase::drawChannel\"");
+    }
+
+    void drawChannels (juce::Graphics& g,
+                       const juce::Rectangle<int>& area,
+                       double startTimeSeconds,
+                       double endTimeSeconds,
+                       float verticalZoomFactor) override
+    {
+        pybind11::gil_scoped_acquire gil;
+
+        if (pybind11::function override_ = pybind11::get_override (static_cast<Base*> (this), "drawChannels"); override_)
+        {
+            override_ (std::addressof (g), area, startTimeSeconds, endTimeSeconds, verticalZoomFactor);
+
+            return;
+        }
+
+        pybind11::pybind11_fail("Tried to call pure virtual function \"AudioThumbnailBase::drawChannels\"");
+    }
+
+    bool isFullyLoaded() const noexcept override
+    {
+        PYBIND11_OVERRIDE_PURE (bool, Base, isFullyLoaded);
+    }
+
+    juce::int64 getNumSamplesFinished() const noexcept override
+    {
+        PYBIND11_OVERRIDE_PURE (juce::int64, Base, getNumSamplesFinished);
+    }
+
+    float getApproximatePeak() const override
+    {
+        PYBIND11_OVERRIDE_PURE (float, Base, getApproximatePeak);
+    }
+
+    void getApproximateMinMax (double startTime, double endTime, int channelIndex,
+                               float& minValue, float& maxValue) const noexcept override
+    {
+        pybind11::gil_scoped_acquire gil;
+
+        if (pybind11::function override_ = pybind11::get_override (static_cast<const Base*> (this), "getApproximateMinMax"); override_)
+        {
+            auto results = override_ (startTime, endTime, channelIndex).cast<pybind11::tuple>();
+
+            if (results.size() != 2)
+                pybind11::pybind11_fail("Invalid return type of function \"AudioThumbnailBase::getApproximateMinMax\" must be tuple[float, 2]");
+
+            minValue = results[0].cast<float>();
+            maxValue = results[1].cast<float>();
+
+            return;
+        }
+
+        pybind11::pybind11_fail("Tried to call pure virtual function \"AudioThumbnailBase::getApproximateMinMax\"");
+    }
+
+    juce::int64 getHashCode() const override
+    {
+        PYBIND11_OVERRIDE_PURE (juce::int64, Base, getHashCode);
+    }
+
+    void reset (int numChannels, double sampleRate, juce::int64 totalSamplesInSource) override
+    {
+        PYBIND11_OVERRIDE_PURE (void, Base, reset, numChannels, sampleRate, totalSamplesInSource);
+    }
+
+    void addBlock (juce::int64 sampleNumberInSource, const juce::AudioBuffer<float>& newData, int startOffsetInBuffer, int numSamples) override
+    {
+        PYBIND11_OVERRIDE_PURE (void, Base, addBlock, sampleNumberInSource, newData, startOffsetInBuffer, numSamples);
+    }
+};
+
 } // namespace popsicle::Bindings

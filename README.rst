@@ -309,6 +309,11 @@ Some images of JUCE tutorials and other small apps ported to *popsicle*.
    .. image:: images/audio_player.png
        :target: examples/audio_player.py
 
+- Audio Player with waveform (https://docs.juce.com/master/tutorial_audio_thumbnail.html)
+
+   .. image:: images/audio_player_waveform.png
+       :target: examples/audio_player_waveform.py
+
 - OpenCV Integration
 
    .. image:: images/opencv_integration.png
@@ -319,10 +324,10 @@ Some images of JUCE tutorials and other small apps ported to *popsicle*.
    .. image:: images/matplotlib_integration.png
        :target: examples/matplotlib_integration.py
 
-- Emojis Component
+- Emojis Components (`emojis_component.py <examples/emojis_component.py>`_ and `emojis_font_component.py <examples/emojis_font_component.py>`_)
 
    .. image:: images/emojis_component.png
-       :target: examples/emojis_component.py
+       :target: examples/emojis_font_component.py
 
 
 -------------
