@@ -37,3 +37,6 @@ def test_file_input_stream_read():
     assert x.decode("UTF8") == "-----BEGIN RSA PRIVATE KEY-----"
     assert a.getTotalLength() > a.getNumBytesRemaining()
     assert a.getPosition() == 31
+
+    next_byte = a.readByte()
+    assert next_byte == "\n" or next_byte == "\r"
