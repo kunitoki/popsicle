@@ -19,6 +19,7 @@
 #include "ScriptJuceCoreBindings.h"
 
 #define JUCE_PYTHON_INCLUDE_PYBIND11_FUNCTIONAL
+#define JUCE_PYTHON_INCLUDE_PYBIND11_STL
 #include "../utilities/PyBind11Includes.h"
 
 #include "../utilities/CrashHandling.h"
@@ -780,13 +781,46 @@ void registerJuceCoreBindings (py::module_& m)
         .def ("removeEmptyStrings", &StringArray::removeEmptyStrings, "removeWhitespaceStrings"_a = true)
         .def ("move", &StringArray::move)
         .def ("trim", &StringArray::trim)
-    //.def ("appendNumbersToDuplicates", &StringArray::appendNumbersToDuplicates)
+        .def ("appendNumbersToDuplicates", [](StringArray& self, bool ignoreCaseWhenComparing, bool appendNumberToFirstInstance, const String* preNumberString, const String* postNumberString)
+        {
+            self.appendNumbersToDuplicates (ignoreCaseWhenComparing, appendNumberToFirstInstance,
+                preNumberString != nullptr ? preNumberString->toUTF8() : CharPointer_UTF8(nullptr),
+                postNumberString != nullptr ? postNumberString->toUTF8() : CharPointer_UTF8(nullptr));
+        }, "ignoreCaseWhenComparing"_a, "appendNumberToFirstInstance"_a, "preNumberString"_a = static_cast<const String*> (nullptr), "postNumberString"_a = static_cast<const String*> (nullptr))
         .def ("joinIntoString", &StringArray::joinIntoString, "separatorString"_a, "startIndex"_a = 0, "numberOfElements"_a = -1)
         .def ("sort", &StringArray::sort, "ignoreCase"_a)
         .def ("sortNatural", &StringArray::sortNatural)
         .def ("ensureStorageAllocated", &StringArray::ensureStorageAllocated)
         .def ("minimiseStorageOverheads", &StringArray::minimiseStorageOverheads)
-    //.def_readwrite ("strings", &StringArray::strings)
+        .def_readwrite ("strings", &StringArray::strings)
+    ;
+
+    // ============================================================================================ juce::StringPairArray
+
+    py::class_<StringPairArray> classStringPairArray (m, "StringPairArray");
+
+    classStringPairArray
+        .def (py::init<bool>(), "ignoreCaseWhenComparingKeys"_a = true)
+        .def (py::init<const StringPairArray&>())
+        .def (py::self == py::self)
+        .def (py::self != py::self)
+        .def ("__getitem__", [](const StringPairArray& self, StringRef key) { return self[ key]; }, "key"_a)
+        .def ("getValue", &StringPairArray::getValue, "key"_a, "defaultReturnValue"_a)
+        .def ("containsKey", &StringPairArray::containsKey)
+        .def ("getAllKeys", &StringPairArray::getAllKeys)
+        .def ("getAllValues", &StringPairArray::getAllValues)
+        .def ("size", &StringPairArray::size)
+        .def ("set", &StringPairArray::set, "key"_a, "value"_a)
+        .def ("addArray", &StringPairArray::addArray, "other"_a)
+        .def ("clear", &StringPairArray::clear)
+        .def ("remove", py::overload_cast<StringRef> (&StringPairArray::remove), "key"_a)
+        .def ("remove", py::overload_cast<int> (&StringPairArray::remove), "index"_a)
+        .def ("setIgnoresCase", &StringPairArray::setIgnoresCase, "shouldIgnoreCase"_a)
+        .def ("getIgnoresCase", &StringPairArray::getIgnoresCase)
+        .def ("getDescription", &StringPairArray::getDescription)
+        .def ("minimiseStorageOverheads", &StringPairArray::minimiseStorageOverheads)
+        .def ("addMap", &StringPairArray::addMap)
+        .def ("addUnorderedMap", &StringPairArray::addUnorderedMap)
     ;
 
     // ============================================================================================ juce::NamedValueSet
@@ -1309,16 +1343,6 @@ void registerJuceCoreBindings (py::module_& m)
         .def (py::init<InputStream*, int64, int64, bool>())
     ;
 
-    py::class_<FileInputStream, InputStream, PyInputStream<FileInputStream>> classFileInputStream (m, "FileInputStream");
-
-    classFileInputStream
-        .def (py::init<const File&>())
-        .def ("getFile", &FileInputStream::getFile, py::return_value_policy::reference_internal)
-        .def ("getStatus", &FileInputStream::getStatus, py::return_value_policy::reference_internal)
-        .def ("failedToOpen", &FileInputStream::failedToOpen)
-        .def ("openedOk", &FileInputStream::openedOk)
-    ;
-
     py::class_<GZIPDecompressorInputStream, InputStream, PyInputStream<GZIPDecompressorInputStream>> classGZIPDecompressorInputStream (m, "GZIPDecompressorInputStream");
 
     py::enum_<GZIPDecompressorInputStream::Format> (classGZIPDecompressorInputStream, "Format")
@@ -1342,12 +1366,6 @@ void registerJuceCoreBindings (py::module_& m)
         .def ("createInputStream", &InputSource::createInputStream)
         .def ("createInputStreamFor", &InputSource::createInputStreamFor)
         .def ("hashCode", &InputSource::hashCode)
-    ;
-
-    py::class_<FileInputSource, InputSource> classFileInputSource (m, "FileInputSource");
-
-    classFileInputSource
-        .def (py::init<const File&, bool>(), "file"_a, "useFileTimeInHashGeneration"_a = false)
     ;
 
     // ============================================================================================ juce::OutputStream
@@ -1406,17 +1424,6 @@ void registerJuceCoreBindings (py::module_& m)
         .def ("__str__", &MemoryOutputStream::toString)
     ;
 
-    py::class_<FileOutputStream, OutputStream, PyOutputStream<FileOutputStream>> classFileOutputStream (m, "FileOutputStream");
-
-    classFileOutputStream
-        .def (py::init<const File&, size_t>(), "fileToWriteTo"_a, "bufferSizeToUse"_a = 16384)
-        .def ("getFile", &FileOutputStream::getFile, py::return_value_policy::reference_internal)
-        .def ("getStatus", &FileOutputStream::getStatus, py::return_value_policy::reference_internal)
-        .def ("failedToOpen", &FileOutputStream::failedToOpen)
-        .def ("openedOk", &FileOutputStream::openedOk)
-        .def ("truncate", &FileOutputStream::truncate)
-    ;
-
     py::class_<GZIPCompressorOutputStream, OutputStream, PyOutputStream<GZIPCompressorOutputStream>> classGZIPCompressorOutputStream (m, "GZIPCompressorOutputStream");
 
     py::enum_<GZIPCompressorOutputStream::WindowBitsValues> (classGZIPCompressorOutputStream, "WindowBitsValues")
@@ -1427,26 +1434,6 @@ void registerJuceCoreBindings (py::module_& m)
     classGZIPCompressorOutputStream
         .def (py::init<OutputStream&, int, int>(), "destStream"_a, "compressionLevel"_a = -1, "windowBits"_a = 0)
         .def (py::init<OutputStream*, int, bool, int>(), "destStream"_a, "compressionLevel"_a = -1, "deleteDestStreamWhenDestroyed"_a = false, "windowBits"_a = 0)
-    ;
-
-    // ============================================================================================ juce::MemoryMappedFile
-
-    py::class_<MemoryMappedFile> classMemoryMappedFile (m, "MemoryMappedFile");
-
-    py::enum_<MemoryMappedFile::AccessMode> (classMemoryMappedFile, "AccessMode")
-        .value ("readOnly", MemoryMappedFile::AccessMode::readOnly)
-        .value ("readWrite", MemoryMappedFile::AccessMode::readWrite)
-        .export_values();
-
-    classMemoryMappedFile
-        .def (py::init<const File&, MemoryMappedFile::AccessMode, bool>(), "file"_a, "mode"_a, "exclusive"_a = false)
-        .def (py::init<const File&, const Range<int64>&, MemoryMappedFile::AccessMode, bool>(), "file"_a, "fileRange"_a, "mode"_a, "exclusive"_a = false)
-        .def ("getData", [](const MemoryMappedFile* self)
-        {
-            return py::memoryview::from_memory (self->getData(), static_cast<Py_ssize_t> (self->getSize()));
-        }, py::return_value_policy::reference_internal)
-        .def ("getSize", &MemoryMappedFile::getSize)
-        .def ("getRange", &MemoryMappedFile::getRange)
     ;
 
     // ============================================================================================ juce::Random
@@ -1475,32 +1462,6 @@ void registerJuceCoreBindings (py::module_& m)
         .def ("combineSeed", &Random::combineSeed)
         .def ("setSeedRandomly", &Random::setSeedRandomly)
         .def_static ("getSystemRandom", &Random::getSystemRandom, py::return_value_policy::reference)
-    ;
-
-    // ============================================================================================ juce::PropertySet
-
-    py::class_<PropertySet> classPropertySet (m, "PropertySet");
-
-    classPropertySet
-        .def (py::init<>())
-        .def (py::init<const PropertySet&>())
-        .def ("getValue", &PropertySet::getValue)
-        .def ("getIntValue", &PropertySet::getIntValue)
-        .def ("getDoubleValue", &PropertySet::getDoubleValue)
-        .def ("getBoolValue", &PropertySet::getBoolValue)
-        .def ("getXmlValue", &PropertySet::getXmlValue)
-        .def ("setValue", py::overload_cast<StringRef, const var&> (&PropertySet::setValue))
-        .def ("setValue", py::overload_cast<StringRef, const XmlElement *> (&PropertySet::setValue))
-        .def ("addAllPropertiesFrom", &PropertySet::addAllPropertiesFrom)
-        .def ("removeValue", &PropertySet::removeValue)
-        .def ("containsKey", &PropertySet::containsKey)
-        .def ("clear", &PropertySet::clear)
-    //.def ("getAllProperties", &PropertySet::getAllProperties, py::return_value_policy::reference)
-    //.def ("getLock", &PropertySet::getLock, py::return_value_policy::reference)
-        .def ("createXml", &PropertySet::createXml)
-        .def ("restoreFromXml", &PropertySet::restoreFromXml)
-        .def ("setFallbackPropertySet", &PropertySet::setFallbackPropertySet)
-        .def ("getFallbackPropertySet", &PropertySet::getFallbackPropertySet)
     ;
 
     // ============================================================================================ juce::File
@@ -1658,6 +1619,55 @@ void registerJuceCoreBindings (py::module_& m)
             result << Helpers::pythonizeModuleClassName (PythonModuleName, typeid (self).name()) << "('" << self.getFullPathName() << "')";
             return result;
         })
+    ;
+
+    // ============================================================================================ juce::File*Stream
+
+    py::class_<FileInputStream, InputStream, PyInputStream<FileInputStream>> classFileInputStream (m, "FileInputStream");
+
+    classFileInputStream
+        .def (py::init<const File&>(), "fileToRead"_a)
+        .def ("getFile", &FileInputStream::getFile, py::return_value_policy::reference_internal)
+        .def ("getStatus", &FileInputStream::getStatus, py::return_value_policy::reference_internal)
+        .def ("failedToOpen", &FileInputStream::failedToOpen)
+        .def ("openedOk", &FileInputStream::openedOk)
+    ;
+
+    py::class_<FileInputSource, InputSource> classFileInputSource (m, "FileInputSource");
+
+    classFileInputSource
+        .def (py::init<const File&, bool>(), "file"_a, "useFileTimeInHashGeneration"_a = false)
+    ;
+
+    py::class_<FileOutputStream, OutputStream, PyOutputStream<FileOutputStream>> classFileOutputStream (m, "FileOutputStream");
+
+    classFileOutputStream
+        .def (py::init<const File&, size_t>(), "fileToWriteTo"_a, "bufferSizeToUse"_a = 16384)
+        .def ("getFile", &FileOutputStream::getFile, py::return_value_policy::reference_internal)
+        .def ("getStatus", &FileOutputStream::getStatus, py::return_value_policy::reference_internal)
+        .def ("failedToOpen", &FileOutputStream::failedToOpen)
+        .def ("openedOk", &FileOutputStream::openedOk)
+        .def ("truncate", &FileOutputStream::truncate)
+    ;
+
+    // ============================================================================================ juce::MemoryMappedFile
+
+    py::class_<MemoryMappedFile> classMemoryMappedFile (m, "MemoryMappedFile");
+
+    py::enum_<MemoryMappedFile::AccessMode> (classMemoryMappedFile, "AccessMode")
+        .value ("readOnly", MemoryMappedFile::AccessMode::readOnly)
+        .value ("readWrite", MemoryMappedFile::AccessMode::readWrite)
+        .export_values();
+
+    classMemoryMappedFile
+        .def (py::init<const File&, MemoryMappedFile::AccessMode, bool>(), "file"_a, "mode"_a, "exclusive"_a = false)
+        .def (py::init<const File&, const Range<int64>&, MemoryMappedFile::AccessMode, bool>(), "file"_a, "fileRange"_a, "mode"_a, "exclusive"_a = false)
+        .def ("getData", [](const MemoryMappedFile* self)
+        {
+            return py::memoryview::from_memory (self->getData(), static_cast<Py_ssize_t> (self->getSize()));
+        }, py::return_value_policy::reference_internal)
+        .def ("getSize", &MemoryMappedFile::getSize)
+        .def ("getRange", &MemoryMappedFile::getRange)
     ;
 
     // ============================================================================================ juce::FileFilter
@@ -2285,10 +2295,88 @@ void registerJuceCoreBindings (py::module_& m)
         .def ("getDocumentElement", &XmlDocument::getDocumentElement, "onlyReadOuterDocumentElement"_a = false)
         .def ("getDocumentElementIfTagMatches", &XmlDocument::getDocumentElementIfTagMatches, "requiredTag"_a)
         .def ("getLastParseError", &XmlDocument::getLastParseError)
-    //.def ("setInputSource", &XmlDocument::setInputSource)
+        .def ("setInputSource", [](XmlDocument& self, py::object source) { self.setInputSource (source.release().cast<InputSource*>()); })
         .def ("setEmptyTextElementsIgnored", &XmlDocument::setEmptyTextElementsIgnored, "shouldBeIgnored"_a)
         .def_static ("parse", static_cast<std::unique_ptr<XmlElement> (*)(const File&)> (&XmlDocument::parse), "file"_a)
         .def_static ("parse", static_cast<std::unique_ptr<XmlElement> (*)(const String&)> (&XmlDocument::parse), "textToParse"_a)
+    ;
+
+    // ============================================================================================ juce::PropertySet
+
+    py::class_<PropertySet> classPropertySet (m, "PropertySet");
+
+    classPropertySet
+        .def (py::init<>())
+        .def (py::init<const PropertySet&>())
+        .def ("getValue", &PropertySet::getValue)
+        .def ("getIntValue", &PropertySet::getIntValue)
+        .def ("getDoubleValue", &PropertySet::getDoubleValue)
+        .def ("getBoolValue", &PropertySet::getBoolValue)
+        .def ("getXmlValue", &PropertySet::getXmlValue)
+        .def ("setValue", py::overload_cast<StringRef, const var&> (&PropertySet::setValue))
+        .def ("setValue", py::overload_cast<StringRef, const XmlElement*> (&PropertySet::setValue))
+        .def ("addAllPropertiesFrom", &PropertySet::addAllPropertiesFrom)
+        .def ("removeValue", &PropertySet::removeValue)
+        .def ("containsKey", &PropertySet::containsKey)
+        .def ("clear", &PropertySet::clear)
+        .def ("getAllProperties", &PropertySet::getAllProperties, py::return_value_policy::reference)
+        .def ("getLock", &PropertySet::getLock, py::return_value_policy::reference)
+        .def ("createXml", &PropertySet::createXml)
+        .def ("restoreFromXml", &PropertySet::restoreFromXml)
+        .def ("setFallbackPropertySet", &PropertySet::setFallbackPropertySet)
+        .def ("getFallbackPropertySet", &PropertySet::getFallbackPropertySet)
+    ;
+
+    // ============================================================================================ juce::ZipFile
+
+    py::class_<ZipFile> classZipFile (m, "ZipFile");
+    py::class_<ZipFile::ZipEntry> classZipFileZipEntry (classZipFile, "ZipEntry");
+    py::class_<ZipFile::Builder> classZipFileBuilder (classZipFile, "Builder");
+
+    py::enum_<ZipFile::OverwriteFiles> (classZipFile, "OverwriteFiles")
+        .value ("no", ZipFile::OverwriteFiles::no)
+        .value ("yes", ZipFile::OverwriteFiles::yes);
+
+    py::enum_<ZipFile::FollowSymlinks> (classZipFile, "FollowSymlinks")
+        .value ("no", ZipFile::FollowSymlinks::no)
+        .value ("yes", ZipFile::FollowSymlinks::yes);
+
+    classZipFileZipEntry
+        .def (py::init<>())
+        .def_readwrite ("filename", &ZipFile::ZipEntry::filename)
+        .def_readwrite ("uncompressedSize", &ZipFile::ZipEntry::uncompressedSize)
+        .def_readwrite ("fileTime", &ZipFile::ZipEntry::fileTime)
+        .def_readwrite ("isSymbolicLink", &ZipFile::ZipEntry::isSymbolicLink)
+        .def_readwrite ("externalFileAttributes", &ZipFile::ZipEntry::externalFileAttributes)
+    ;
+
+    classZipFileBuilder
+        .def (py::init<>())
+        .def ("addFile", &ZipFile::Builder::addFile, "fileToAdd"_a, "compressionLevel"_a, "storedPathName"_a = String())
+        .def ("addEntry", [](ZipFile::Builder& self, py::object stream, int compression, const String& path, Time time)
+        {
+            self.addEntry (stream.release().cast<InputStream*>(), compression, path, time);
+        }, "streamToRead"_a, "compressionLevel"_a, "storedPathName"_a, "fileModificationTime"_a)
+        .def ("writeToStream", [](const ZipFile::Builder& self, OutputStream& target) { return self.writeToStream (target, nullptr); }, "target"_a)
+    ;
+
+    classZipFile
+        .def (py::init<const File&>(), "file"_a)
+        .def (py::init<InputStream&>(), "inputStream"_a)
+        .def (py::init ([](py::object inputSource)
+        {
+            return new ZipFile (inputSource.release().cast<InputSource*>());
+        }), "inputSource"_a)
+        .def ("getNumEntries", &ZipFile::getNumEntries)
+        .def ("getIndexOfFileName", &ZipFile::getIndexOfFileName, "fileName"_a, "ignoreCase"_a = false)
+        .def ("getEntry", py::overload_cast<int> (&ZipFile::getEntry, py::const_), "index"_a, py::return_value_policy::reference_internal)
+        .def ("getEntry", py::overload_cast<const String&, bool> (&ZipFile::getEntry, py::const_), "fileName"_a, "ignoreCase"_a = false, py::return_value_policy::reference_internal)
+        .def ("sortEntriesByFilename", &ZipFile::sortEntriesByFilename)
+        .def ("createStreamForEntry", py::overload_cast<int> (&ZipFile::createStreamForEntry))
+        .def ("createStreamForEntry", py::overload_cast<const ZipFile::ZipEntry&> (&ZipFile::createStreamForEntry))
+        .def ("uncompressTo", &ZipFile::uncompressTo, "targetDirectory"_a, "shouldOverwriteFiles"_a = true)
+        .def ("uncompressEntry", py::overload_cast<int, const File&, bool> (&ZipFile::uncompressEntry), "index"_a, "targetDirectory"_a, "shouldOverwriteFiles"_a = true)
+        .def ("uncompressEntry", py::overload_cast<int, const File&, ZipFile::OverwriteFiles, ZipFile::FollowSymlinks> (&ZipFile::uncompressEntry), "index"_a, "targetDirectory"_a, "overwriteFiles"_a, "followSymlinks"_a)
     ;
 
     // ============================================================================================ juce::SystemStats
@@ -2379,59 +2467,7 @@ void registerJuceCoreBindings (py::module_& m)
         .def_static ("getMemorySizeInMegabytes", &SystemStats::getMemorySizeInMegabytes)
         .def_static ("getPageSize", &SystemStats::getPageSize)
         .def_static ("getStackBacktrace", &SystemStats::getStackBacktrace)
-        //.def_static ("setApplicationCrashHandler", &SystemStats::setApplicationCrashHandler)
-    ;
-
-    // ============================================================================================ juce::ZipFile
-
-    py::class_<ZipFile> classZipFile (m, "ZipFile");
-    py::class_<ZipFile::ZipEntry> classZipFileZipEntry (classZipFile, "ZipEntry");
-    py::class_<ZipFile::Builder> classZipFileBuilder (classZipFile, "Builder");
-
-    py::enum_<ZipFile::OverwriteFiles> (classZipFile, "OverwriteFiles")
-        .value ("no", ZipFile::OverwriteFiles::no)
-        .value ("yes", ZipFile::OverwriteFiles::yes);
-
-    py::enum_<ZipFile::FollowSymlinks> (classZipFile, "FollowSymlinks")
-        .value ("no", ZipFile::FollowSymlinks::no)
-        .value ("yes", ZipFile::FollowSymlinks::yes);
-
-    classZipFileZipEntry
-        .def (py::init<>())
-        .def_readwrite ("filename", &ZipFile::ZipEntry::filename)
-        .def_readwrite ("uncompressedSize", &ZipFile::ZipEntry::uncompressedSize)
-        .def_readwrite ("fileTime", &ZipFile::ZipEntry::fileTime)
-        .def_readwrite ("isSymbolicLink", &ZipFile::ZipEntry::isSymbolicLink)
-        .def_readwrite ("externalFileAttributes", &ZipFile::ZipEntry::externalFileAttributes)
-    ;
-
-    classZipFileBuilder
-        .def (py::init<>())
-        .def ("addFile", &ZipFile::Builder::addFile, "fileToAdd"_a, "compressionLevel"_a, "storedPathName"_a = String())
-        .def ("addEntry", [](ZipFile::Builder& self, py::object stream, int compression, const String& path, Time time)
-        {
-            self.addEntry (stream.release().cast<InputStream*>(), compression, path, time);
-        }, "streamToRead"_a, "compressionLevel"_a, "storedPathName"_a, "fileModificationTime"_a)
-        .def ("writeToStream", [](const ZipFile::Builder& self, OutputStream& target) { return self.writeToStream (target, nullptr); }, "target"_a)
-    ;
-
-    classZipFile
-        .def (py::init<const File&>(), "file"_a)
-        .def (py::init<InputStream&>(), "inputStream"_a)
-        .def (py::init ([](py::object inputSource)
-        {
-            return new ZipFile (inputSource.release().cast<InputSource*>());
-        }), "inputSource"_a)
-        .def ("getNumEntries", &ZipFile::getNumEntries)
-        .def ("getIndexOfFileName", &ZipFile::getIndexOfFileName, "fileName"_a, "ignoreCase"_a = false)
-        .def ("getEntry", py::overload_cast<int> (&ZipFile::getEntry, py::const_), "index"_a, py::return_value_policy::reference_internal)
-        .def ("getEntry", py::overload_cast<const String&, bool> (&ZipFile::getEntry, py::const_), "fileName"_a, "ignoreCase"_a = false, py::return_value_policy::reference_internal)
-        .def ("sortEntriesByFilename", &ZipFile::sortEntriesByFilename)
-        .def ("createStreamForEntry", py::overload_cast<int> (&ZipFile::createStreamForEntry))
-        .def ("createStreamForEntry", py::overload_cast<const ZipFile::ZipEntry&> (&ZipFile::createStreamForEntry))
-        .def ("uncompressTo", &ZipFile::uncompressTo, "targetDirectory"_a, "shouldOverwriteFiles"_a = true)
-        .def ("uncompressEntry", py::overload_cast<int, const File&, bool> (&ZipFile::uncompressEntry), "index"_a, "targetDirectory"_a, "shouldOverwriteFiles"_a = true)
-        .def ("uncompressEntry", py::overload_cast<int, const File&, ZipFile::OverwriteFiles, ZipFile::FollowSymlinks> (&ZipFile::uncompressEntry), "index"_a, "targetDirectory"_a, "overwriteFiles"_a, "followSymlinks"_a)
+    //.def_static ("setApplicationCrashHandler", &SystemStats::setApplicationCrashHandler)
     ;
 
     // ============================================================================================ juce::Array<>
