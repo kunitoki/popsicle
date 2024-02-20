@@ -188,35 +188,35 @@ Supported Modules
      - Not Planned
    * - juce_audio_basics
      - ✅
-     - 0.0%
+     - 0.87%
      - In Progress
    * - juce_audio_devices
      - ✅
      - 0.0%
      - In Progress
    * - juce_audio_formats
-     - ⛔️
-     - N/A
-     - Planned
+     - ✅
+     - 0.0%
+     - In Progress
    * - juce_audio_plugin_client
      - ⛔️
      - N/A
      - Not planned
    * - juce_audio_processors
-     - ⛔️
-     - N/A
-     - Planned
+     - ✅
+     - 0.0%
+     - In Progress
    * - juce_audio_utils
-     - ⛔️
-     - N/A
-     - Planned
+     - ✅
+     - 0.0%
+     - In Progress
    * - juce_box2d
      - ⛔️
      - N/A
      - Planned
    * - juce_core
      - ✅
-     - 36.66%
+     - 43.75%
      - Ready
    * - juce_cryptography
      - ⛔️
@@ -232,7 +232,7 @@ Supported Modules
      - Planned
    * - juce_events
      - ✅
-     - 50.97%
+     - 49.4%
      - Ready
    * - juce_graphics
      - ✅
@@ -240,7 +240,7 @@ Supported Modules
      - In Progress
    * - juce_gui_basics
      - ✅
-     - 9.53%
+     - 9.77%
      - In Progress, Basic Components Available
    * - juce_gui_extra
      - ✅
