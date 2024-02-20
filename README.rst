@@ -390,7 +390,7 @@ Install python dependencies.
 .. code-block:: bash
 
   # Build the binary distribution
-  python -m build --wheel
+  python3 -m build --wheel
 
   # Install the local wheel
   pip3 install dist/popsicle-*.whl
