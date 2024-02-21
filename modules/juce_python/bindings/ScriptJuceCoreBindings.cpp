@@ -1889,6 +1889,15 @@ void registerJuceCoreBindings (py::module_& m)
         .def ("stop", &PerformanceCounter::stop)
         .def ("printStatistics", &PerformanceCounter::printStatistics)
         .def ("getStatisticsAndReset", &PerformanceCounter::getStatisticsAndReset)
+        .def ("__enter__", [](PerformanceCounter& self)
+        {
+            self.start();
+        }, py::return_value_policy::reference)
+        .def ("__exit__", [](PerformanceCounter& self, const std::optional<py::type>&, const std::optional<py::object>&, const std::optional<py::object>&)
+        {
+            self.stop();
+            return self.getStatisticsAndReset();
+        })
     ;
 
     // ============================================================================================ juce::CriticalSection
@@ -1897,9 +1906,54 @@ void registerJuceCoreBindings (py::module_& m)
 
     classCriticalSection
         .def (py::init<>())
-        .def ("enter", &CriticalSection::enter)
+        .def ("enter", &CriticalSection::enter, py::call_guard<py::gil_scoped_release>())
         .def ("tryEnter", &CriticalSection::tryEnter)
         .def ("exit", &CriticalSection::exit)
+    ;
+
+    py::class_<PyGenericScopedLock<CriticalSection>> classScopedLockCriticalSection (classCriticalSection, "ScopedLockType");
+
+    classScopedLockCriticalSection
+        .def (py::init<CriticalSection&>(), "lock"_a)
+        .def ("__enter__", [](PyGenericScopedLock<CriticalSection>& self) -> PyGenericScopedLock<CriticalSection>*
+        {
+            self.enter();
+            return std::addressof (self);
+        }, py::return_value_policy::reference, py::call_guard<py::gil_scoped_release>())
+        .def ("__exit__", [](PyGenericScopedLock<CriticalSection>& self, const std::optional<py::type>&, const std::optional<py::object>&, const std::optional<py::object>&)
+        {
+            self.exit();
+        })
+    ;
+
+    py::class_<PyGenericScopedUnlock<CriticalSection>> classScopedUnlockCriticalSection (classCriticalSection, "ScopedUnlockType");
+
+    classScopedUnlockCriticalSection
+        .def (py::init<CriticalSection&>(), "lock"_a)
+        .def ("__enter__", [](PyGenericScopedUnlock<CriticalSection>& self) -> PyGenericScopedUnlock<CriticalSection>*
+        {
+            self.enter();
+            return std::addressof (self);
+        }, py::return_value_policy::reference, py::call_guard<py::gil_scoped_release>())
+        .def ("__exit__", [](PyGenericScopedUnlock<CriticalSection>& self, const std::optional<py::type>&, const std::optional<py::object>&, const std::optional<py::object>&)
+        {
+            self.exit();
+        })
+    ;
+
+    py::class_<PyGenericScopedTryLock<CriticalSection>> classScopedTryLockCriticalSection (classCriticalSection, "ScopedTryLock");
+
+    classScopedTryLockCriticalSection
+        .def (py::init<CriticalSection&, int>(), "lock"_a, "acquireLockOnInitialisation"_a = true)
+        .def ("__enter__", [](PyGenericScopedTryLock<CriticalSection>& self) -> PyGenericScopedTryLock<CriticalSection>*
+        {
+            self.enter();
+            return std::addressof (self);
+        }, py::return_value_policy::reference, py::call_guard<py::gil_scoped_release>())
+        .def ("__exit__", [](PyGenericScopedTryLock<CriticalSection>& self, const std::optional<py::type>&, const std::optional<py::object>&, const std::optional<py::object>&)
+        {
+            self.exit();
+        })
     ;
 
     // ============================================================================================ juce::SpinLock
@@ -1908,7 +1962,7 @@ void registerJuceCoreBindings (py::module_& m)
 
     classSpinLock
         .def (py::init<>())
-        .def ("enter", &SpinLock::enter)
+        .def ("enter", &SpinLock::enter, py::call_guard<py::gil_scoped_release>())
         .def ("tryEnter", &SpinLock::tryEnter)
         .def ("exit", &SpinLock::exit)
     ;
@@ -1919,7 +1973,7 @@ void registerJuceCoreBindings (py::module_& m)
 
     classWaitableEvent
         .def (py::init<bool>(), "manualReset"_a = false)
-        .def ("wait", &WaitableEvent::wait, "timeOutMilliseconds"_a = -1.0)
+        .def ("wait", &WaitableEvent::wait, "timeOutMilliseconds"_a = -1.0, py::call_guard<py::gil_scoped_release>())
         .def ("signal", &WaitableEvent::signal)
         .def ("reset", &WaitableEvent::reset)
     ;
@@ -1930,12 +1984,12 @@ void registerJuceCoreBindings (py::module_& m)
 
     classReadWriteLock
         .def (py::init<>())
-        .def ("enterRead", &ReadWriteLock::enterRead)
+        .def ("enterRead", &ReadWriteLock::enterRead, py::call_guard<py::gil_scoped_release>())
         .def ("tryEnterRead", &ReadWriteLock::tryEnterRead)
-        .def ("exitRead", &ReadWriteLock::exitRead)
-        .def ("enterWrite", &ReadWriteLock::enterWrite)
+        .def ("exitRead", &ReadWriteLock::exitRead, py::call_guard<py::gil_scoped_release>())
+        .def ("enterWrite", &ReadWriteLock::enterWrite, py::call_guard<py::gil_scoped_release>())
         .def ("tryEnterWrite", &ReadWriteLock::tryEnterWrite)
-        .def ("exitWrite", &ReadWriteLock::exitWrite)
+        .def ("exitWrite", &ReadWriteLock::exitWrite, py::call_guard<py::gil_scoped_release>())
     ;
 
     // ============================================================================================ juce::InterProcessLock
@@ -1944,7 +1998,7 @@ void registerJuceCoreBindings (py::module_& m)
 
     classInterProcessLock
         .def (py::init<const String&>())
-        .def ("enter", &InterProcessLock::enter, "timeOutMillisecs"_a = -1)
+        .def ("enter", &InterProcessLock::enter, "timeOutMillisecs"_a = -1, py::call_guard<py::gil_scoped_release>())
         .def ("exit", &InterProcessLock::exit)
     ;
 
@@ -1965,10 +2019,18 @@ void registerJuceCoreBindings (py::module_& m)
 
     py::class_<ChildProcess> classChildProcess (m, "ChildProcess");
 
+    py::enum_<ChildProcess::StreamFlags> (classChildProcess, "StreamFlags", py::arithmetic())
+        .value ("wantStdOut", ChildProcess::StreamFlags::wantStdOut)
+        .value ("wantStdErr", ChildProcess::StreamFlags::wantStdErr);
+
     classChildProcess
         .def (py::init<>())
-        .def ("start", py::overload_cast<const String &, int> (&ChildProcess::start))
-        .def ("start", py::overload_cast<const StringArray &, int> (&ChildProcess::start))
+        .def ("start", py::overload_cast<const String&, int> (&ChildProcess::start), "command"_a, "streamFlags"_a = ChildProcess::wantStdOut | ChildProcess::wantStdErr)
+        .def ("start", py::overload_cast<const StringArray&, int> (&ChildProcess::start), "command"_a, "streamFlags"_a = ChildProcess::wantStdOut | ChildProcess::wantStdErr)
+        .def ("start", [](ChildProcess& self, const String& command, ChildProcess::StreamFlags streamFlags)
+            { return self.start (command, streamFlags); }, "command"_a, "streamFlags"_a)
+        .def ("start", [](ChildProcess& self, const StringArray& command, ChildProcess::StreamFlags streamFlags)
+            { return self.start (command, streamFlags); }, "command"_a, "streamFlags"_a)
         .def ("isRunning", &ChildProcess::isRunning)
         .def ("readProcessOutput", [](ChildProcess& self, py::buffer data)
         {
@@ -2136,7 +2198,7 @@ void registerJuceCoreBindings (py::module_& m)
 
     // ============================================================================================ juce::TimeSliceThread
 
-    py::class_<TimeSliceThread, PyThread<TimeSliceThread>> classTimeSliceThread (m, "TimeSliceThread");
+    py::class_<TimeSliceThread, Thread, PyThread<TimeSliceThread>> classTimeSliceThread (m, "TimeSliceThread");
     py::class_<TimeSliceClient, PyTimeSliceClient> classTimeSliceClient (m, "TimeSliceClient");
 
     classTimeSliceClient

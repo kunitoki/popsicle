@@ -622,6 +622,115 @@ struct PyHighResolutionTimer : public juce::HighResolutionTimer
 
 // =================================================================================================
 
+template <class T>
+struct PyGenericScopedLock
+{
+    PyGenericScopedLock (const T& mutex)
+        : mutex (mutex)
+    {
+    }
+
+    PyGenericScopedLock (const PyGenericScopedLock&) = delete;
+    PyGenericScopedLock (PyGenericScopedLock&&) = default;
+
+    ~PyGenericScopedLock()
+    {
+        exit();
+    }
+
+    void enter()
+    {
+        mutex.enter();
+    }
+
+    void exit()
+    {
+        mutex.exit();
+    }
+
+private:
+    const T& mutex;
+};
+
+template <class T>
+struct PyGenericScopedUnlock
+{
+    PyGenericScopedUnlock (const T& mutex)
+        : mutex (mutex)
+    {
+    }
+
+    PyGenericScopedUnlock (const PyGenericScopedUnlock&) = delete;
+    PyGenericScopedUnlock (PyGenericScopedUnlock&&) = default;
+
+    ~PyGenericScopedUnlock()
+    {
+        exit();
+    }
+
+    void enter()
+    {
+        mutex.exit();
+    }
+
+    void exit()
+    {
+        mutex.enter();
+    }
+
+private:
+    const T& mutex;
+};
+
+template <class T>
+struct PyGenericScopedTryLock
+{
+    PyGenericScopedTryLock (const T& mutex, bool acquireLockOnInitialisation = true)
+        : mutex (mutex)
+        , lockWasSuccessful (acquireLockOnInitialisation && mutex.tryEnter())
+        , acquireLockOnInitialisation (acquireLockOnInitialisation)
+    {
+    }
+
+    PyGenericScopedTryLock (const PyGenericScopedTryLock&) = delete;
+    PyGenericScopedTryLock (PyGenericScopedTryLock&&) = default;
+
+    ~PyGenericScopedTryLock()
+    {
+        exit();
+    }
+
+    bool isLocked() const noexcept
+    {
+        return lockWasSuccessful;
+    }
+
+    bool retryLock() const
+    {
+        lockWasSuccessful = mutex.tryEnter();
+        return lockWasSuccessful;
+    }
+
+    void enter()
+    {
+        if (! acquireLockOnInitialisation)
+            retryLock();
+    }
+
+    void exit()
+    {
+        if (lockWasSuccessful)
+            mutex.exit();
+    }
+
+private:
+    const T& mutex;
+    mutable bool lockWasSuccessful;
+    bool acquireLockOnInitialisation;
+};
+
+// =================================================================================================
+
 template <class Base = juce::Thread>
 struct PyThread : Base
 {
