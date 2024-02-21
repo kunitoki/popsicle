@@ -50,8 +50,10 @@ void registerCachedValue (py::module_& m)
 
         auto class_ = py::class_<T> (m, className.toRawUTF8())
             .def (py::init<>())
-            .def (py::init<ValueTree&, const Identifier&, UndoManager*>())
-            .def (py::init<ValueTree&, const Identifier&, UndoManager*, const ValueType&>())
+            .def (py::init<ValueTree&, const Identifier&, UndoManager*>(),
+                "tree"_a.none(false), "propertyID"_a.none(false), "undoManager"_a)
+            .def (py::init<ValueTree&, const Identifier&, UndoManager*, const ValueType&>(),
+                "tree"_a.none(false), "propertyID"_a.none(false), "undoManager"_a, "defaultToUse"_a.none(false))
             .def ("get", &T::get)
             .def (py::self == py::self)
             .def (py::self != py::self)
@@ -62,8 +64,10 @@ void registerCachedValue (py::module_& m)
             .def ("resetToDefault", py::overload_cast<> (&T::resetToDefault))
             .def ("resetToDefault", py::overload_cast<UndoManager*> (&T::resetToDefault))
             .def ("setDefault", &T::setDefault)
-            .def ("referTo", py::overload_cast<ValueTree&, const Identifier&, UndoManager*> (&T::referTo))
-            .def ("referTo", py::overload_cast<ValueTree&, const Identifier&, UndoManager*, const ValueType&> (&T::referTo))
+            .def ("referTo", py::overload_cast<ValueTree&, const Identifier&, UndoManager*> (&T::referTo),
+                "tree"_a.none(false), "propertyID"_a.none(false), "undoManager"_a)
+            .def ("referTo", py::overload_cast<ValueTree&, const Identifier&, UndoManager*, const ValueType&> (&T::referTo),
+                "tree"_a.none(false), "propertyID"_a.none(false), "undoManager"_a, "defaultToUse"_a.none(false))
             .def ("forceUpdateOfCachedValue", &T::forceUpdateOfCachedValue)
             .def ("getValueTree", &T::getValueTree, py::return_value_policy::reference)
             .def ("getPropertyID", &T::getPropertyID, py::return_value_policy::reference)
@@ -322,7 +326,7 @@ void registerJuceDataStructuresBindings (py::module_& m)
         {
             auto info = data.request();
             return ValueTreeSynchroniser::applyChange (root, info.ptr, static_cast<size_t> (info.size), undoManager);
-        })
+        }, "root"_a, "data"_a, "undoManager"_a)
         .def ("getRoot", &ValueTreeSynchroniser::getRoot, py::return_value_policy::reference)
     ;
 

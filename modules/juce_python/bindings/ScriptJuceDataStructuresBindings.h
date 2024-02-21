@@ -175,7 +175,7 @@ struct PyValueTreeSynchroniser : public juce::ValueTreeSynchroniser
         {
             auto change = pybind11::memoryview::from_memory (encodedChange, static_cast<Py_ssize_t> (encodedChangeSize));
 
-            override_ (change, encodedChangeSize);
+            override_ (change);
 
             return;
         }
