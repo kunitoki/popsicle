@@ -216,7 +216,7 @@ Supported Modules
      - Planned
    * - juce_core
      - ✅
-     - 43.75%
+     - 44.82%
      - Ready
    * - juce_cryptography
      - ⛔️
@@ -224,7 +224,7 @@ Supported Modules
      - Planned
    * - juce_data_structures
      - ✅
-     - 25.72%
+     - 55.61%
      - Ready
    * - juce_dsp
      - ⛔️
@@ -232,7 +232,7 @@ Supported Modules
      - Planned
    * - juce_events
      - ✅
-     - 49.4%
+     - 49.68%
      - Ready
    * - juce_graphics
      - ✅
