@@ -2311,15 +2311,15 @@ void registerJuceCoreBindings (py::module_& m)
     py::class_<PropertySet> classPropertySet (m, "PropertySet");
 
     classPropertySet
-        .def (py::init<>())
+        .def (py::init<bool>(), "ignoreCaseOfKeyNames"_a = false)
         .def (py::init<const PropertySet&>())
         .def ("getValue", &PropertySet::getValue, "keyName"_a, "defaultReturnValue"_a = String())
         .def ("getIntValue", &PropertySet::getIntValue, "keyName"_a, "defaultReturnValue"_a = 0)
         .def ("getDoubleValue", &PropertySet::getDoubleValue, "keyName"_a, "defaultReturnValue"_a = 0.0)
         .def ("getBoolValue", &PropertySet::getBoolValue, "keyName"_a, "defaultReturnValue"_a = false)
         .def ("getXmlValue", &PropertySet::getXmlValue, "keyName"_a)
-        .def ("setValue", py::overload_cast<StringRef, const var&> (&PropertySet::setValue), "keyName"_a, "value"_a)
         .def ("setValue", py::overload_cast<StringRef, const XmlElement*> (&PropertySet::setValue), "keyName"_a, "xml"_a)
+        .def ("setValue", py::overload_cast<StringRef, const var&> (&PropertySet::setValue), "keyName"_a, "value"_a)
         .def ("addAllPropertiesFrom", &PropertySet::addAllPropertiesFrom, "source"_a)
         .def ("removeValue", &PropertySet::removeValue, "keyName"_a)
         .def ("containsKey", &PropertySet::containsKey, "keyName"_a)
