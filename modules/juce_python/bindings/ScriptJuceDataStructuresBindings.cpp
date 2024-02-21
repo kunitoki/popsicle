@@ -50,8 +50,10 @@ void registerCachedValue (py::module_& m)
 
         auto class_ = py::class_<T> (m, className.toRawUTF8())
             .def (py::init<>())
-            .def (py::init<ValueTree&, const Identifier&, UndoManager*>())
-            .def (py::init<ValueTree&, const Identifier&, UndoManager*, const ValueType&>())
+            .def (py::init<ValueTree&, const Identifier&, UndoManager*>(),
+                "tree"_a.none(false), "propertyID"_a.none(false), "undoManager"_a)
+            .def (py::init<ValueTree&, const Identifier&, UndoManager*, const ValueType&>(),
+                "tree"_a.none(false), "propertyID"_a.none(false), "undoManager"_a, "defaultToUse"_a.none(false))
             .def ("get", &T::get)
             .def (py::self == py::self)
             .def (py::self != py::self)
@@ -62,8 +64,10 @@ void registerCachedValue (py::module_& m)
             .def ("resetToDefault", py::overload_cast<> (&T::resetToDefault))
             .def ("resetToDefault", py::overload_cast<UndoManager*> (&T::resetToDefault))
             .def ("setDefault", &T::setDefault)
-            .def ("referTo", py::overload_cast<ValueTree&, const Identifier&, UndoManager*> (&T::referTo))
-            .def ("referTo", py::overload_cast<ValueTree&, const Identifier&, UndoManager*, const ValueType&> (&T::referTo))
+            .def ("referTo", py::overload_cast<ValueTree&, const Identifier&, UndoManager*> (&T::referTo),
+                "tree"_a.none(false), "propertyID"_a.none(false), "undoManager"_a)
+            .def ("referTo", py::overload_cast<ValueTree&, const Identifier&, UndoManager*, const ValueType&> (&T::referTo),
+                "tree"_a.none(false), "propertyID"_a.none(false), "undoManager"_a, "defaultToUse"_a.none(false))
             .def ("forceUpdateOfCachedValue", &T::forceUpdateOfCachedValue)
             .def ("getValueTree", &T::getValueTree, py::return_value_policy::reference)
             .def ("getPropertyID", &T::getPropertyID, py::return_value_policy::reference)
@@ -207,10 +211,11 @@ void registerJuceDataStructuresBindings (py::module_& m)
 
     classValueTree
         .def (py::init<>())
-        .def (py::init<const Identifier&>())
-        .def (py::init ([](py::str id, py::dict dict)
+        .def (py::init<const Identifier&>(), "type"_a)
+        .def (py::init ([](const String& type) { return ValueTree (type); }), "type"_a)
+        .def (py::init ([](py::str type, py::dict dict)
         {
-            auto result = ValueTree (Identifier (static_cast<std::string> (id)));
+            auto result = ValueTree (Identifier (static_cast<std::string> (type)));
 
             for (auto item : dict)
             {
@@ -230,64 +235,78 @@ void registerJuceDataStructuresBindings (py::module_& m)
             }
 
             return result;
-        }))
+        }), "type"_a, "dictionary"_a)
         .def (py::init<const ValueTree&>())
         .def (py::self == py::self)
         .def (py::self != py::self)
         .def ("isEquivalentTo", &ValueTree::isEquivalentTo)
         .def ("isValid", &ValueTree::isValid)
         .def ("createCopy", &ValueTree::createCopy)
-        .def ("copyPropertiesFrom", &ValueTree::copyPropertiesFrom)
-        .def ("copyPropertiesAndChildrenFrom", &ValueTree::copyPropertiesAndChildrenFrom)
+        .def ("copyPropertiesFrom", &ValueTree::copyPropertiesFrom, "source"_a, "undoManager"_a)
+        .def ("copyPropertiesAndChildrenFrom", &ValueTree::copyPropertiesAndChildrenFrom, "source"_a, "undoManager"_a)
         .def ("getType", &ValueTree::getType)
-        .def ("hasType", &ValueTree::hasType)
-        .def ("getProperty", py::overload_cast<const Identifier&> (&ValueTree::getProperty, py::const_), py::return_value_policy::reference)
-        .def ("getProperty", py::overload_cast<const Identifier&, const var&> (&ValueTree::getProperty, py::const_), py::return_value_policy::reference)
-    //.def ("getPropertyPointer", &ValueTree::getPropertyPointer, py::return_value_policy::reference)
-        .def ("setProperty", &ValueTree::setProperty)
-        .def ("hasProperty", &ValueTree::hasProperty)
-        .def ("removeProperty", &ValueTree::removeProperty)
-        .def ("removeAllProperties", &ValueTree::removeAllProperties)
+        .def ("hasType", &ValueTree::hasType, "typeName"_a)
+        .def ("hasType", [](const ValueTree& self, const String& type) { return self.hasType (type); }, "typeName"_a)
+        .def ("getProperty", py::overload_cast<const Identifier&> (&ValueTree::getProperty, py::const_), "name"_a, py::return_value_policy::reference)
+        .def ("getProperty", [](const ValueTree& self, const String& name) { return self.getProperty (name); }, "name"_a, py::return_value_policy::reference)
+        .def ("getProperty", py::overload_cast<const Identifier&, const var&> (&ValueTree::getProperty, py::const_), "name"_a, "defaultReturnValue"_a, py::return_value_policy::reference)
+        .def ("getProperty", [](const ValueTree& self, const String& name, const var& defaultReturnValue) { return self.getProperty (name, defaultReturnValue); }, "name"_a, "defaultReturnValue"_a, py::return_value_policy::reference)
+        .def ("__getitem__", [](const ValueTree& self, const Identifier& name) { return self[name]; })
+        .def ("__getitem__", [](const ValueTree& self, const String& name) { return self[name]; })
+        .def ("setProperty", &ValueTree::setProperty, "name"_a, "newValue"_a, "undoManager"_a, py::return_value_policy::reference)
+        .def ("setProperty", [](ValueTree& self, const String& name, const var& newValue, UndoManager* undoManager) { return self.setProperty (name, newValue, undoManager); }, "name"_a, "newValue"_a, "undoManager"_a, py::return_value_policy::reference)
+        .def ("hasProperty", &ValueTree::hasProperty, "name"_a)
+        .def ("hasProperty", [](const ValueTree& self, const String& name) { return self.hasProperty (name); }, "name"_a)
+        .def ("removeProperty", &ValueTree::removeProperty, "name"_a, "undoManager"_a)
+        .def ("removeProperty", [](ValueTree& self, const String& name, UndoManager* undoManager) { self.removeProperty (name, undoManager); }, "name"_a, "undoManager"_a)
+        .def ("removeAllProperties", &ValueTree::removeAllProperties, "undoManager"_a)
         .def ("getNumProperties", &ValueTree::getNumProperties)
-        .def ("getPropertyName", &ValueTree::getPropertyName)
-        .def ("getPropertyAsValue", &ValueTree::getPropertyAsValue)
+        .def ("getPropertyName", &ValueTree::getPropertyName, "index"_a)
+        .def ("getPropertyAsValue", &ValueTree::getPropertyAsValue, "name"_a, "undoManager"_a, "shouldUpdateSynchronously"_a = false)
         .def ("getNumChildren", &ValueTree::getNumChildren)
-        .def ("getChild", &ValueTree::getChild)
-        .def ("getChildWithName", &ValueTree::getChildWithName)
-        .def ("getOrCreateChildWithName", &ValueTree::getOrCreateChildWithName)
-        .def ("getChildWithProperty", &ValueTree::getChildWithProperty)
-        .def ("addChild", &ValueTree::addChild)
-        .def ("appendChild", &ValueTree::appendChild)
-        .def ("removeChild", py::overload_cast<const ValueTree&, UndoManager*> (&ValueTree::removeChild))
-        .def ("removeChild", py::overload_cast<int, UndoManager*> (&ValueTree::removeChild))
-        .def ("removeAllChildren", &ValueTree::removeAllChildren)
-        .def ("moveChild", &ValueTree::moveChild)
-        .def ("isAChildOf", &ValueTree::isAChildOf)
-        .def ("indexOf", &ValueTree::indexOf)
+        .def ("getChild", &ValueTree::getChild, "index"_a)
+        .def ("getChildWithName", &ValueTree::getChildWithName, "type"_a)
+        .def ("getChildWithName", [](const ValueTree& self, const String& name) { return self.getChildWithName (name); }, "type"_a)
+        .def ("getOrCreateChildWithName", &ValueTree::getOrCreateChildWithName, "type"_a, "undoManager"_a)
+        .def ("getOrCreateChildWithName", [](ValueTree& self, const String& name, UndoManager* undoManager) { return self.getOrCreateChildWithName (name, undoManager); }, "type"_a, "undoManager"_a)
+        .def ("getChildWithProperty", &ValueTree::getChildWithProperty, "propertyName"_a, "propertyValue"_a)
+        .def ("getChildWithProperty", [](const ValueTree& self, const String& propertyName, const var& propertyValue) { return self.getChildWithProperty (propertyName, propertyValue); }, "propertyName"_a, "propertyValue"_a)
+        .def ("addChild", &ValueTree::addChild, "child"_a, "index"_a, "undoManager"_a)
+        .def ("appendChild", &ValueTree::appendChild, "child"_a, "undoManager"_a)
+        .def ("removeChild", py::overload_cast<const ValueTree&, UndoManager*> (&ValueTree::removeChild), "child"_a, "undoManager"_a)
+        .def ("removeChild", py::overload_cast<int, UndoManager*> (&ValueTree::removeChild), "childIndex"_a, "undoManager"_a)
+        .def ("removeAllChildren", &ValueTree::removeAllChildren, "undoManager"_a)
+        .def ("moveChild", &ValueTree::moveChild, "currentIndex"_a, "newIndex"_a, "undoManager"_a)
+        .def ("isAChildOf", &ValueTree::isAChildOf, "possibleParent"_a)
+        .def ("indexOf", &ValueTree::indexOf, "child"_a)
         .def ("getParent", &ValueTree::getParent)
         .def ("getRoot", &ValueTree::getRoot)
-        .def ("getSibling", &ValueTree::getSibling)
+        .def ("getSibling", &ValueTree::getSibling, "delta"_a)
+        .def ("__iter__", [](const ValueTree& self) { return py::make_iterator (self.begin(), self.end()); }, py::keep_alive<0, 1>())
         .def ("createXml", &ValueTree::createXml)
-        .def_static ("fromXml", static_cast<ValueTree (*)(const XmlElement&)> (&ValueTree::fromXml))
-        .def_static ("fromXml", static_cast<ValueTree (*)(const String&)> (&ValueTree::fromXml))
-        .def ("toXmlString", &ValueTree::toXmlString)
-        .def ("writeToStream", &ValueTree::writeToStream)
-        .def_static ("readFromStream", &ValueTree::readFromStream)
+        .def_static ("fromXml", static_cast<ValueTree (*)(const XmlElement&)> (&ValueTree::fromXml), "xml"_a)
+        .def_static ("fromXml", static_cast<ValueTree (*)(const String&)> (&ValueTree::fromXml), "xmlText"_a)
+        .def ("toXmlString", &ValueTree::toXmlString, "format"_a = XmlElement::TextFormat())
+        .def ("writeToStream", &ValueTree::writeToStream, "output"_a)
+        .def_static ("readFromStream", &ValueTree::readFromStream, "input"_a)
         .def_static ("readFromData", [](py::buffer data)
         {
             auto info = data.request();
             return ValueTree::readFromData (info.ptr, static_cast<size_t> (info.size));
-        })
+        }, "data"_a)
         .def_static ("readFromGZIPData", [](py::buffer data)
         {
             auto info = data.request();
             return ValueTree::readFromGZIPData (info.ptr, static_cast<size_t> (info.size));
-        })
-        .def ("addListener", &ValueTree::addListener)
-        .def ("removeListener", &ValueTree::removeListener)
-        .def ("setPropertyExcludingListener", &ValueTree::setPropertyExcludingListener)
-        .def ("sendPropertyChangeMessage", &ValueTree::sendPropertyChangeMessage)
-        .def ("sort", &ValueTree::template sort<PyValueTreeComparator>)
+        }, "data"_a)
+        .def ("addListener", &ValueTree::addListener, "listener"_a)
+        .def ("removeListener", &ValueTree::removeListener, "listener"_a)
+        .def ("setPropertyExcludingListener", &ValueTree::setPropertyExcludingListener,
+            "listenerToExclude"_a, "name"_a, "newValue"_a, "undoManager"_a, py::return_value_policy::reference)
+        .def ("sendPropertyChangeMessage", &ValueTree::sendPropertyChangeMessage, "property"_a)
+        .def ("sendPropertyChangeMessage", [](ValueTree& self, const String& property) { self.sendPropertyChangeMessage (property); }, "property"_a)
+        .def ("sort", &ValueTree::template sort<PyValueTreeComparator>,
+            "comparator"_a, "undoManager"_a, "retainOrderOfEquivalentItems"_a)
         .def ("getReferenceCount", &ValueTree::getReferenceCount)
     ;
 
@@ -307,7 +326,7 @@ void registerJuceDataStructuresBindings (py::module_& m)
         {
             auto info = data.request();
             return ValueTreeSynchroniser::applyChange (root, info.ptr, static_cast<size_t> (info.size), undoManager);
-        })
+        }, "root"_a, "data"_a, "undoManager"_a)
         .def ("getRoot", &ValueTreeSynchroniser::getRoot, py::return_value_policy::reference)
     ;
 
@@ -338,7 +357,7 @@ void registerJuceDataStructuresBindings (py::module_& m)
 
     // ============================================================================================ juce::PropertiesFile
 
-    py::class_<PropertiesFile> classPropertiesFile (m, "PropertiesFile");
+    py::class_<PropertiesFile, PropertySet, ChangeBroadcaster> classPropertiesFile (m, "PropertiesFile");
 
     py::enum_<PropertiesFile::StorageFormat> (classPropertiesFile, "StorageFormat")
         .value ("storeAsBinary", PropertiesFile::StorageFormat::storeAsBinary)

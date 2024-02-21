@@ -188,35 +188,35 @@ Supported Modules
      - Not Planned
    * - juce_audio_basics
      - ✅
-     - 0.0%
+     - 0.87%
      - In Progress
    * - juce_audio_devices
      - ✅
      - 0.0%
      - In Progress
    * - juce_audio_formats
-     - ⛔️
-     - N/A
-     - Planned
+     - ✅
+     - 0.0%
+     - In Progress
    * - juce_audio_plugin_client
      - ⛔️
      - N/A
      - Not planned
    * - juce_audio_processors
-     - ⛔️
-     - N/A
-     - Planned
+     - ✅
+     - 0.0%
+     - In Progress
    * - juce_audio_utils
-     - ⛔️
-     - N/A
-     - Planned
+     - ✅
+     - 0.0%
+     - In Progress
    * - juce_box2d
      - ⛔️
      - N/A
      - Planned
    * - juce_core
      - ✅
-     - 36.66%
+     - 44.82%
      - Ready
    * - juce_cryptography
      - ⛔️
@@ -224,7 +224,7 @@ Supported Modules
      - Planned
    * - juce_data_structures
      - ✅
-     - 25.72%
+     - 55.61%
      - Ready
    * - juce_dsp
      - ⛔️
@@ -232,7 +232,7 @@ Supported Modules
      - Planned
    * - juce_events
      - ✅
-     - 50.97%
+     - 49.68%
      - Ready
    * - juce_graphics
      - ✅
@@ -240,7 +240,7 @@ Supported Modules
      - In Progress
    * - juce_gui_basics
      - ✅
-     - 9.53%
+     - 9.77%
      - In Progress, Basic Components Available
    * - juce_gui_extra
      - ✅
@@ -309,6 +309,11 @@ Some images of JUCE tutorials and other small apps ported to *popsicle*.
    .. image:: images/audio_player.png
        :target: examples/audio_player.py
 
+- Audio Player with waveform (https://docs.juce.com/master/tutorial_audio_thumbnail.html)
+
+   .. image:: images/audio_player_waveform.png
+       :target: examples/audio_player_waveform.py
+
 - OpenCV Integration
 
    .. image:: images/opencv_integration.png
@@ -318,6 +323,11 @@ Some images of JUCE tutorials and other small apps ported to *popsicle*.
 
    .. image:: images/matplotlib_integration.png
        :target: examples/matplotlib_integration.py
+
+- Emojis Components (`emojis_component.py <examples/emojis_component.py>`_ and `emojis_font_component.py <examples/emojis_font_component.py>`_)
+
+   .. image:: images/emojis_component.png
+       :target: examples/emojis_font_component.py
 
 
 -------------
@@ -380,7 +390,7 @@ Install python dependencies.
 .. code-block:: bash
 
   # Build the binary distribution
-  python -m build --wheel
+  python3 -m build --wheel
 
   # Install the local wheel
   pip3 install dist/popsicle-*.whl

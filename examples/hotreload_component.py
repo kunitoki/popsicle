@@ -11,7 +11,7 @@ class TestComponent(juce.Component, juce.Timer):
 		juce.Timer.__init__(self)
 
 		self.setOpaque(True)
-		self.startTimerHz(24)
+		self.startTimerHz(25)
 
 	def timerCallback(self):
 		self.time += juce.degreesToRadians(1)
@@ -26,5 +26,5 @@ class TestComponent(juce.Component, juce.Timer):
 		p = juce.Path()
 		p.addStar(center, 20, 25, self.getWidth(), self.time)
 
-		g.setColour(juce.Colours.green)
+		g.setColour(juce.Colours.yellow)
 		g.fillPath(p)

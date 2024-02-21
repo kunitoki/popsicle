@@ -26,6 +26,8 @@
 #include "../utilities/WindowsIncludes.h"
 #endif
 
+#include "ScriptJuceOptionsBindings.h"
+
 #include <functional>
 #include <string_view>
 #include <typeinfo>
@@ -49,7 +51,50 @@ using namespace juce;
 namespace py = pybind11;
 using namespace py::literals;
 
+namespace {
+
 // ============================================================================================
+
+void runApplication (JUCEApplicationBase* application, int milliseconds)
+{
+    {
+        py::gil_scoped_release release;
+
+        if (! application->initialiseApp())
+            return;
+    }
+
+    while (! MessageManager::getInstance()->hasStopMessageBeenSent())
+    {
+        if (globalOptions().catchExceptionsAndContinue)
+        {
+            try
+            {
+                py::gil_scoped_release release;
+
+                MessageManager::getInstance()->runDispatchLoopUntil (milliseconds);
+            }
+            catch (const py::error_already_set& e)
+            {
+                Helpers::printPythonException (e);
+            }
+        }
+        else
+        {
+            py::gil_scoped_release release;
+
+            MessageManager::getInstance()->runDispatchLoopUntil (milliseconds);
+        }
+
+        if (globalOptions().caughtKeyboardInterrupt)
+            break;
+
+        if (PyErr_CheckSignals() != 0)
+            throw py::error_already_set();
+    }
+}
+
+} // namespace
 
 void registerJuceGuiEntryPointsBindings (py::module_& m)
 {
@@ -57,8 +102,11 @@ void registerJuceGuiEntryPointsBindings (py::module_& m)
 
     // =================================================================================================
 
-    m.def ("START_JUCE_APPLICATION", [](py::handle applicationType)
+    m.def ("START_JUCE_APPLICATION", [](py::handle applicationType, bool catchExceptionsAndContinue)
     {
+        globalOptions().catchExceptionsAndContinue = catchExceptionsAndContinue;
+        globalOptions().caughtKeyboardInterrupt = false;
+
         py::scoped_ostream_redirect output;
 
         if (! applicationType)
@@ -98,46 +146,15 @@ void registerJuceGuiEntryPointsBindings (py::module_& m)
 
         try
         {
-            if (! application->initialiseApp()) // TODO - error checking (python)
-            {
-                systemExit();
-                return;
-            }
-
-            bool isErrorSignalInFlight = false;
-
-            JUCE_TRY
-            {
-                do
-                {
-                    {
-                        py::gil_scoped_release release;
-
-                        if (MessageManager::getInstance()->hasStopMessageBeenSent())
-                            break;
-
-                        MessageManager::getInstance()->runDispatchLoopUntil (200);
-                    }
-
-                    isErrorSignalInFlight = PyErr_CheckSignals() != 0;
-                    if (isErrorSignalInFlight)
-                        break;
-                }
-                while (true);
-            }
-            JUCE_CATCH_EXCEPTION
-
-            if (isErrorSignalInFlight)
-                throw py::error_already_set();
+            runApplication (application, globalOptions().messageManagerGranularityMilliseconds);
         }
         catch (const py::error_already_set& e)
         {
-            py::print (e.what());
-            pybind11::module_::import ("traceback").attr ("print_stack") ();
+            Helpers::printPythonException (e);
         }
 
         systemExit();
-    });
+    }, "applicationType"_a, "catchExceptionsAndContinue"_a = false);
 
 #endif
 

@@ -66,20 +66,83 @@ namespace {
 
 // =================================================================================================
 
+std::unique_ptr<PyConfig> ScriptEngine::prepareScriptingHome (
+    const juce::String& programName,
+    const juce::File& destinationFolder,
+    std::function<juce::MemoryBlock (const char*)> standardLibraryCallback,
+    bool forceInstall)
+{
+    juce::String pythonFolderName, pythonArchiveName;
+    pythonFolderName << "python" << PY_MAJOR_VERSION << "." << PY_MINOR_VERSION;
+    pythonArchiveName << "python" << PY_MAJOR_VERSION << PY_MINOR_VERSION << "_zip";
+
+    if (! destinationFolder.isDirectory())
+        destinationFolder.createDirectory();
+
+    auto libFolder = destinationFolder.getChildFile ("lib");
+    if (! libFolder.isDirectory())
+        libFolder.createDirectory();
+
+    auto pythonFolder = libFolder.getChildFile (pythonFolderName);
+    if (! pythonFolder.isDirectory())
+        pythonFolder.createDirectory();
+
+    if (forceInstall && pythonFolder.getNumberOfChildFiles (juce::File::findFilesAndDirectories) > 0)
+    {
+        pythonFolder.deleteRecursively();
+        pythonFolder.createDirectory();
+    }
+
+    if (! pythonFolder.getChildFile ("lib-dynload").isDirectory())
+    {
+        juce::MemoryBlock mb = standardLibraryCallback (pythonArchiveName.toRawUTF8());
+
+        auto mis = juce::MemoryInputStream (mb.getData(), mb.getSize(), false);
+
+        auto zip = juce::ZipFile (mis);
+        zip.uncompressTo (pythonFolder);
+    }
+
+    auto config = std::make_unique<PyConfig>();
+
+    PyConfig_InitPythonConfig (config.get());
+    config->parse_argv = 0;
+    config->isolated = 1;
+    config->install_signal_handlers = 0;
+    config->program_name = Py_DecodeLocale (programName.toRawUTF8(), nullptr);
+    config->home = Py_DecodeLocale (destinationFolder.getFullPathName().toRawUTF8(), nullptr);
+
+    return config;
+}
+
+// =================================================================================================
+
 ScriptEngine::ScriptEngine ()
     : ScriptEngine (juce::StringArray{})
 {
 }
 
-ScriptEngine::ScriptEngine (juce::StringArray modules)
+ScriptEngine::ScriptEngine (std::unique_ptr<PyConfig> config)
+    : ScriptEngine (juce::StringArray{}, std::move (config))
+{
+}
+
+ScriptEngine::ScriptEngine (juce::StringArray modules, std::unique_ptr<PyConfig> config)
     : customModules (std::move (modules))
 {
+    if (config)
+        pybind11::initialize_interpreter (config.get(), 0, nullptr, false);
+    else
+        pybind11::initialize_interpreter();
+
     py::set_shared_data ("_ENGINE", this);
 }
 
 ScriptEngine::~ScriptEngine()
 {
     py::set_shared_data ("_ENGINE", nullptr);
+
+    pybind11::finalize_interpreter();
 }
 
 // =================================================================================================

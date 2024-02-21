@@ -43,6 +43,15 @@ void crashHandler ([[maybe_unused]] void* stack)
 
 PopsicleDemo::PopsicleDemo()
     : text ("Unkown")
+    , engine (popsicle::ScriptEngine::prepareScriptingHome (
+        juce::JUCEApplication::getInstance()->getApplicationName(),
+        juce::File::getSpecialLocation (juce::File::tempDirectory),
+        [](const char* resourceName) -> juce::MemoryBlock
+        {
+            int dataSize = 0;
+            auto data = BinaryData::getNamedResource (resourceName, dataSize);
+            return { data, static_cast<size_t> (dataSize) };
+        }))
 {
     juce::SystemStats::setApplicationCrashHandler (crashHandler);
 
@@ -52,17 +61,18 @@ PopsicleDemo::PopsicleDemo()
     locals["this"] = pybind11::cast (this);
 
     auto result = engine.runScript (R"(
-    )", locals);
-    if (result.failed())
-        std::cout << result.getErrorMessage();
+import sys
 
-    engine.runScript (R"(
 # An example of scriptable self
 print("Scripting JUCE!")
-this.text = "Popsicle"
+
+this.text = "Popsicle " + sys.version.split(" ")[0]
 this.setOpaque(True)
 this.setSize(600, 300)
     )", locals);
+
+    if (result.failed())
+        std::cout << result.getErrorMessage();
 }
 
 PopsicleDemo::~PopsicleDemo()

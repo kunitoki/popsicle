@@ -49,6 +49,8 @@ class HotReloadContentComponent(juce.Component, juce.Timer):
             else:
                 self.module = importlib.reload(self.module)
 
+            print("Module", self.fileToWatch.getFileName(), "reloaded correctly")
+
         except Exception as e:
             print(e)
             return
@@ -62,4 +64,4 @@ class HotReloadContentComponent(juce.Component, juce.Timer):
 
 
 if __name__ == "__main__":
-    START_JUCE_COMPONENT(HotReloadContentComponent, name="Hot Reload Example", alwaysOnTop=True)
+    START_JUCE_COMPONENT(HotReloadContentComponent, name="Hot Reload Example", alwaysOnTop=True, catchExceptionsAndContinue=True)

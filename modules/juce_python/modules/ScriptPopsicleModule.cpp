@@ -52,8 +52,8 @@ PYBIND11_EMBEDDED_MODULE(__popsicle__, m)
 
     m.def ("__redirect__", []
     {
-        auto sys = py::module::import ("sys");
-        auto popsicleSys = py::module::import ("__popsicle__");
+        auto sys = py::module_::import ("sys");
+        auto popsicleSys = py::module_::import ("__popsicle__");
 
         popsicleSys.attr ("__saved_stdout__") = sys.attr ("stdout");
         popsicleSys.attr ("__saved_stderr__") = sys.attr ("stderr");
@@ -63,8 +63,8 @@ PYBIND11_EMBEDDED_MODULE(__popsicle__, m)
 
     m.def ("__restore__", []
     {
-        auto sys = py::module::import ("sys");
-        auto popsicleSys = py::module::import ("__popsicle__");
+        auto sys = py::module_::import ("sys");
+        auto popsicleSys = py::module_::import ("__popsicle__");
 
         sys.attr ("stdout") = popsicleSys.attr ("__saved_stdout__");
         sys.attr ("stderr") = popsicleSys.attr ("__saved_stderr__");

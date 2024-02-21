@@ -20,8 +20,6 @@
 
 #include "juce_python.h"
 
-JUCE_BEGIN_IGNORE_WARNINGS_MSVC(4244)
 #include "bindings/ScriptJuceGraphicsBindings.cpp"
-JUCE_END_IGNORE_WARNINGS_MSVC
 
 #endif

@@ -9,7 +9,7 @@ project (${PROJECT_NAME} VERSION ${VERSION_NUMBER})
 
 # Find python
 if ("${Python_INCLUDE_DIRS}" STREQUAL "")
-    set (Python_ROOT_DIR "/Library/Frameworks/Python.framework/Versions/Current")
+    #set (Python_ROOT_DIR "/Library/Frameworks/Python.framework/Versions/Current")
     set (Python_USE_STATIC_LIBS TRUE)
     find_package (Python REQUIRED Development)
 else()
@@ -46,7 +46,6 @@ set_target_properties (${PROJECT_NAME} PROPERTIES PREFIX "")
 
 if (APPLE)
     set_target_properties (${PROJECT_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
-    set_target_properties (${PROJECT_NAME} PROPERTIES LINK_FLAGS_RELEASE "-s")
     set_target_properties (${PROJECT_NAME} PROPERTIES SUFFIX ".so")
     target_link_options (${PROJECT_NAME} PRIVATE "-Wl,-weak_reference_mismatches,weak")
 elseif (WIN32)
@@ -54,6 +53,20 @@ elseif (WIN32)
     set_target_properties (${PROJECT_NAME} PROPERTIES SUFFIX ".pyd")
     if (CMAKE_BUILD_TYPE STREQUAL "Debug")
         set_target_properties (${PROJECT_NAME} PROPERTIES OUTPUT_NAME "${PROJECT_NAME}_d")
+    endif()
+endif()
+
+if (ENABLE_DISTRIBUTION)
+    if (APPLE)
+        add_custom_command(
+            TARGET "${PROJECT_NAME}" POST_BUILD DEPENDS "${PROJECT_NAME}"
+            COMMAND $<$<CONFIG:release>:${CMAKE_STRIP}>
+            ARGS -x $<TARGET_FILE:${PROJECT_NAME}>)
+    elseif (UNIX)
+        add_custom_command(
+            TARGET "${PROJECT_NAME}" POST_BUILD DEPENDS "${PROJECT_NAME}"
+            COMMAND $<$<CONFIG:release>:${CMAKE_STRIP}>
+            ARGS --strip-all $<TARGET_FILE:${PROJECT_NAME}>)
     endif()
 endif()
 
@@ -73,7 +86,7 @@ target_compile_definitions (${PROJECT_NAME} PRIVATE
     JUCE_DISPLAY_SPLASH_SCREEN=0
     JUCE_DISABLE_JUCE_VERSION_PRINTING=1
     JUCE_MODAL_LOOPS_PERMITTED=1
-    JUCE_CATCH_UNHANDLED_EXCEPTIONS=0
+    JUCE_CATCH_UNHANDLED_EXCEPTIONS=1
     JUCE_LOG_ASSERTIONS=1
     JUCE_ALLOW_STATIC_NULL_VARIABLES=0
     JUCE_STRICT_REFCOUNTEDPOINTER=1

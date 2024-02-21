@@ -50,13 +50,13 @@ struct PyAudioFormatReader : Base
     {
     }
 
-    void readMaxLevels (juce::int64 startSample, juce::int64 numSamples,
+    void readMaxLevels (juce::int64 startOffset, juce::int64 numSamples,
                         juce::Range<float>* results, int numChannelsToRead) override
     {
-        PYBIND11_OVERRIDE (void, Base, readMaxLevels, startSample, numSamples, results, numChannelsToRead);
+        PYBIND11_OVERRIDE (void, Base, readMaxLevels, startOffset, numSamples, results, numChannelsToRead);
     }
 
-    void readMaxLevels (juce::int64 startSample, juce::int64 numSamples,
+    void readMaxLevels (juce::int64 startOffset, juce::int64 numSamples,
                         float& lowestLeft,  float& highestLeft,
                         float& lowestRight, float& highestRight) override
     {
@@ -64,7 +64,7 @@ struct PyAudioFormatReader : Base
 
         if (pybind11::function override_ = pybind11::get_override (static_cast<Base*> (this), "readMaxLevels"); override_)
         {
-            auto results = override_ (startSample, numSamples).cast<pybind11::tuple>();
+            auto results = override_ (startOffset, numSamples).cast<pybind11::tuple>();
 
             if (results.size() != 4)
                 pybind11::pybind11_fail("Invalid return type of function \"AudioFormatReader::readMaxLevels\" must be tuple[float, 4]");
@@ -77,7 +77,7 @@ struct PyAudioFormatReader : Base
             return;
         }
 
-        Base::readMaxLevels (startSample, numSamples, lowestLeft, highestLeft, lowestRight, highestRight);
+        Base::readMaxLevels (startOffset, numSamples, lowestLeft, highestLeft, lowestRight, highestRight);
     }
 
     juce::AudioChannelSet getChannelLayout() override
