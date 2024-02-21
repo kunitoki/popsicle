@@ -357,7 +357,7 @@ void registerJuceDataStructuresBindings (py::module_& m)
 
     // ============================================================================================ juce::PropertiesFile
 
-    py::class_<PropertiesFile> classPropertiesFile (m, "PropertiesFile");
+    py::class_<PropertiesFile, PropertySet, ChangeBroadcaster> classPropertiesFile (m, "PropertiesFile");
 
     py::enum_<PropertiesFile::StorageFormat> (classPropertiesFile, "StorageFormat")
         .value ("storeAsBinary", PropertiesFile::StorageFormat::storeAsBinary)
