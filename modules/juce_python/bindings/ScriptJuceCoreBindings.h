@@ -26,6 +26,7 @@
 
 #include "../utilities/ClassDemangling.h"
 #include "../utilities/PythonInterop.h"
+#include "../utilities/PythonTypes.h"
 
 #include <cstddef>
 #include <functional>
@@ -130,10 +131,10 @@ void registerArray (pybind11::module_& m)
 
     ([&]
     {
-        using ValueType = Types;
+        using ValueType = underlying_type_t<Types>;
         using T = Class<ValueType, DummyCriticalSection, 0>;
 
-        const auto className = popsicle::Helpers::pythonizeCompoundClassName ("Array", typeid (Types).name());
+        const auto className = popsicle::Helpers::pythonizeCompoundClassName ("Array", typeid (ValueType).name());
 
         py::class_<T> class_ (m, className.toRawUTF8());
 
@@ -215,6 +216,9 @@ void registerArray (pybind11::module_& m)
                 return result;
             })
         ;
+
+        if constexpr (! std::is_same_v<ValueType, Types>)
+            class_.def (py::init ([](Types value) { return T (static_cast<ValueType> (value)); }));
 
         if constexpr (isEqualityComparable<ValueType>::value)
         {

@@ -24,6 +24,7 @@
 
 #include "../utilities/CrashHandling.h"
 
+#include <optional>
 #include <string_view>
 
 namespace PYBIND11_NAMESPACE {
@@ -425,10 +426,10 @@ void registerRange (py::module_& m)
 
     ([&]
     {
-        using ValueType = Types;
+        using ValueType = underlying_type_t<Types>;
         using T = Class<ValueType>;
 
-        const auto className = popsicle::Helpers::pythonizeCompoundClassName ("Range", typeid (Types).name());
+        const auto className = popsicle::Helpers::pythonizeCompoundClassName ("Range", typeid (ValueType).name());
 
         auto class_ = py::class_<T> (m, className.toRawUTF8())
             .def (py::init<>())
@@ -462,7 +463,11 @@ void registerRange (py::module_& m)
             .def ("getUnionWith", py::overload_cast<T> (&T::getUnionWith, py::const_))
             .def ("getUnionWith", py::overload_cast<const ValueType> (&T::getUnionWith, py::const_))
             .def ("constrainRange", &T::constrainRange)
-        //.def_static ("findMinAndMax", &T::template findMinAndMax<int>)
+        //.def_static ("findMinAndMax", [](const T& self, py::buffer values, int numValues)
+        //{
+        //  auto info = values.request();
+        //  return self.findMinAndMax (reinterpret_cast<ValueType*> (info.ptr), numValues);
+        //})
             .def ("__repr__", [](const T& self)
             {
                 String result;
@@ -472,6 +477,9 @@ void registerRange (py::module_& m)
                 return result;
             })
         ;
+
+        if constexpr (! std::is_same_v<ValueType, Types>)
+            class_.def (py::init ([](Types start, Types end) { return T (static_cast<ValueType> (start), static_cast<ValueType> (end)); }));
 
         type[py::type::of (py::cast (Types{}))] = class_;
 
@@ -490,10 +498,10 @@ void registerAtomic (py::module_& m)
 
     ([&]
     {
-        using ValueType = Types;
+        using ValueType = underlying_type_t<Types>;
         using T = Class<ValueType>;
 
-        const auto className = popsicle::Helpers::pythonizeCompoundClassName ("Atomic", typeid (Types).name());
+        const auto className = popsicle::Helpers::pythonizeCompoundClassName ("Atomic", typeid (ValueType).name());
 
         auto class_ = py::class_<T> (m, className.toRawUTF8())
             .def (py::init<>())
@@ -505,6 +513,9 @@ void registerAtomic (py::module_& m)
             .def ("compareAndSetBool", &T::compareAndSetBool)
             .def ("memoryBarrier", &T::memoryBarrier)
         ;
+
+        if constexpr (! std::is_same_v<ValueType, Types>)
+            class_.def (py::init ([](Types value) { return T (static_cast<ValueType> (value)); }));
 
         if constexpr (!std::is_same_v<ValueType, bool> && !std::is_floating_point_v<ValueType>)
         {
@@ -527,6 +538,40 @@ void registerJuceCoreBindings (py::module_& m)
 #if !JUCE_PYTHON_EMBEDDED_INTERPRETER
     juce::SystemStats::setApplicationCrashHandler (Helpers::applicationCrashHandler);
 #endif
+
+    // ============================================================================================ GenericInteger<T>
+
+    py::class_<GenericInteger<int8>> (m, "int8")
+        .def (py::init<int8>())
+        .def ("get", &GenericInteger<int8>::get);
+
+    py::class_<GenericInteger<uint8>> (m, "uint8")
+        .def (py::init<uint8>())
+        .def ("get", &GenericInteger<uint8>::get);
+
+    py::class_<GenericInteger<int16>> (m, "int16")
+        .def (py::init<int16>())
+        .def ("get", &GenericInteger<int16>::get);
+
+    py::class_<GenericInteger<uint16>> (m, "uint16")
+        .def (py::init<uint16>())
+        .def ("get", &GenericInteger<uint16>::get);
+
+    py::class_<GenericInteger<int32>> (m, "int32")
+        .def (py::init<int32>())
+        .def ("get", &GenericInteger<int32>::get);
+
+    py::class_<GenericInteger<uint32>> (m, "uint32")
+        .def (py::init<uint32>())
+        .def ("get", &GenericInteger<uint32>::get);
+
+    py::class_<GenericInteger<int64>> (m, "int64")
+        .def (py::init<int64>())
+        .def ("get", &GenericInteger<int64>::get);
+
+    py::class_<GenericInteger<uint64>> (m, "uint64")
+        .def (py::init<uint64>())
+        .def ("get", &GenericInteger<uint64>::get);
 
     // ============================================================================================ juce::Math
 
@@ -1188,7 +1233,7 @@ void registerJuceCoreBindings (py::module_& m)
 
     // ============================================================================================ juce::Range<>
 
-    registerRange<Range, int, float> (m);
+    registerRange<Range, int, GenericInteger<int64>, float> (m);
 
     // ============================================================================================ juce::MemoryBlock
 
@@ -1668,9 +1713,12 @@ void registerJuceCoreBindings (py::module_& m)
     classMemoryMappedFile
         .def (py::init<const File&, MemoryMappedFile::AccessMode, bool>(), "file"_a, "mode"_a, "exclusive"_a = false)
         .def (py::init<const File&, const Range<int64>&, MemoryMappedFile::AccessMode, bool>(), "file"_a, "fileRange"_a, "mode"_a, "exclusive"_a = false)
-        .def ("getData", [](const MemoryMappedFile* self)
+        .def ("getData", [](const MemoryMappedFile& self) -> std::optional<py::memoryview>
         {
-            return py::memoryview::from_memory (self->getData(), static_cast<Py_ssize_t> (self->getSize()));
+            if (self.getData() == nullptr)
+                return std::nullopt;
+
+            return py::memoryview::from_memory (self.getData(), static_cast<Py_ssize_t> (self.getSize()));
         }, py::return_value_policy::reference_internal)
         .def ("getSize", &MemoryMappedFile::getSize)
         .def ("getRange", &MemoryMappedFile::getRange)

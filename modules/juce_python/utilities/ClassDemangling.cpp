@@ -88,6 +88,7 @@ juce::String pythonizeClassName (juce::StringRef className, int maxTemplateArgs)
     }
 
     return name
+        .replace ("popsicle::", "")
         .replace ("juce::", "")
         .replace ("::", ".")
         .replace ("<", "[")
