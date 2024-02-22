@@ -1,4 +1,6 @@
 import os
+import sys
+import pytest
 
 import popsicle as juce
 from popsicle import int64
@@ -28,6 +30,7 @@ def test_memory_mapped_file_read_write_mode():
 
 #==================================================================================================
 
+@pytest.mark.skipif(sys.platform == "win32")
 def test_memory_mapped_file_exclusive_mode():
     mmf = juce.MemoryMappedFile(data_folder.getChildFile("somefile.txt"), juce.MemoryMappedFile.readOnly, exclusive=True)
     assert mmf.getData() is not None
@@ -58,6 +61,7 @@ def test_memory_mapped_file_section_read_write_mode():
 
 #==================================================================================================
 
+@pytest.mark.skipif(sys.platform == "win32")
 def test_memory_mapped_file_section_exclusive_mode():
     mmf = juce.MemoryMappedFile(data_folder.getChildFile("somefile.txt"), juce.Range[int64](0, 10), juce.MemoryMappedFile.readOnly, exclusive=True)
     assert mmf.getData() is not None
