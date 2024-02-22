@@ -317,6 +317,7 @@ def test_write_to_stream():
 
     with open(temp_file.getFullPathName(), "r") as file:
         content = file.read()
+
     assert "note" in content
     assert "This is a note" in content
 
@@ -329,5 +330,8 @@ def test_read_from_file():
 
     root = juce.XmlDocument.parse(temp_file)
     assert root.getTagName() == "note"
+    assert root.getNumChildElements() == 2
+    assert root.getChildElement(0) is not None
     assert root.getChildElement(0).getAllSubText() == "User"
+    assert root.getChildElement(1) is not None
     assert root.getChildElement(1).getAllSubText() == "Hello, World!"

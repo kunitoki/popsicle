@@ -80,7 +80,7 @@ def test_is_root():
 
 def test_get_size():
     file = juce.File(this_folder).getChildFile("data").getChildFile("somefile.txt")
-    assert file.getSize() == (900 if sys.platform == "win32" else 886)
+    assert file.getSize() == 886
 
 #==================================================================================================
 
