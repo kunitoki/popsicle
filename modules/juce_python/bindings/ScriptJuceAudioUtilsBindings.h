@@ -182,9 +182,9 @@ struct PyAudioThumbnailBase : Base
         PYBIND11_OVERRIDE_PURE (juce::int64, Base, getHashCode);
     }
 
-    void reset (int numChannels, double sampleRate, juce::int64 totalSamplesInSource) override
+    void reset (int channels, double sampleRate, juce::int64 totalSamplesInSource) override
     {
-        PYBIND11_OVERRIDE_PURE (void, Base, reset, numChannels, sampleRate, totalSamplesInSource);
+        PYBIND11_OVERRIDE_PURE (void, Base, reset, channels, sampleRate, totalSamplesInSource);
     }
 
     void addBlock (juce::int64 sampleNumberInSource, const juce::AudioBuffer<float>& newData, int startOffsetInBuffer, int numSamples) override
