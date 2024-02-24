@@ -110,7 +110,8 @@ class CustomFullInputStream(juce.InputStream):
             self.offset += 1
             data.append(value)
 
-            if value.to_bytes() == b"\n" or value.to_bytes() == b"\0":
+            value_bytes = value.to_bytes(length=1, byteorder="little")
+            if value_bytes == b"\n" or value_bytes == b"\0":
                 data = data[:-1]
                 break
 
@@ -124,7 +125,8 @@ class CustomFullInputStream(juce.InputStream):
             self.offset += 1
             data.append(value)
 
-            if value.to_bytes() == b"\0":
+            value_bytes = value.to_bytes(length=1, byteorder="little")
+            if value_bytes == b"\0":
                 data = data[:-1]
                 break
 
