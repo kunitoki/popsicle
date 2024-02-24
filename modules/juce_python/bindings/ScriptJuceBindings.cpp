@@ -68,6 +68,10 @@ PYBIND11_EMBEDDED_MODULE (JUCE_PYTHON_MODULE_NAME, m)
 PYBIND11_MODULE (JUCE_PYTHON_MODULE_NAME, m)
 #endif
 {
+#if JUCE_MAC
+    juce::Process::setDockIconVisible (false);
+#endif
+
     popsicle::Bindings::registerJuceCoreBindings (m);
 
 #if JUCE_MODULE_AVAILABLE_juce_events

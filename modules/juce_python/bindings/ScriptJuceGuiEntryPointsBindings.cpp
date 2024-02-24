@@ -104,6 +104,10 @@ void registerJuceGuiEntryPointsBindings (py::module_& m)
 
     m.def ("START_JUCE_APPLICATION", [](py::handle applicationType, bool catchExceptionsAndContinue)
     {
+#if JUCE_MAC
+        juce::Process::setDockIconVisible (true);
+#endif
+
         globalOptions().catchExceptionsAndContinue = catchExceptionsAndContinue;
         globalOptions().caughtKeyboardInterrupt = false;
 

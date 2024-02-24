@@ -46,7 +46,6 @@ set_target_properties (${PROJECT_NAME} PROPERTIES PREFIX "")
 
 if (APPLE)
     set_target_properties (${PROJECT_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
-    set_target_properties (${PROJECT_NAME} PROPERTIES SUFFIX ".so")
     target_link_options (${PROJECT_NAME} PRIVATE "-Wl,-weak_reference_mismatches,weak")
 elseif (WIN32)
     target_compile_definitions (${PROJECT_NAME} PUBLIC $<$<CONFIG:Debug>:Py_DEBUG>)

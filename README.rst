@@ -216,7 +216,7 @@ Supported Modules
      - Planned
    * - juce_core
      - ✅
-     - 44.82%
+     - 47.7%
      - Ready
    * - juce_cryptography
      - ⛔️
