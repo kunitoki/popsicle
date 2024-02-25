@@ -533,6 +533,70 @@ void registerAtomic (py::module_& m)
     m.add_object ("Atomic", type);
 }
 
+// ============================================================================================
+
+template <template <class> class Class, class... Types>
+void registerSparseSet (pybind11::module_& m)
+{
+    using namespace juce;
+
+    namespace py = pybind11;
+    using namespace py::literals;
+
+    auto type = py::hasattr (m, "SparseSet") ? m.attr ("SparseSet").cast<py::dict>() : py::dict{};
+
+    ([&]
+    {
+        using ValueType = underlying_type_t<Types>;
+        using T = Class<ValueType>;
+
+        const auto className = popsicle::Helpers::pythonizeCompoundClassName ("SparseSet", typeid (ValueType).name());
+
+        py::class_<T> class_ (m, className.toRawUTF8());
+
+        class_
+            .def (py::init<>())
+            .def (py::init<const T&>())
+            .def ("clear", &T::clear)
+            .def ("isEmpty", &T::isEmpty)
+            .def ("size", &T::size)
+            .def ("__getitem__", &T::operator[])
+            .def ("contains", &T::contains)
+            .def ("getNumRanges", &T::getNumRanges)
+            .def ("getRange", &T::getRange)
+            .def ("getTotalRange", &T::getTotalRange)
+            .def ("addRange", &T::addRange)
+            .def ("removeRange", &T::removeRange)
+            .def ("invertRange", &T::invertRange)
+            .def ("overlapsRange", &T::overlapsRange)
+            .def ("containsRange", &T::containsRange)
+            .def ("__len__", &T::size)
+            .def ("__repr__", [className](T& self)
+            {
+                String result;
+                result
+                    << "<" << Helpers::pythonizeModuleClassName (PythonModuleName, typeid (T).name(), 1)
+                    << " object at " << String::formatted ("%p", std::addressof (self)) << ">";
+                return result;
+            })
+        ;
+
+        if constexpr (isEqualityComparable<ValueType>::value)
+        {
+            class_
+                .def (py::self == py::self)
+                .def (py::self != py::self)
+            ;
+        }
+
+        type[py::type::of (py::cast (Types{}))] = class_;
+
+        return true;
+    }() && ...);
+
+    m.attr ("SparseSet") = type;
+}
+
 void registerJuceCoreBindings (py::module_& m)
 {
 #if !JUCE_PYTHON_EMBEDDED_INTERPRETER
@@ -2589,6 +2653,10 @@ void registerJuceCoreBindings (py::module_& m)
     // ============================================================================================ juce::Array<>
 
     registerArray<Array, bool, int, float, String, File> (m);
+
+    // ============================================================================================ juce::SparseSet<>
+
+    registerSparseSet<SparseSet, int> (m);
 
     // ============================================================================================ testing
 

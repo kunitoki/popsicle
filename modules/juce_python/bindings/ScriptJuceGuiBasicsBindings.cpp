@@ -650,7 +650,7 @@ void registerJuceGuiBasicsBindings (py::module_& m)
 
     // ============================================================================================ juce::Desktop
 
-    py::class_<ComponentAnimator> classComponentAnimator (m, "ComponentAnimator");
+    py::class_<ComponentAnimator, ChangeBroadcaster> classComponentAnimator (m, "ComponentAnimator");
 
     classComponentAnimator
         .def (py::init<>())
@@ -684,7 +684,8 @@ void registerJuceGuiBasicsBindings (py::module_& m)
         })
     ;
 
-    py::class_<FocusTraverser, ComponentTraverser, PyFocusTraverser<>> (m, "FocusTraverser");
+    py::class_<FocusTraverser, ComponentTraverser, PyFocusTraverser<FocusTraverser>> (m, "FocusTraverser");
+    py::class_<KeyboardFocusTraverser, ComponentTraverser, PyFocusTraverser<KeyboardFocusTraverser>> (m, "KeyboardFocusTraverser");
 
     // ============================================================================================ juce::ModalComponentManager
 
@@ -1676,13 +1677,44 @@ void registerJuceGuiBasicsBindings (py::module_& m)
         .def ("getClicksOutsideDismissVirtualKeyboard", &TextEditor::getClicksOutsideDismissVirtualKeyboard)
     ;
 
+    // ============================================================================================ juce::GroupComponent
+
+    py::class_<GroupComponent, PyComponent<GroupComponent>> classGroupComponent (m, "GroupComponent");
+
+    classGroupComponent
+        .def (py::init<const String&, const String&>(), "componentName"_a, "labelText"_a)
+        .def ("setText", &GroupComponent::setText, "newText"_a)
+        .def ("getText", &GroupComponent::getText)
+        .def ("setTextLabelPosition", &GroupComponent::setTextLabelPosition, "justification"_a)
+        .def ("setTextLabelPosition", [](GroupComponent& self, Justification::Flags flags) { self.setTextLabelPosition (flags); }, "justification"_a)
+        .def ("setTextLabelPosition", [](GroupComponent& self, int flags) { self.setTextLabelPosition (Justification (flags)); }, "justification"_a)
+        .def ("getTextLabelPosition", &GroupComponent::getTextLabelPosition)
+    ;
+
+    classGroupComponent.attr ("outlineColourId") = py::int_ (static_cast<int> (GroupComponent::outlineColourId));
+    classGroupComponent.attr ("textColourId") = py::int_ (static_cast<int> (GroupComponent::textColourId));
+
     // ============================================================================================ juce::ListBox
 
     py::class_<ListBoxModel, PyListBoxModel> classListBoxModel (m, "ListBoxModel");
 
     classListBoxModel
         .def (py::init<>())
-        // TODO
+        .def ("getNumRows", &ListBoxModel::getNumRows)
+        .def ("paintListBoxItem", &ListBoxModel::paintListBoxItem)
+        .def ("refreshComponentForRow", &ListBoxModel::refreshComponentForRow, py::return_value_policy::reference_internal)
+        .def ("getNameForRow", &ListBoxModel::getNameForRow)
+        .def ("listBoxItemClicked", &ListBoxModel::listBoxItemClicked)
+        .def ("listBoxItemDoubleClicked", &ListBoxModel::listBoxItemDoubleClicked)
+        .def ("backgroundClicked", &ListBoxModel::backgroundClicked)
+        .def ("selectedRowsChanged", &ListBoxModel::selectedRowsChanged)
+        .def ("deleteKeyPressed", &ListBoxModel::deleteKeyPressed)
+        .def ("returnKeyPressed", &ListBoxModel::returnKeyPressed)
+        .def ("listWasScrolled", &ListBoxModel::listWasScrolled)
+        .def ("getDragSourceDescription", &ListBoxModel::getDragSourceDescription)
+        .def ("mayDragToExternalWindows", &ListBoxModel::mayDragToExternalWindows)
+        .def ("getTooltipForRow", &ListBoxModel::getTooltipForRow)
+        .def ("getMouseCursorForRow", &ListBoxModel::getMouseCursorForRow)
     ;
 
     py::class_<ListBox, Component, PyListBox<>> classListBox (m, "ListBox");
@@ -1702,8 +1734,8 @@ void registerJuceGuiBasicsBindings (py::module_& m)
         .def ("deselectRow", &ListBox::deselectRow)
         .def ("deselectAllRows", &ListBox::deselectAllRows)
         .def ("flipRowSelection", &ListBox::flipRowSelection)
-    //.def ("getSelectedRows", &ListBox::getSelectedRows)
-    //.def ("setSelectedRows", &ListBox::setSelectedRows, "setOfRowsToBeSelected"_a, "sendNotificationEventToModel"_a = sendNotification)
+        .def ("getSelectedRows", &ListBox::getSelectedRows)
+        .def ("setSelectedRows", py::overload_cast<const SparseSet<int>&, NotificationType> (&ListBox::setSelectedRows), "setOfRowsToBeSelected"_a, "sendNotificationEventToModel"_a = sendNotification)
         .def ("isRowSelected", &ListBox::isRowSelected)
         .def ("getNumSelectedRows", &ListBox::getNumSelectedRows)
         .def ("getSelectedRow", &ListBox::getSelectedRow, "index"_a = 0)
