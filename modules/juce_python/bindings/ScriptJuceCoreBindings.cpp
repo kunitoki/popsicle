@@ -1816,7 +1816,7 @@ void registerJuceCoreBindings (py::module_& m)
 
     // ============================================================================================ juce::FileFilter
 
-    py::class_<FileFilter, PyFileFilter> classFileFilter (m, "FileFilter");
+    py::class_<FileFilter, PyFileFilter<>> classFileFilter (m, "FileFilter");
 
     classFileFilter
         .def (py::init<const String&>())
@@ -1825,12 +1825,11 @@ void registerJuceCoreBindings (py::module_& m)
         .def ("isDirectorySuitable", &FileFilter::isDirectorySuitable)
     ;
 
-    py::class_<WildcardFileFilter, FileFilter> classWildcardFileFilter (m, "WildcardFileFilter");
+    py::class_<WildcardFileFilter, FileFilter, PyFileFilter<WildcardFileFilter>> classWildcardFileFilter (m, "WildcardFileFilter");
 
     classWildcardFileFilter
         .def (py::init<const String&, const String&, const String&>())
     ;
-
 
     // ============================================================================================ juce::TemporaryFile
 

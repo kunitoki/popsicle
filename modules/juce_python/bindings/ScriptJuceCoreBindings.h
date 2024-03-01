@@ -656,18 +656,19 @@ public:
 
 // =================================================================================================
 
-struct PyFileFilter : juce::FileFilter
+template <class Base = juce::FileFilter>
+struct PyFileFilter : Base
 {
-    using juce::FileFilter::FileFilter;
+    using Base::Base;
 
     bool isFileSuitable (const juce::File& file) const override
     {
-        PYBIND11_OVERRIDE_PURE (bool, juce::FileFilter, isFileSuitable, file);
+        PYBIND11_OVERRIDE_PURE (bool, Base, isFileSuitable, file);
     }
 
     bool isDirectorySuitable (const juce::File& file) const override
     {
-        PYBIND11_OVERRIDE_PURE (bool, juce::FileFilter, isDirectorySuitable, file);
+        PYBIND11_OVERRIDE_PURE (bool, Base, isDirectorySuitable, file);
     }
 };
 
