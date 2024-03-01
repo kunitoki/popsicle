@@ -505,23 +505,24 @@ public:
 
 // =================================================================================================
 
-struct PyInputSource : juce::InputSource
+template <class Base = juce::InputSource>
+struct PyInputSource : Base
 {
-    using juce::InputSource::InputSource;
+    using Base::Base;
 
     juce::InputStream* createInputStream() override
     {
-        PYBIND11_OVERRIDE_PURE (juce::InputStream*, juce::InputSource, createInputStream);
+        PYBIND11_OVERRIDE_PURE (juce::InputStream*, Base, createInputStream);
     }
 
     juce::InputStream* createInputStreamFor (const juce::String& relatedItemPath) override
     {
-        PYBIND11_OVERRIDE_PURE (juce::InputStream*, juce::InputSource, createInputStreamFor, relatedItemPath);
+        PYBIND11_OVERRIDE_PURE (juce::InputStream*, Base, createInputStreamFor, relatedItemPath);
     }
 
     juce::int64 hashCode() const override
     {
-        PYBIND11_OVERRIDE_PURE (juce::int64, juce::InputSource, hashCode);
+        PYBIND11_OVERRIDE_PURE (juce::int64, Base, hashCode);
     }
 };
 

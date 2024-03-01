@@ -1474,7 +1474,7 @@ void registerJuceCoreBindings (py::module_& m)
 
     // ============================================================================================ juce::InputSource
 
-    py::class_<InputSource, PyInputSource> classInputSource (m, "InputSource");
+    py::class_<InputSource, PyInputSource<>> classInputSource (m, "InputSource");
 
     classInputSource
         .def (py::init<>())
@@ -1831,6 +1831,34 @@ void registerJuceCoreBindings (py::module_& m)
         .def (py::init<const String&, const String&, const String&>())
     ;
 
+
+    // ============================================================================================ juce::TemporaryFile
+
+    py::class_<TemporaryFile> classTemporaryFile (m, "TemporaryFile");
+
+    py::enum_<TemporaryFile::OptionFlags> (classTemporaryFile, "OptionFlags", py::arithmetic())
+        .value ("useHiddenFile", TemporaryFile::OptionFlags::useHiddenFile)
+        .value ("putNumbersInBrackets", TemporaryFile::OptionFlags::putNumbersInBrackets)
+        .export_values();
+
+    classTemporaryFile
+        .def (py::init<const String&, int>(), "suffix"_a = String(), "optionFlags"_a = 0)
+        .def (py::init<const File&, int>(), "targetFile"_a, "optionFlags"_a = 0)
+        .def (py::init<const File&, const File&>(), "targetFile"_a, "temporaryFile"_a)
+        .def ("getFile", &TemporaryFile::getFile)
+        .def ("getTargetFile", &TemporaryFile::getTargetFile)
+        .def ("overwriteTargetFileWithTemporary", &TemporaryFile::overwriteTargetFileWithTemporary)
+        .def ("deleteTemporaryFile", &TemporaryFile::deleteTemporaryFile)
+        .def ("__enter__", [](TemporaryFile& self)
+        {
+            return std::addressof(self);
+        }, py::return_value_policy::reference)
+        .def ("__exit__", [](TemporaryFile& self, const std::optional<py::type>&, const std::optional<py::object>&, const std::optional<py::object>&)
+        {
+            self.overwriteTargetFileWithTemporary();
+        })
+    ;
+
     // ============================================================================================ juce::URL
 
     py::class_<DirectoryEntry> classDirectoryEntry (m, "DirectoryEntry");
@@ -1975,6 +2003,14 @@ void registerJuceCoreBindings (py::module_& m)
         .def_readwrite ("sharedContainer", &URL::DownloadTaskOptions::sharedContainer)
         .def_readwrite ("listener", &URL::DownloadTaskOptions::listener)
         .def_readwrite ("usePost", &URL::DownloadTaskOptions::usePost)
+    ;
+
+    // ============================================================================================ juce::URLInputSource
+
+    py::class_<URLInputSource, InputSource, PyInputSource<URLInputSource>> classURLInputSource (m, "URLInputSource");
+
+    classURLInputSource
+        .def (py::init<const URL&>())
     ;
 
     // ============================================================================================ juce::PerformanceCounter
