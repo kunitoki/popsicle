@@ -132,7 +132,7 @@ def test_escape_string_escapes_special_characters():
 
 #==================================================================================================
 
-@pytest.mark.skip(reason="unfinished")
+"""
 def test_parse_quoted_string_with_valid_input():
     text = '"Hello, World!"'
     expected = "Hello, World!"
@@ -140,3 +140,4 @@ def test_parse_quoted_string_with_valid_input():
     result_var = None
     result = juce.JSON.parseQuotedString(char_pointer, result_var)
     assert result.wasOk() and result_var == expected
+"""
