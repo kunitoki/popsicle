@@ -492,6 +492,58 @@ void registerRange (py::module_& m)
 // ============================================================================================
 
 template <template <class> class Class, class... Types>
+void registerNormalisableRange (py::module_& m)
+{
+    py::dict type;
+
+    ([&]
+    {
+        using ValueType = underlying_type_t<Types>;
+        using T = Class<ValueType>;
+        using ValueRemapFunction = typename T::ValueRemapFunction;
+
+        const auto className = popsicle::Helpers::pythonizeCompoundClassName ("NormalisableRange", typeid (ValueType).name());
+
+        auto class_ = py::class_<T> (m, className.toRawUTF8())
+            .def (py::init<>())
+            .def (py::init<ValueType, ValueType>(), "rangeStart"_a, "rangeEnd"_a)
+            .def (py::init<ValueType, ValueType, ValueType, ValueType, bool>(), "rangeStart"_a, "rangeEnd"_a, "intervalValue"_a, "skewFactor"_a, "useSymmetricSkew"_a = false)
+            .def (py::init<ValueType, ValueType, ValueType>(), "rangeStart"_a, "rangeEnd"_a, "intervalValue"_a)
+            .def (py::init<Range<ValueType>>(), "range"_a)
+            .def (py::init<Range<ValueType>, ValueType>(), "range"_a, "intervalValue"_a)
+            .def (py::init<ValueType, ValueType, ValueRemapFunction, ValueRemapFunction, ValueRemapFunction>(), "rangeStart"_a, "rangeEnd"_a, "convertFrom0To1Func"_a, "convertTo0To1Func"_a, "snapToLegalValueFunc"_a = ValueRemapFunction())
+            .def (py::init<const T&>())
+            .def ("convertTo0to1", &T::convertTo0to1)
+            .def ("convertFrom0to1", &T::convertFrom0to1)
+            .def ("snapToLegalValue", &T::snapToLegalValue)
+            .def ("getRange", &T::getRange)
+            .def ("setSkewForCentre", &T::setSkewForCentre)
+            .def_readwrite ("start", &T::start)
+            .def_readwrite ("end", &T::end)
+            .def_readwrite ("interval", &T::interval)
+            .def_readwrite ("skew", &T::skew)
+            .def_readwrite ("symmetricSkew", &T::symmetricSkew)
+            .def ("__repr__", [](const T& self)
+            {
+                String result;
+                result
+                    << Helpers::pythonizeModuleClassName (PythonModuleName, typeid (self).name())
+                    << "(" << self.start << ", " << self.end << ", " << self.interval << ", " << self.skew << ", " << (self.symmetricSkew ? "True" : "False") << ")";
+                return result;
+            })
+        ;
+
+        type[py::type::of (py::cast (Types{}))] = class_;
+
+        return true;
+    }() && ...);
+
+    m.add_object ("NormalisableRange", type);
+}
+
+// ============================================================================================
+
+template <template <class> class Class, class... Types>
 void registerAtomic (py::module_& m)
 {
     py::dict type;
@@ -710,6 +762,14 @@ void registerJuceCoreBindings (py::module_& m)
     // ============================================================================================ juce::MathConstants
 
     registerMathConstants<MathConstants, float, double> (m);
+
+    // ============================================================================================ juce::Range<>
+
+    registerRange<Range, int, GenericInteger<int64>, float> (m);
+
+    // ============================================================================================ juce::NormalisableRange<>
+
+    registerNormalisableRange<NormalisableRange, float> (m);
 
     // ============================================================================================ juce::Atomic
 
@@ -1294,10 +1354,6 @@ void registerJuceCoreBindings (py::module_& m)
         })
         .def ("__str__", [](const Time& self) { return self.toISO8601 (false); })
     ;
-
-    // ============================================================================================ juce::Range<>
-
-    registerRange<Range, int, GenericInteger<int64>, float> (m);
 
     // ============================================================================================ juce::MemoryBlock
 
