@@ -1888,6 +1888,43 @@ void registerJuceCoreBindings (py::module_& m)
         }, py::keep_alive<0, 1>())
     ;
 
+    // ============================================================================================ juce::JSON
+
+    py::class_<JSON> classJSON (m, "JSON");
+
+    py::enum_<JSON::Spacing> (classJSON, "Spacing")
+        .value ("none", JSON::Spacing::none)
+        .value ("singleLine", JSON::Spacing::singleLine)
+        .value ("multiLine", JSON::Spacing::multiLine);
+
+    py::class_<JSON::FormatOptions> classJSONFormatOptions (classJSON, "FormatOptions");
+
+    classJSONFormatOptions
+        .def (py::init<>())
+        .def ("withSpacing", &JSON::FormatOptions::withSpacing)
+        .def ("withMaxDecimalPlaces", &JSON::FormatOptions::withMaxDecimalPlaces)
+        .def ("withIndentLevel", &JSON::FormatOptions::withIndentLevel)
+        .def ("getSpacing", &JSON::FormatOptions::getSpacing)
+        .def ("getMaxDecimalPlaces", &JSON::FormatOptions::getMaxDecimalPlaces)
+        .def ("getIndentLevel", &JSON::FormatOptions::getIndentLevel)
+    ;
+
+    classJSON
+        .def_static ("parse", static_cast<Result (*)(const String&, var&)> (&JSON::parse))
+        .def_static ("parse", static_cast<var (*)(const String&)> (&JSON::parse))
+        .def_static ("parse", static_cast<var (*)(const File&)> (&JSON::parse))
+        .def_static ("parse", static_cast<var (*)(InputStream&)> (&JSON::parse))
+        .def_static ("toString", static_cast<String (*)(const var&, bool, int)> (&JSON::toString),
+            "objectToFormat"_a, "allOnOneLine"_a = false, "maximumDecimalPlaces"_a = 15)
+        .def_static ("toString", static_cast<String (*)(const var&, const JSON::FormatOptions&)> (&JSON::toString))
+        .def_static ("fromString", &JSON::fromString)
+        .def_static ("writeToStream", static_cast<void (*)(OutputStream&, const var&, bool, int)> (&JSON::writeToStream),
+            "output"_a, "objectToFormat"_a, "allOnOneLine"_a = false, "maximumDecimalPlaces"_a = 15)
+        .def_static ("writeToStream", static_cast<void (*)(OutputStream&, const var&, const JSON::FormatOptions&)> (&JSON::writeToStream))
+        .def_static ("escapeString", &JSON::escapeString)
+    //.def_static ("parseQuotedString", &JSON::parseQuotedString)
+    ;
+
     // ============================================================================================ juce::URL
 
     py::class_<URL> classURL (m, "URL");
