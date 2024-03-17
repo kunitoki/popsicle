@@ -216,17 +216,50 @@ struct PyMouseListener : Base
 
     void mouseEnter (const juce::MouseEvent& event) override
     {
-        PYBIND11_OVERRIDE (void, Base, mouseEnter, event);
+        {
+            pybind11::gil_scoped_acquire gil;
+
+            if (pybind11::function override_ = pybind11::get_override (static_cast<Base*> (this), "mouseEnter"))
+            {
+                override_ (event);
+                return;
+            }
+        }
+
+        if constexpr (! std::is_same_v<Base, juce::TooltipWindow>)
+            Base::mouseEnter (event);
     }
 
     void mouseExit (const juce::MouseEvent& event) override
     {
-        PYBIND11_OVERRIDE (void, Base, mouseExit, event);
+        {
+            pybind11::gil_scoped_acquire gil;
+
+            if (pybind11::function override_ = pybind11::get_override (static_cast<Base*> (this), "mouseExit"))
+            {
+                override_ (event);
+                return;
+            }
+        }
+
+        if constexpr (! std::is_same_v<Base, juce::TooltipWindow>)
+            Base::mouseExit (event);
     }
 
     void mouseDown (const juce::MouseEvent& event) override
     {
-        PYBIND11_OVERRIDE (void, Base, mouseDown, event);
+        {
+            pybind11::gil_scoped_acquire gil;
+
+            if (pybind11::function override_ = pybind11::get_override (static_cast<Base*> (this), "mouseDown"))
+            {
+                override_ (event);
+                return;
+            }
+        }
+
+        if constexpr (! std::is_same_v<Base, juce::TooltipWindow>)
+            Base::mouseDown (event);
     }
 
     void mouseDrag (const juce::MouseEvent& event) override
@@ -246,7 +279,18 @@ struct PyMouseListener : Base
 
     void mouseWheelMove (const juce::MouseEvent& event, const juce::MouseWheelDetails& wheel) override
     {
-        PYBIND11_OVERRIDE (void, Base, mouseWheelMove, event, wheel);
+        {
+            pybind11::gil_scoped_acquire gil;
+
+            if (pybind11::function override_ = pybind11::get_override (static_cast<Base*> (this), "mouseWheelMove"))
+            {
+                override_ (event, wheel);
+                return;
+            }
+        }
+
+        if constexpr (! std::is_same_v<Base, juce::TooltipWindow>)
+            Base::mouseWheelMove (event, wheel);
     }
 
     void mouseMagnify (const juce::MouseEvent& event, float scaleFactor) override
@@ -762,7 +806,8 @@ struct PyComponent : PyMouseListener<Base>
             }
         }
 
-        return Base::paint (g);
+        if constexpr (! std::is_same_v<Base, juce::TooltipWindow>)
+            Base::paint (g);
     }
 
     void paintOverChildren (juce::Graphics& g) override
@@ -777,7 +822,7 @@ struct PyComponent : PyMouseListener<Base>
             }
         }
 
-        return Base::paintOverChildren (g);
+        Base::paintOverChildren (g);
     }
 
     bool keyPressed (const juce::KeyPress& key) override
@@ -1718,6 +1763,32 @@ struct PyDocumentWindow : PyComponent<Base>
     void maximiseButtonPressed() override
     {
         PYBIND11_OVERRIDE (void, Base, maximiseButtonPressed);
+    }
+};
+
+// ============================================================================================
+
+template <class Base = juce::TooltipWindow>
+struct PyTooltipWindow : PyComponent<Base>
+{
+    using PyComponent<Base>::PyComponent;
+
+    juce::String getTipFor (juce::Component& c) override
+    {
+        PYBIND11_OVERRIDE (juce::String, Base, getTipFor, c);
+    }
+};
+
+// ============================================================================================
+
+template <class Base = juce::ThreadWithProgressWindow>
+struct PyThreadWithProgressWindow : PyThread<Base>
+{
+    using PyThread<Base>::PyThread;
+
+    void threadComplete (bool userPressedCancel) override
+    {
+        PYBIND11_OVERRIDE (void, Base, threadComplete, userPressedCancel);
     }
 };
 

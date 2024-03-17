@@ -611,10 +611,10 @@ void registerJuceGuiBasicsBindings (py::module_& m)
         .def_static ("isScreenSaverEnabled", &Desktop::isScreenSaverEnabled)
         .def ("addGlobalMouseListener", &Desktop::addGlobalMouseListener)
         .def ("removeGlobalMouseListener", &Desktop::removeGlobalMouseListener)
-        .def ("addFocusChangeListener", &Desktop::addFocusChangeListener)
-        .def ("removeFocusChangeListener", &Desktop::removeFocusChangeListener)
-        .def ("addDarkModeSettingListener", &Desktop::addDarkModeSettingListener)
-        .def ("removeDarkModeSettingListener", &Desktop::removeDarkModeSettingListener)
+    //.def ("addFocusChangeListener", &Desktop::addFocusChangeListener)
+    //.def ("removeFocusChangeListener", &Desktop::removeFocusChangeListener)
+    //.def ("addDarkModeSettingListener", &Desktop::addDarkModeSettingListener)
+    //.def ("removeDarkModeSettingListener", &Desktop::removeDarkModeSettingListener)
         .def ("isDarkModeActive", &Desktop::isDarkModeActive)
         .def ("setKioskModeComponent", &Desktop::setKioskModeComponent)
         .def ("getKioskModeComponent", &Desktop::getKioskModeComponent)
@@ -2142,6 +2142,74 @@ void registerJuceGuiBasicsBindings (py::module_& m)
     ;
 
     classDocumentWindow.attr ("textColourId") = py::int_ (static_cast<int> (DocumentWindow::textColourId));
+
+    // ============================================================================================ juce::DialogWindow
+
+    py::class_<DialogWindow, DocumentWindow, PyDocumentWindow<DialogWindow>> classDialogWindow (m, "DialogWindow");
+
+    py::class_<DialogWindow::LaunchOptions> classDialogWindowLaunchOptions (classDialogWindow, "LaunchOptions");
+
+    classDialogWindowLaunchOptions
+        .def (py::init<>())
+        .def_readwrite ("dialogTitle", &DialogWindow::LaunchOptions::dialogTitle)
+        .def_readwrite ("dialogBackgroundColour", &DialogWindow::LaunchOptions::dialogBackgroundColour)
+    //.def_readwrite ("content", &DialogWindow::LaunchOptions::content)
+        .def_readwrite ("componentToCentreAround", &DialogWindow::LaunchOptions::componentToCentreAround)
+        .def_readwrite ("escapeKeyTriggersCloseButton", &DialogWindow::LaunchOptions::escapeKeyTriggersCloseButton)
+        .def_readwrite ("useNativeTitleBar", &DialogWindow::LaunchOptions::useNativeTitleBar)
+        .def_readwrite ("resizable", &DialogWindow::LaunchOptions::resizable)
+        .def_readwrite ("useBottomRightCornerResizer", &DialogWindow::LaunchOptions::useBottomRightCornerResizer)
+        .def ("launchAsync", &DialogWindow::LaunchOptions::launchAsync)
+        .def ("create", &DialogWindow::LaunchOptions::create)
+#if JUCE_MODAL_LOOPS_PERMITTED
+        .def ("runModal", &DialogWindow::LaunchOptions::runModal)
+#endif
+    ;
+
+    classDialogWindow
+        .def (py::init<const String&, Colour, bool, bool, float>(),
+            "name"_a, "backgroundColour"_a, "escapeKeyTriggersCloseButton"_a, "addToDesktop"_a = true, "desktopScale"_a = 1.0f)
+        .def_static ("showDialog", &DialogWindow::showDialog,
+            "dialogTitle"_a, "contentComponent"_a, "componentToCentreAround"_a, "backgroundColour"_a, "escapeKeyTriggersCloseButton"_a, "shouldBeResizable"_a = false, "useBottomRightCornerResizer"_a = false)
+#if JUCE_MODAL_LOOPS_PERMITTED
+        .def_static ("showModalDialog", &DialogWindow::showModalDialog,
+            "dialogTitle"_a, "contentComponent"_a, "componentToCentreAround"_a, "backgroundColour"_a, "escapeKeyTriggersCloseButton"_a, "shouldBeResizable"_a = false, "useBottomRightCornerResizer"_a = false)
+#endif
+    ;
+
+    // ============================================================================================ juce::TooltipWindow
+
+    py::class_<TooltipWindow, Component, PyTooltipWindow<>> classTooltipWindow (m, "TooltipWindow");
+
+    classTooltipWindow
+        .def (py::init<Component*, int>(), "parentComponent"_a = static_cast<Component*>(nullptr), "millisecondsBeforeTipAppears"_a = 700)
+        .def ("setMillisecondsBeforeTipAppears", &TooltipWindow::setMillisecondsBeforeTipAppears, "newTimeMs"_a = 700)
+        .def ("displayTip", &TooltipWindow::displayTip)
+        .def ("hideTip", &TooltipWindow::hideTip)
+        .def ("getTipFor", &TooltipWindow::getTipFor)
+        .def ("displayTip", &TooltipWindow::displayTip)
+    ;
+
+    classTooltipWindow.attr ("backgroundColourId") = py::int_ (static_cast<int> (TooltipWindow::backgroundColourId));
+    classTooltipWindow.attr ("textColourId") = py::int_ (static_cast<int> (TooltipWindow::textColourId));
+    classTooltipWindow.attr ("outlineColourId") = py::int_ (static_cast<int> (TooltipWindow::outlineColourId));
+
+    // ============================================================================================ juce::ThreadWithProgressWindow
+
+    py::class_<ThreadWithProgressWindow, Thread, PyThreadWithProgressWindow<>> classThreadWithProgressWindow (m, "ThreadWithProgressWindow");
+
+    classThreadWithProgressWindow
+        .def (py::init<const String&, bool, bool, int, const String&, Component*>(),
+            "windowTitle"_a, "hasProgressBar"_a, "hasCancelButton"_a, "timeOutMsWhenCancelling"_a = 10000, "cancelButtonText"_a = String(), "componentToCentreAround"_a = static_cast<Component*>(nullptr))
+#if JUCE_MODAL_LOOPS_PERMITTED
+        .def ("runThread", &ThreadWithProgressWindow::runThread)
+#endif
+        .def ("launchThread", &ThreadWithProgressWindow::launchThread)
+        .def ("setProgress", &ThreadWithProgressWindow::setProgress)
+        .def ("setStatusMessage", &ThreadWithProgressWindow::setStatusMessage)
+    //.def ("getAlertWindow", &ThreadWithProgressWindow::getAlertWindow)
+        .def ("threadComplete", &ThreadWithProgressWindow::threadComplete)
+    ;
 
     // ============================================================================================ juce::FileChooser
 
