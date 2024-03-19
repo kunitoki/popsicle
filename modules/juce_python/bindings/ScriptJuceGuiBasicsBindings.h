@@ -46,34 +46,6 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m);
 
 // =================================================================================================
 
-struct PyNativeHandle
-{
-    explicit PyNativeHandle (void* value) noexcept
-        : value (value)
-    {
-    }
-
-    operator void*() const noexcept
-    {
-        return value;
-    }
-
-    bool operator== (const PyNativeHandle& other) const noexcept
-    {
-        return value == other.value;
-    }
-
-    bool operator!= (const PyNativeHandle& other) const noexcept
-    {
-        return value != other.value;
-    }
-
-private:
-    void* value;
-};
-
-// =================================================================================================
-
 struct PyJUCEApplication : juce::JUCEApplication
 {
     const juce::String getApplicationName() override
