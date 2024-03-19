@@ -329,6 +329,11 @@ Some images of JUCE tutorials and other small apps ported to *popsicle*.
    .. image:: images/emojis_component.png
        :target: examples/emojis_font_component.py
 
+- Wgpu Triangle Rendering Embedded Component
+
+   .. image:: images/wgpu_triangle.png
+       :target: examples/webgpu/
+
 
 -------------
 Code Coverage
