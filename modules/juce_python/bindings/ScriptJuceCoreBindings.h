@@ -26,6 +26,7 @@
 
 #include "../utilities/ClassDemangling.h"
 #include "../utilities/PythonInterop.h"
+#include "../utilities/PythonTypes.h"
 
 #include <cstddef>
 #include <functional>
@@ -117,6 +118,28 @@ struct isEqualityComparable : std::false_type {};
 template <class T>
 struct isEqualityComparable<T, std::void_t<decltype(std::declval<T>() == std::declval<T>())>> : std::true_type {};
 
+// =================================================================================================
+
+template <class T>
+struct PyArrayElementComparator
+{
+    PyArrayElementComparator() = default;
+
+    int compareElements (const T& first, const T& second)
+    {
+        pybind11::gil_scoped_acquire gil;
+
+        if (pybind11::function override_ = pybind11::get_override (static_cast<PyArrayElementComparator*> (this), "compareElements"); override_)
+        {
+            auto result = override_ (first, second);
+
+            return result.template cast<int>();
+        }
+
+        pybind11::pybind11_fail("Tried to call pure virtual function \"Array.Comparator.compareElements\"");
+    }
+};
+
 // ============================================================================================
 
 template <template <class, class, int> class Class, class... Types>
@@ -125,22 +148,63 @@ void registerArray (pybind11::module_& m)
     using namespace juce;
 
     namespace py = pybind11;
+    using namespace py::literals;
 
     auto type = py::hasattr (m, "Array") ? m.attr ("Array").cast<py::dict>() : py::dict{};
 
     ([&]
     {
-        using ValueType = Types;
+        using ValueType = underlying_type_t<Types>;
         using T = Class<ValueType, DummyCriticalSection, 0>;
 
-        const auto className = popsicle::Helpers::pythonizeCompoundClassName ("Array", typeid (Types).name());
+        const auto className = popsicle::Helpers::pythonizeCompoundClassName ("Array", typeid (ValueType).name());
 
         py::class_<T> class_ (m, className.toRawUTF8());
+        py::class_<PyArrayElementComparator<ValueType>> classComparator_ (class_, "Comparator");
+
+        classComparator_
+            .def (py::init<>())
+            .def ("compareElements", &PyArrayElementComparator<ValueType>::compareElements)
+        ;
 
         class_
             .def (py::init<>())
             .def (py::init<const ValueType&>())
             .def (py::init<const T&>())
+            .def (py::init ([](py::list list)
+            {
+                auto result = T();
+                result.ensureStorageAllocated (static_cast<int> (list.size()));
+
+                for (auto item : list)
+                {
+                    py::detail::make_caster<ValueType> conv;
+
+                    if (! conv.load (item, true))
+                        py::pybind11_fail("Invalid value type used to feed \"Array\" constructor");
+
+                    result.add (py::detail::cast_op<ValueType&&> (std::move (conv)));
+                }
+
+                return result;
+            }))
+            .def (py::init ([](py::args args)
+            {
+                auto result = T();
+                result.ensureStorageAllocated (static_cast<int> (args.size()));
+
+                for (auto item : args)
+                {
+                    py::detail::make_caster<ValueType> conv;
+
+                    if (! conv.load (item, true))
+                        py::pybind11_fail("Invalid value type used to feed \"Array\" constructor");
+
+                    result.add (py::detail::cast_op<ValueType&&> (std::move (conv)));
+                }
+
+                return result;
+            }))
             .def ("clear", &T::clear)
             .def ("clearQuick", &T::clearQuick)
             .def ("fill", &T::fill)
@@ -161,14 +225,30 @@ void registerArray (pybind11::module_& m)
             {
                 self.add (arg);
             })
+            .def ("add", [](T& self, py::list list)
+            {
+                self.ensureStorageAllocated (self.size() + static_cast<int> (list.size()));
+
+                for (auto item : list)
+                {
+                    py::detail::make_caster<ValueType> conv;
+
+                    if (! conv.load (item, true))
+                        py::pybind11_fail("Invalid value type used to feed \"Array.add\"");
+
+                    self.add (py::detail::cast_op<ValueType&&> (std::move (conv)));
+                }
+            })
             .def ("add", [](T& self, py::args args)
             {
+                self.ensureStorageAllocated (self.size() + static_cast<int> (args.size()));
+
                 for (auto item : args)
                 {
                     py::detail::make_caster<ValueType> conv;
 
                     if (! conv.load (item, true))
-                        py::pybind11_fail("Invalid property type of a \"Array\", needs to be \"?\"");
+                        py::pybind11_fail("Invalid value type used to feed \"Array.add\"");
 
                     self.add (py::detail::cast_op<ValueType&&> (std::move (conv)));
                 }
@@ -186,7 +266,7 @@ void registerArray (pybind11::module_& m)
                     py::detail::make_caster<ValueType> conv;
 
                     if (! conv.load (item, true))
-                        py::pybind11_fail("Invalid property type of a \"Array\", needs to be \"?\"");
+                        py::pybind11_fail("Invalid value type used to feed \"Array.addArray\"");
 
                     self.add (py::detail::cast_op<ValueType&&> (std::move (conv)));
                 }
@@ -197,14 +277,20 @@ void registerArray (pybind11::module_& m)
             .def ("remove", py::overload_cast<int> (&T::remove))
             .def ("removeAndReturn", &T::removeAndReturn)
             .def ("remove", py::overload_cast<const ValueType*> (&T::remove))
-        //.def ("removeIf", &T::removeIf)
+            .def ("removeIf", [](T& self, py::function predicate)
+            {
+                return self.removeIf ([&predicate](const ValueType& value)
+                {
+                    return predicate (py::cast (value)).template cast<bool>();
+                });
+            })
             .def ("removeRange", &T::removeRange)
             .def ("removeLast", &T::removeLast)
             .def ("swap", &T::swap)
-            .def ("move", &T::move)
+            .def ("move", &T::move, "currentIndex"_a, "newIndex"_a)
             .def ("minimiseStorageOverheads", &T::minimiseStorageOverheads)
-            .def ("ensureStorageAllocated", &T::ensureStorageAllocated)
-        //.def ("getLock", &T::getLock)
+            .def ("ensureStorageAllocated", &T::ensureStorageAllocated, "minNumElements"_a)
+            .def ("getLock", &T::getLock)
             .def ("__len__", &T::size)
             .def ("__repr__", [className](T& self)
             {
@@ -216,23 +302,35 @@ void registerArray (pybind11::module_& m)
             })
         ;
 
+        if constexpr (! std::is_same_v<ValueType, Types>)
+            class_.def (py::init ([](Types value) { return T (static_cast<ValueType> (value)); }));
+
         if constexpr (isEqualityComparable<ValueType>::value)
         {
             class_
                 .def (py::self == py::self)
                 .def (py::self != py::self)
-                .def ("sort", [](T& self) { self.sort(); })
                 .def ("indexOf", &T::indexOf)
                 .def ("contains", &T::contains)
                 .def ("addIfNotAlreadyThere", &T::addIfNotAlreadyThere)
                 .def ("addUsingDefaultSort", &T::addUsingDefaultSort)
-            //.def ("addSorted", &T::addSorted)
-            //.def ("indexOfSorted", &T::indexOfSorted)
+                .def ("addSorted", [](T& self, PyArrayElementComparator<ValueType>& comparator, ValueType value)
+                {
+                    self.addSorted (comparator, value);
+                })
+                .def ("indexOfSorted", [](const T& self, PyArrayElementComparator<ValueType>& comparator, ValueType value)
+                {
+                    return self.indexOfSorted (comparator, value);
+                })
                 .def ("removeValuesIn", &T::template removeValuesIn<T>)
                 .def ("removeValuesNotIn", &T::template removeValuesNotIn<T>)
                 .def ("removeFirstMatchingValue", &T::removeFirstMatchingValue)
                 .def ("removeAllInstancesOf", &T::removeAllInstancesOf)
-            //.def ("sort", &T::sort)
+                .def ("sort", [](T& self) { self.sort(); })
+                .def ("sort", [](T& self, PyArrayElementComparator<ValueType>& comparator, int retainOrderOfEquivalentItems)
+                {
+                    self.sort (comparator, retainOrderOfEquivalentItems);
+                }, "comparator"_a, "retainOrderOfEquivalentItems"_a = false)
             ;
         }
 
@@ -287,134 +385,144 @@ public:
 
     juce::int64 getTotalLength() override
     {
-        PYBIND11_OVERRIDE_PURE (juce::int64, juce::InputStream, getTotalLength);
+        PYBIND11_OVERRIDE_PURE (juce::int64, Base, getTotalLength);
     }
 
     bool isExhausted() override
     {
-        PYBIND11_OVERRIDE_PURE (bool, juce::InputStream, isExhausted);
+        PYBIND11_OVERRIDE_PURE (bool, Base, isExhausted);
     }
 
     int read (void* destBuffer, int maxBytesToRead) override
     {
-        PYBIND11_OVERRIDE_PURE (int, juce::InputStream, read, destBuffer, maxBytesToRead);
+        pybind11::gil_scoped_acquire gil;
+
+        if (pybind11::function override_ = pybind11::get_override (static_cast<Base*> (this), "read"); override_)
+        {
+            auto result = override_ (pybind11::memoryview::from_memory (destBuffer, static_cast<ssize_t> (maxBytesToRead)));
+
+            return result.cast<int>();
+        }
+
+        pybind11::pybind11_fail("Tried to call pure virtual function \"InputStream.read\"");
     }
 
     char readByte() override
     {
-        PYBIND11_OVERRIDE (char, juce::InputStream, readByte);
+        PYBIND11_OVERRIDE (char, Base, readByte);
     }
 
     short readShort() override
     {
-        PYBIND11_OVERRIDE (short, juce::InputStream, readShort);
+        PYBIND11_OVERRIDE (short, Base, readShort);
     }
 
     short readShortBigEndian() override
     {
-        PYBIND11_OVERRIDE (short, juce::InputStream, readShortBigEndian);
+        PYBIND11_OVERRIDE (short, Base, readShortBigEndian);
     }
 
     int readInt() override
     {
-        PYBIND11_OVERRIDE (int, juce::InputStream, readInt);
+        PYBIND11_OVERRIDE (int, Base, readInt);
     }
 
     int readIntBigEndian() override
     {
-        PYBIND11_OVERRIDE (int, juce::InputStream, readIntBigEndian);
+        PYBIND11_OVERRIDE (int, Base, readIntBigEndian);
     }
 
     juce::int64 readInt64() override
     {
-        PYBIND11_OVERRIDE (juce::int64, juce::InputStream, readInt64);
+        PYBIND11_OVERRIDE (juce::int64, Base, readInt64);
     }
 
     juce::int64 readInt64BigEndian() override
     {
-        PYBIND11_OVERRIDE (juce::int64, juce::InputStream, readInt64BigEndian);
+        PYBIND11_OVERRIDE (juce::int64, Base, readInt64BigEndian);
     }
 
     float readFloat() override
     {
-        PYBIND11_OVERRIDE (float, juce::InputStream, readFloat);
+        PYBIND11_OVERRIDE (float, Base, readFloat);
     }
 
     float readFloatBigEndian() override
     {
-        PYBIND11_OVERRIDE (float, juce::InputStream, readFloatBigEndian);
+        PYBIND11_OVERRIDE (float, Base, readFloatBigEndian);
     }
 
     double readDouble() override
     {
-        PYBIND11_OVERRIDE (double, juce::InputStream, readDouble);
+        PYBIND11_OVERRIDE (double, Base, readDouble);
     }
 
     double readDoubleBigEndian() override
     {
-        PYBIND11_OVERRIDE (double, juce::InputStream, readDoubleBigEndian);
+        PYBIND11_OVERRIDE (double, Base, readDoubleBigEndian);
     }
 
     int readCompressedInt() override
     {
-        PYBIND11_OVERRIDE (int, juce::InputStream, readCompressedInt);
+        PYBIND11_OVERRIDE (int, Base, readCompressedInt);
     }
 
     juce::String readNextLine() override
     {
-        PYBIND11_OVERRIDE (juce::String, juce::InputStream, readNextLine);
+        PYBIND11_OVERRIDE (juce::String, Base, readNextLine);
     }
 
     juce::String readString() override
     {
-        PYBIND11_OVERRIDE (juce::String, juce::InputStream, readString);
+        PYBIND11_OVERRIDE (juce::String, Base, readString);
     }
 
     juce::String readEntireStreamAsString() override
     {
-        PYBIND11_OVERRIDE (juce::String, juce::InputStream, readEntireStreamAsString);
+        PYBIND11_OVERRIDE (juce::String, Base, readEntireStreamAsString);
     }
 
     size_t readIntoMemoryBlock (juce::MemoryBlock& destBlock, ssize_t maxNumBytesToRead) override
     {
-        PYBIND11_OVERRIDE (size_t, juce::InputStream, readIntoMemoryBlock, destBlock, maxNumBytesToRead);
+        PYBIND11_OVERRIDE (size_t, Base, readIntoMemoryBlock, destBlock, maxNumBytesToRead);
     }
 
     juce::int64 getPosition() override
     {
-        PYBIND11_OVERRIDE_PURE (juce::int64, juce::InputStream, getPosition);
+        PYBIND11_OVERRIDE_PURE (juce::int64, Base, getPosition);
     }
 
     bool setPosition (juce::int64 newPosition) override
     {
-        PYBIND11_OVERRIDE_PURE (bool, juce::InputStream, setPosition, newPosition);
+        PYBIND11_OVERRIDE_PURE (bool, Base, setPosition, newPosition);
     }
 
     void skipNextBytes (juce::int64 newPosition) override
     {
-        PYBIND11_OVERRIDE (void, juce::InputStream, skipNextBytes, newPosition);
+        PYBIND11_OVERRIDE (void, Base, skipNextBytes, newPosition);
     }
 };
 
 // =================================================================================================
 
-struct PyInputSource : juce::InputSource
+template <class Base = juce::InputSource>
+struct PyInputSource : Base
 {
-    using juce::InputSource::InputSource;
+    using Base::Base;
 
     juce::InputStream* createInputStream() override
     {
-        PYBIND11_OVERRIDE_PURE (juce::InputStream*, juce::InputSource, createInputStream);
+        PYBIND11_OVERRIDE_PURE (juce::InputStream*, Base, createInputStream);
     }
 
     juce::InputStream* createInputStreamFor (const juce::String& relatedItemPath) override
     {
-        PYBIND11_OVERRIDE_PURE (juce::InputStream*, juce::InputSource, createInputStreamFor, relatedItemPath);
+        PYBIND11_OVERRIDE_PURE (juce::InputStream*, Base, createInputStreamFor, relatedItemPath);
     }
 
     juce::int64 hashCode() const override
     {
-        PYBIND11_OVERRIDE_PURE (juce::int64, juce::InputSource, hashCode);
+        PYBIND11_OVERRIDE_PURE (juce::int64, Base, hashCode);
     }
 };
 
@@ -423,129 +531,144 @@ struct PyInputSource : juce::InputSource
 template <class Base = juce::OutputStream>
 struct PyOutputStream : Base
 {
+private:
+#if JUCE_WINDOWS && ! JUCE_MINGW
+    using ssize_t = juce::pointer_sized_int;
+#endif
+
+public:
     using Base::Base;
 
     void flush() override
     {
-        PYBIND11_OVERRIDE_PURE (void, juce::OutputStream, flush);
+        PYBIND11_OVERRIDE_PURE (void, Base, flush);
     }
 
     bool setPosition (juce::int64 newPosition) override
     {
-        PYBIND11_OVERRIDE_PURE (bool, juce::OutputStream, setPosition, newPosition);
+        PYBIND11_OVERRIDE_PURE (bool, Base, setPosition, newPosition);
     }
 
     juce::int64 getPosition() override
     {
-        PYBIND11_OVERRIDE_PURE (juce::int64, juce::OutputStream, getPosition);
+        PYBIND11_OVERRIDE_PURE (juce::int64, Base, getPosition);
     }
 
     bool write (const void* dataToWrite, size_t numberOfBytes) override
     {
-        PYBIND11_OVERRIDE_PURE (bool, juce::OutputStream, write, dataToWrite, numberOfBytes);
+        pybind11::gil_scoped_acquire gil;
+
+        if (pybind11::function override_ = pybind11::get_override (static_cast<Base*> (this), "write"); override_)
+        {
+            auto result = override_ (pybind11::memoryview::from_memory (dataToWrite, static_cast<ssize_t> (numberOfBytes)));
+
+            return result.cast<bool>();
+        }
+
+        pybind11::pybind11_fail("Tried to call pure virtual function \"OutputStream.write\"");
     }
 
     bool writeByte (char value) override
     {
-        PYBIND11_OVERRIDE (bool, juce::OutputStream, writeByte, value);
+        PYBIND11_OVERRIDE (bool, Base, writeByte, value);
     }
 
     bool writeBool (bool value) override
     {
-        PYBIND11_OVERRIDE (bool, juce::OutputStream, writeBool, value);
+        PYBIND11_OVERRIDE (bool, Base, writeBool, value);
     }
 
     bool writeShort (short value) override
     {
-        PYBIND11_OVERRIDE (bool, juce::OutputStream, writeShort, value);
+        PYBIND11_OVERRIDE (bool, Base, writeShort, value);
     }
 
     bool writeShortBigEndian (short value) override
     {
-        PYBIND11_OVERRIDE (bool, juce::OutputStream, writeShortBigEndian, value);
+        PYBIND11_OVERRIDE (bool, Base, writeShortBigEndian, value);
     }
-
 
     bool writeInt (int value) override
     {
-        PYBIND11_OVERRIDE (bool, juce::OutputStream, writeInt, value);
+        PYBIND11_OVERRIDE (bool, Base, writeInt, value);
     }
 
     bool writeIntBigEndian (int value) override
     {
-        PYBIND11_OVERRIDE (bool, juce::OutputStream, writeIntBigEndian, value);
+        PYBIND11_OVERRIDE (bool, Base, writeIntBigEndian, value);
     }
 
     bool writeInt64 (juce::int64 value) override
     {
-        PYBIND11_OVERRIDE (bool, juce::OutputStream, writeInt64, value);
+        PYBIND11_OVERRIDE (bool, Base, writeInt64, value);
     }
 
     bool writeInt64BigEndian (juce::int64 value) override
     {
-        PYBIND11_OVERRIDE (bool, juce::OutputStream, writeInt64BigEndian, value);
+        PYBIND11_OVERRIDE (bool, Base, writeInt64BigEndian, value);
     }
 
     bool writeFloat (float value) override
     {
-        PYBIND11_OVERRIDE (bool, juce::OutputStream, writeFloat, value);
+        PYBIND11_OVERRIDE (bool, Base, writeFloat, value);
     }
 
     bool writeFloatBigEndian (float value) override
     {
-        PYBIND11_OVERRIDE (bool, juce::OutputStream, writeFloatBigEndian, value);
+        PYBIND11_OVERRIDE (bool, Base, writeFloatBigEndian, value);
     }
 
     bool writeDouble (double value) override
     {
-        PYBIND11_OVERRIDE (bool, juce::OutputStream, writeDouble, value);
+        PYBIND11_OVERRIDE (bool, Base, writeDouble, value);
     }
 
     bool writeDoubleBigEndian (double value) override
     {
-        PYBIND11_OVERRIDE (bool, juce::OutputStream, writeDoubleBigEndian, value);
+        PYBIND11_OVERRIDE (bool, Base, writeDoubleBigEndian, value);
     }
 
     bool writeRepeatedByte (juce::uint8 byte, size_t numTimesToRepeat) override
     {
-        PYBIND11_OVERRIDE (bool, juce::OutputStream, writeRepeatedByte, byte, numTimesToRepeat);
+        PYBIND11_OVERRIDE (bool, Base, writeRepeatedByte, byte, numTimesToRepeat);
     }
 
     bool writeCompressedInt (int value) override
     {
-        PYBIND11_OVERRIDE (bool, juce::OutputStream, writeCompressedInt, value);
+        PYBIND11_OVERRIDE (bool, Base, writeCompressedInt, value);
     }
 
     bool writeString (const juce::String& text) override
     {
-        PYBIND11_OVERRIDE (bool, juce::OutputStream, writeString, text);
+        PYBIND11_OVERRIDE (bool, Base, writeString, text);
     }
 
     bool writeText (const juce::String& text, bool asUTF16, bool writeUTF16ByteOrderMark, const char* lineEndings) override
     {
-        PYBIND11_OVERRIDE (bool, juce::OutputStream, writeText, text, asUTF16, writeUTF16ByteOrderMark, lineEndings);
+        PYBIND11_OVERRIDE (bool, Base, writeText, text, asUTF16, writeUTF16ByteOrderMark, lineEndings);
     }
 
     juce::int64 writeFromInputStream (juce::InputStream& source, juce::int64 maxNumBytesToWrite) override
     {
-        PYBIND11_OVERRIDE (juce::int64, juce::OutputStream, writeFromInputStream, source, maxNumBytesToWrite);
+        PYBIND11_OVERRIDE (juce::int64, Base, writeFromInputStream, source, maxNumBytesToWrite);
     }
 };
 
 // =================================================================================================
 
-struct PyFileFilter : juce::FileFilter
+template <class Base = juce::FileFilter>
+struct PyFileFilter : Base
 {
-    using juce::FileFilter::FileFilter;
+    using Base::Base;
 
     bool isFileSuitable (const juce::File& file) const override
     {
-        PYBIND11_OVERRIDE_PURE (bool, juce::FileFilter, isFileSuitable, file);
+        PYBIND11_OVERRIDE_PURE (bool, Base, isFileSuitable, file);
     }
 
     bool isDirectorySuitable (const juce::File& file) const override
     {
-        PYBIND11_OVERRIDE_PURE (bool, juce::FileFilter, isDirectorySuitable, file);
+        PYBIND11_OVERRIDE_PURE (bool, Base, isDirectorySuitable, file);
     }
 };
 
@@ -581,7 +704,7 @@ struct PyXmlElementComparator
             return result.cast<int>();
         }
 
-        pybind11::pybind11_fail("Tried to call pure virtual function \"XmlElement::Comparator::compareElements\"");
+        pybind11::pybind11_fail("Tried to call pure virtual function \"XmlElement.Comparator.compareElements\"");
     }
 };
 
@@ -603,7 +726,7 @@ struct PyXmlElementCallableComparator
             return result.cast<int>();
         }
 
-        pybind11::pybind11_fail("Tried to call function \"XmlElement::Comparator::compareElements\" without a callable");
+        pybind11::pybind11_fail("Tried to call function \"XmlElement.Comparator.compareElements\" without a callable");
     }
 
 private:
@@ -618,6 +741,115 @@ struct PyHighResolutionTimer : public juce::HighResolutionTimer
     {
         PYBIND11_OVERRIDE_PURE(void, juce::HighResolutionTimer, hiResTimerCallback);
     }
+};
+
+// =================================================================================================
+
+template <class T>
+struct PyGenericScopedLock
+{
+    PyGenericScopedLock (const T& mutex)
+        : mutex (mutex)
+    {
+    }
+
+    PyGenericScopedLock (const PyGenericScopedLock&) = delete;
+    PyGenericScopedLock (PyGenericScopedLock&&) = default;
+
+    ~PyGenericScopedLock()
+    {
+        exit();
+    }
+
+    void enter()
+    {
+        mutex.enter();
+    }
+
+    void exit()
+    {
+        mutex.exit();
+    }
+
+private:
+    const T& mutex;
+};
+
+template <class T>
+struct PyGenericScopedUnlock
+{
+    PyGenericScopedUnlock (const T& mutex)
+        : mutex (mutex)
+    {
+    }
+
+    PyGenericScopedUnlock (const PyGenericScopedUnlock&) = delete;
+    PyGenericScopedUnlock (PyGenericScopedUnlock&&) = default;
+
+    ~PyGenericScopedUnlock()
+    {
+        exit();
+    }
+
+    void enter()
+    {
+        mutex.exit();
+    }
+
+    void exit()
+    {
+        mutex.enter();
+    }
+
+private:
+    const T& mutex;
+};
+
+template <class T>
+struct PyGenericScopedTryLock
+{
+    PyGenericScopedTryLock (const T& mutex, bool acquireLockOnInitialisation = true)
+        : mutex (mutex)
+        , lockWasSuccessful (acquireLockOnInitialisation && mutex.tryEnter())
+        , acquireLockOnInitialisation (acquireLockOnInitialisation)
+    {
+    }
+
+    PyGenericScopedTryLock (const PyGenericScopedTryLock&) = delete;
+    PyGenericScopedTryLock (PyGenericScopedTryLock&&) = default;
+
+    ~PyGenericScopedTryLock()
+    {
+        exit();
+    }
+
+    bool isLocked() const noexcept
+    {
+        return lockWasSuccessful;
+    }
+
+    bool retryLock() const
+    {
+        lockWasSuccessful = mutex.tryEnter();
+        return lockWasSuccessful;
+    }
+
+    void enter()
+    {
+        if (! acquireLockOnInitialisation)
+            retryLock();
+    }
+
+    void exit()
+    {
+        if (lockWasSuccessful)
+            mutex.exit();
+    }
+
+private:
+    const T& mutex;
+    mutable bool lockWasSuccessful;
+    bool acquireLockOnInitialisation;
 };
 
 // =================================================================================================
@@ -640,19 +872,19 @@ struct PyThread : Base
         catch (const pybind11::error_already_set& e)
         {
             pybind11::gil_scoped_acquire acquire;
-            pybind11::print ("Your run() method mustn't throw any exceptions!");
+            pybind11::print ("The \"Thread.run\" method mustn't throw any exceptions!");
             pybind11::module_::import ("traceback").attr ("print_exception") (e.type(), e.value(), e.trace());
         }
         catch (const std::exception& e)
         {
             pybind11::gil_scoped_acquire acquire;
-            auto exception = juce::String ("Your run() method mustn't throw any exceptions: ") + e.what();
+            auto exception = juce::String ("The \"Thread.run\" method mustn't throw any exceptions: ") + e.what();
             pybind11::print (exception);
         }
         catch (...)
         {
             pybind11::gil_scoped_acquire acquire;
-            auto exception = juce::String ("Your run() method mustn't throw any exceptions: Unhandled python exeption");
+            auto exception = juce::String ("The \"Thread.run\" method mustn't throw any exceptions: Unhandled python exeption");
             pybind11::print (exception);
         }
 #endif

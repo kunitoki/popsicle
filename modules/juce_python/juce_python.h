@@ -21,7 +21,7 @@
 
   ID:                 juce_python
   vendor:             kunitoki
-  version:            0.9.6
+  version:            0.9.7
   name:               Python bindings for the JUCE framework
   description:        The python bindings to create and work on JUCE apps.
   website:            https://github.com/kunitoki/popsicle

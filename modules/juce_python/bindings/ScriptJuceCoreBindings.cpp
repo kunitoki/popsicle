@@ -24,6 +24,7 @@
 
 #include "../utilities/CrashHandling.h"
 
+#include <optional>
 #include <string_view>
 
 namespace PYBIND11_NAMESPACE {
@@ -425,10 +426,10 @@ void registerRange (py::module_& m)
 
     ([&]
     {
-        using ValueType = Types;
+        using ValueType = underlying_type_t<Types>;
         using T = Class<ValueType>;
 
-        const auto className = popsicle::Helpers::pythonizeCompoundClassName ("Range", typeid (Types).name());
+        const auto className = popsicle::Helpers::pythonizeCompoundClassName ("Range", typeid (ValueType).name());
 
         auto class_ = py::class_<T> (m, className.toRawUTF8())
             .def (py::init<>())
@@ -462,7 +463,11 @@ void registerRange (py::module_& m)
             .def ("getUnionWith", py::overload_cast<T> (&T::getUnionWith, py::const_))
             .def ("getUnionWith", py::overload_cast<const ValueType> (&T::getUnionWith, py::const_))
             .def ("constrainRange", &T::constrainRange)
-        //.def_static ("findMinAndMax", &T::template findMinAndMax<int>)
+        //.def_static ("findMinAndMax", [](const T& self, py::buffer values, int numValues)
+        //{
+        //  auto info = values.request();
+        //  return self.findMinAndMax (reinterpret_cast<ValueType*> (info.ptr), numValues);
+        //})
             .def ("__repr__", [](const T& self)
             {
                 String result;
@@ -472,6 +477,9 @@ void registerRange (py::module_& m)
                 return result;
             })
         ;
+
+        if constexpr (! std::is_same_v<ValueType, Types>)
+            class_.def (py::init ([](Types start, Types end) { return T (static_cast<ValueType> (start), static_cast<ValueType> (end)); }));
 
         type[py::type::of (py::cast (Types{}))] = class_;
 
@@ -484,16 +492,68 @@ void registerRange (py::module_& m)
 // ============================================================================================
 
 template <template <class> class Class, class... Types>
+void registerNormalisableRange (py::module_& m)
+{
+    py::dict type;
+
+    ([&]
+    {
+        using ValueType = underlying_type_t<Types>;
+        using T = Class<ValueType>;
+        using ValueRemapFunction = typename T::ValueRemapFunction;
+
+        const auto className = popsicle::Helpers::pythonizeCompoundClassName ("NormalisableRange", typeid (ValueType).name());
+
+        auto class_ = py::class_<T> (m, className.toRawUTF8())
+            .def (py::init<>())
+            .def (py::init<ValueType, ValueType>(), "rangeStart"_a, "rangeEnd"_a)
+            .def (py::init<ValueType, ValueType, ValueType, ValueType, bool>(), "rangeStart"_a, "rangeEnd"_a, "intervalValue"_a, "skewFactor"_a, "useSymmetricSkew"_a = false)
+            .def (py::init<ValueType, ValueType, ValueType>(), "rangeStart"_a, "rangeEnd"_a, "intervalValue"_a)
+            .def (py::init<Range<ValueType>>(), "range"_a)
+            .def (py::init<Range<ValueType>, ValueType>(), "range"_a, "intervalValue"_a)
+            .def (py::init<ValueType, ValueType, ValueRemapFunction, ValueRemapFunction, ValueRemapFunction>(), "rangeStart"_a, "rangeEnd"_a, "convertFrom0To1Func"_a, "convertTo0To1Func"_a, "snapToLegalValueFunc"_a = ValueRemapFunction())
+            .def (py::init<const T&>())
+            .def ("convertTo0to1", &T::convertTo0to1)
+            .def ("convertFrom0to1", &T::convertFrom0to1)
+            .def ("snapToLegalValue", &T::snapToLegalValue)
+            .def ("getRange", &T::getRange)
+            .def ("setSkewForCentre", &T::setSkewForCentre)
+            .def_readwrite ("start", &T::start)
+            .def_readwrite ("end", &T::end)
+            .def_readwrite ("interval", &T::interval)
+            .def_readwrite ("skew", &T::skew)
+            .def_readwrite ("symmetricSkew", &T::symmetricSkew)
+            .def ("__repr__", [](const T& self)
+            {
+                String result;
+                result
+                    << Helpers::pythonizeModuleClassName (PythonModuleName, typeid (self).name())
+                    << "(" << self.start << ", " << self.end << ", " << self.interval << ", " << self.skew << ", " << (self.symmetricSkew ? "True" : "False") << ")";
+                return result;
+            })
+        ;
+
+        type[py::type::of (py::cast (Types{}))] = class_;
+
+        return true;
+    }() && ...);
+
+    m.add_object ("NormalisableRange", type);
+}
+
+// ============================================================================================
+
+template <template <class> class Class, class... Types>
 void registerAtomic (py::module_& m)
 {
     py::dict type;
 
     ([&]
     {
-        using ValueType = Types;
+        using ValueType = underlying_type_t<Types>;
         using T = Class<ValueType>;
 
-        const auto className = popsicle::Helpers::pythonizeCompoundClassName ("Atomic", typeid (Types).name());
+        const auto className = popsicle::Helpers::pythonizeCompoundClassName ("Atomic", typeid (ValueType).name());
 
         auto class_ = py::class_<T> (m, className.toRawUTF8())
             .def (py::init<>())
@@ -505,6 +565,9 @@ void registerAtomic (py::module_& m)
             .def ("compareAndSetBool", &T::compareAndSetBool)
             .def ("memoryBarrier", &T::memoryBarrier)
         ;
+
+        if constexpr (! std::is_same_v<ValueType, Types>)
+            class_.def (py::init ([](Types value) { return T (static_cast<ValueType> (value)); }));
 
         if constexpr (!std::is_same_v<ValueType, bool> && !std::is_floating_point_v<ValueType>)
         {
@@ -522,11 +585,109 @@ void registerAtomic (py::module_& m)
     m.add_object ("Atomic", type);
 }
 
+// ============================================================================================
+
+template <template <class> class Class, class... Types>
+void registerSparseSet (pybind11::module_& m)
+{
+    using namespace juce;
+
+    namespace py = pybind11;
+    using namespace py::literals;
+
+    auto type = py::hasattr (m, "SparseSet") ? m.attr ("SparseSet").cast<py::dict>() : py::dict{};
+
+    ([&]
+    {
+        using ValueType = underlying_type_t<Types>;
+        using T = Class<ValueType>;
+
+        const auto className = popsicle::Helpers::pythonizeCompoundClassName ("SparseSet", typeid (ValueType).name());
+
+        py::class_<T> class_ (m, className.toRawUTF8());
+
+        class_
+            .def (py::init<>())
+            .def (py::init<const T&>())
+            .def ("clear", &T::clear)
+            .def ("isEmpty", &T::isEmpty)
+            .def ("size", &T::size)
+            .def ("__getitem__", &T::operator[])
+            .def ("contains", &T::contains)
+            .def ("getNumRanges", &T::getNumRanges)
+            .def ("getRange", &T::getRange)
+            .def ("getTotalRange", &T::getTotalRange)
+            .def ("addRange", &T::addRange)
+            .def ("removeRange", &T::removeRange)
+            .def ("invertRange", &T::invertRange)
+            .def ("overlapsRange", &T::overlapsRange)
+            .def ("containsRange", &T::containsRange)
+            .def ("__len__", &T::size)
+            .def ("__repr__", [className](T& self)
+            {
+                String result;
+                result
+                    << "<" << Helpers::pythonizeModuleClassName (PythonModuleName, typeid (T).name(), 1)
+                    << " object at " << String::formatted ("%p", std::addressof (self)) << ">";
+                return result;
+            })
+        ;
+
+        if constexpr (isEqualityComparable<ValueType>::value)
+        {
+            class_
+                .def (py::self == py::self)
+                .def (py::self != py::self)
+            ;
+        }
+
+        type[py::type::of (py::cast (Types{}))] = class_;
+
+        return true;
+    }() && ...);
+
+    m.attr ("SparseSet") = type;
+}
+
 void registerJuceCoreBindings (py::module_& m)
 {
 #if !JUCE_PYTHON_EMBEDDED_INTERPRETER
     juce::SystemStats::setApplicationCrashHandler (Helpers::applicationCrashHandler);
 #endif
+
+    // ============================================================================================ GenericInteger<T>
+
+    py::class_<GenericInteger<int8>> (m, "int8")
+        .def (py::init<int8>())
+        .def ("get", &GenericInteger<int8>::get);
+
+    py::class_<GenericInteger<uint8>> (m, "uint8")
+        .def (py::init<uint8>())
+        .def ("get", &GenericInteger<uint8>::get);
+
+    py::class_<GenericInteger<int16>> (m, "int16")
+        .def (py::init<int16>())
+        .def ("get", &GenericInteger<int16>::get);
+
+    py::class_<GenericInteger<uint16>> (m, "uint16")
+        .def (py::init<uint16>())
+        .def ("get", &GenericInteger<uint16>::get);
+
+    py::class_<GenericInteger<int32>> (m, "int32")
+        .def (py::init<int32>())
+        .def ("get", &GenericInteger<int32>::get);
+
+    py::class_<GenericInteger<uint32>> (m, "uint32")
+        .def (py::init<uint32>())
+        .def ("get", &GenericInteger<uint32>::get);
+
+    py::class_<GenericInteger<int64>> (m, "int64")
+        .def (py::init<int64>())
+        .def ("get", &GenericInteger<int64>::get);
+
+    py::class_<GenericInteger<uint64>> (m, "uint64")
+        .def (py::init<uint64>())
+        .def ("get", &GenericInteger<uint64>::get);
 
     // ============================================================================================ juce::Math
 
@@ -601,6 +762,14 @@ void registerJuceCoreBindings (py::module_& m)
     // ============================================================================================ juce::MathConstants
 
     registerMathConstants<MathConstants, float, double> (m);
+
+    // ============================================================================================ juce::Range<>
+
+    registerRange<Range, int, GenericInteger<int64>, float> (m);
+
+    // ============================================================================================ juce::NormalisableRange<>
+
+    registerNormalisableRange<NormalisableRange, float> (m);
 
     // ============================================================================================ juce::Atomic
 
@@ -804,6 +973,7 @@ void registerJuceCoreBindings (py::module_& m)
         .def (py::init<const StringPairArray&>())
         .def (py::self == py::self)
         .def (py::self != py::self)
+        .def ("__len__", &StringPairArray::size)
         .def ("__getitem__", [](const StringPairArray& self, StringRef key) { return self[ key]; }, "key"_a)
         .def ("getValue", &StringPairArray::getValue, "key"_a, "defaultReturnValue"_a)
         .def ("containsKey", &StringPairArray::containsKey)
@@ -1185,10 +1355,6 @@ void registerJuceCoreBindings (py::module_& m)
         .def ("__str__", [](const Time& self) { return self.toISO8601 (false); })
     ;
 
-    // ============================================================================================ juce::Range<>
-
-    registerRange<Range, int, float> (m);
-
     // ============================================================================================ juce::MemoryBlock
 
     py::class_<MemoryBlock> classMemoryBlock (m, "MemoryBlock");
@@ -1364,7 +1530,7 @@ void registerJuceCoreBindings (py::module_& m)
 
     // ============================================================================================ juce::InputSource
 
-    py::class_<InputSource, PyInputSource> classInputSource (m, "InputSource");
+    py::class_<InputSource, PyInputSource<>> classInputSource (m, "InputSource");
 
     classInputSource
         .def (py::init<>())
@@ -1667,9 +1833,12 @@ void registerJuceCoreBindings (py::module_& m)
     classMemoryMappedFile
         .def (py::init<const File&, MemoryMappedFile::AccessMode, bool>(), "file"_a, "mode"_a, "exclusive"_a = false)
         .def (py::init<const File&, const Range<int64>&, MemoryMappedFile::AccessMode, bool>(), "file"_a, "fileRange"_a, "mode"_a, "exclusive"_a = false)
-        .def ("getData", [](const MemoryMappedFile* self)
+        .def ("getData", [](const MemoryMappedFile& self) -> std::optional<py::memoryview>
         {
-            return py::memoryview::from_memory (self->getData(), static_cast<Py_ssize_t> (self->getSize()));
+            if (self.getData() == nullptr)
+                return std::nullopt;
+
+            return py::memoryview::from_memory (self.getData(), static_cast<Py_ssize_t> (self.getSize()));
         }, py::return_value_policy::reference_internal)
         .def ("getSize", &MemoryMappedFile::getSize)
         .def ("getRange", &MemoryMappedFile::getRange)
@@ -1703,7 +1872,7 @@ void registerJuceCoreBindings (py::module_& m)
 
     // ============================================================================================ juce::FileFilter
 
-    py::class_<FileFilter, PyFileFilter> classFileFilter (m, "FileFilter");
+    py::class_<FileFilter, PyFileFilter<>> classFileFilter (m, "FileFilter");
 
     classFileFilter
         .def (py::init<const String&>())
@@ -1712,10 +1881,37 @@ void registerJuceCoreBindings (py::module_& m)
         .def ("isDirectorySuitable", &FileFilter::isDirectorySuitable)
     ;
 
-    py::class_<WildcardFileFilter, FileFilter> classWildcardFileFilter (m, "WildcardFileFilter");
+    py::class_<WildcardFileFilter, FileFilter, PyFileFilter<WildcardFileFilter>> classWildcardFileFilter (m, "WildcardFileFilter");
 
     classWildcardFileFilter
         .def (py::init<const String&, const String&, const String&>())
+    ;
+
+    // ============================================================================================ juce::TemporaryFile
+
+    py::class_<TemporaryFile> classTemporaryFile (m, "TemporaryFile");
+
+    py::enum_<TemporaryFile::OptionFlags> (classTemporaryFile, "OptionFlags", py::arithmetic())
+        .value ("useHiddenFile", TemporaryFile::OptionFlags::useHiddenFile)
+        .value ("putNumbersInBrackets", TemporaryFile::OptionFlags::putNumbersInBrackets)
+        .export_values();
+
+    classTemporaryFile
+        .def (py::init<const String&, int>(), "suffix"_a = String(), "optionFlags"_a = 0)
+        .def (py::init<const File&, int>(), "targetFile"_a, "optionFlags"_a = 0)
+        .def (py::init<const File&, const File&>(), "targetFile"_a, "temporaryFile"_a)
+        .def ("getFile", &TemporaryFile::getFile)
+        .def ("getTargetFile", &TemporaryFile::getTargetFile)
+        .def ("overwriteTargetFileWithTemporary", &TemporaryFile::overwriteTargetFileWithTemporary)
+        .def ("deleteTemporaryFile", &TemporaryFile::deleteTemporaryFile)
+        .def ("__enter__", [](TemporaryFile& self)
+        {
+            return std::addressof(self);
+        }, py::return_value_policy::reference)
+        .def ("__exit__", [](TemporaryFile& self, const std::optional<py::type>&, const std::optional<py::object>&, const std::optional<py::object>&)
+        {
+            self.overwriteTargetFileWithTemporary();
+        })
     ;
 
     // ============================================================================================ juce::URL
@@ -1746,6 +1942,43 @@ void registerJuceCoreBindings (py::module_& m)
         {
             return py::make_iterator (begin (self), end (self));
         }, py::keep_alive<0, 1>())
+    ;
+
+    // ============================================================================================ juce::JSON
+
+    py::class_<JSON> classJSON (m, "JSON");
+
+    py::enum_<JSON::Spacing> (classJSON, "Spacing")
+        .value ("none", JSON::Spacing::none)
+        .value ("singleLine", JSON::Spacing::singleLine)
+        .value ("multiLine", JSON::Spacing::multiLine);
+
+    py::class_<JSON::FormatOptions> classJSONFormatOptions (classJSON, "FormatOptions");
+
+    classJSONFormatOptions
+        .def (py::init<>())
+        .def ("withSpacing", &JSON::FormatOptions::withSpacing)
+        .def ("withMaxDecimalPlaces", &JSON::FormatOptions::withMaxDecimalPlaces)
+        .def ("withIndentLevel", &JSON::FormatOptions::withIndentLevel)
+        .def ("getSpacing", &JSON::FormatOptions::getSpacing)
+        .def ("getMaxDecimalPlaces", &JSON::FormatOptions::getMaxDecimalPlaces)
+        .def ("getIndentLevel", &JSON::FormatOptions::getIndentLevel)
+    ;
+
+    classJSON
+        .def_static ("parse", static_cast<Result (*)(const String&, var&)> (&JSON::parse))
+        .def_static ("parse", static_cast<var (*)(const String&)> (&JSON::parse))
+        .def_static ("parse", static_cast<var (*)(const File&)> (&JSON::parse))
+        .def_static ("parse", static_cast<var (*)(InputStream&)> (&JSON::parse))
+        .def_static ("toString", static_cast<String (*)(const var&, bool, int)> (&JSON::toString),
+            "objectToFormat"_a, "allOnOneLine"_a = false, "maximumDecimalPlaces"_a = 15)
+        .def_static ("toString", static_cast<String (*)(const var&, const JSON::FormatOptions&)> (&JSON::toString))
+        .def_static ("fromString", &JSON::fromString)
+        .def_static ("writeToStream", static_cast<void (*)(OutputStream&, const var&, bool, int)> (&JSON::writeToStream),
+            "output"_a, "objectToFormat"_a, "allOnOneLine"_a = false, "maximumDecimalPlaces"_a = 15)
+        .def_static ("writeToStream", static_cast<void (*)(OutputStream&, const var&, const JSON::FormatOptions&)> (&JSON::writeToStream))
+        .def_static ("escapeString", &JSON::escapeString)
+    //.def_static ("parseQuotedString", &JSON::parseQuotedString)
     ;
 
     // ============================================================================================ juce::URL
@@ -1864,6 +2097,14 @@ void registerJuceCoreBindings (py::module_& m)
         .def_readwrite ("usePost", &URL::DownloadTaskOptions::usePost)
     ;
 
+    // ============================================================================================ juce::URLInputSource
+
+    py::class_<URLInputSource, InputSource, PyInputSource<URLInputSource>> classURLInputSource (m, "URLInputSource");
+
+    classURLInputSource
+        .def (py::init<const URL&>())
+    ;
+
     // ============================================================================================ juce::PerformanceCounter
 
     py::class_<PerformanceCounter> classPerformanceCounter (m, "PerformanceCounter");
@@ -1889,6 +2130,15 @@ void registerJuceCoreBindings (py::module_& m)
         .def ("stop", &PerformanceCounter::stop)
         .def ("printStatistics", &PerformanceCounter::printStatistics)
         .def ("getStatisticsAndReset", &PerformanceCounter::getStatisticsAndReset)
+        .def ("__enter__", [](PerformanceCounter& self)
+        {
+            self.start();
+        }, py::return_value_policy::reference)
+        .def ("__exit__", [](PerformanceCounter& self, const std::optional<py::type>&, const std::optional<py::object>&, const std::optional<py::object>&)
+        {
+            self.stop();
+            return self.getStatisticsAndReset();
+        })
     ;
 
     // ============================================================================================ juce::CriticalSection
@@ -1897,9 +2147,54 @@ void registerJuceCoreBindings (py::module_& m)
 
     classCriticalSection
         .def (py::init<>())
-        .def ("enter", &CriticalSection::enter)
+        .def ("enter", &CriticalSection::enter, py::call_guard<py::gil_scoped_release>())
         .def ("tryEnter", &CriticalSection::tryEnter)
         .def ("exit", &CriticalSection::exit)
+    ;
+
+    py::class_<PyGenericScopedLock<CriticalSection>> classScopedLockCriticalSection (classCriticalSection, "ScopedLockType");
+
+    classScopedLockCriticalSection
+        .def (py::init<CriticalSection&>(), "lock"_a)
+        .def ("__enter__", [](PyGenericScopedLock<CriticalSection>& self) -> PyGenericScopedLock<CriticalSection>*
+        {
+            self.enter();
+            return std::addressof (self);
+        }, py::return_value_policy::reference, py::call_guard<py::gil_scoped_release>())
+        .def ("__exit__", [](PyGenericScopedLock<CriticalSection>& self, const std::optional<py::type>&, const std::optional<py::object>&, const std::optional<py::object>&)
+        {
+            self.exit();
+        })
+    ;
+
+    py::class_<PyGenericScopedUnlock<CriticalSection>> classScopedUnlockCriticalSection (classCriticalSection, "ScopedUnlockType");
+
+    classScopedUnlockCriticalSection
+        .def (py::init<CriticalSection&>(), "lock"_a)
+        .def ("__enter__", [](PyGenericScopedUnlock<CriticalSection>& self) -> PyGenericScopedUnlock<CriticalSection>*
+        {
+            self.enter();
+            return std::addressof (self);
+        }, py::return_value_policy::reference, py::call_guard<py::gil_scoped_release>())
+        .def ("__exit__", [](PyGenericScopedUnlock<CriticalSection>& self, const std::optional<py::type>&, const std::optional<py::object>&, const std::optional<py::object>&)
+        {
+            self.exit();
+        })
+    ;
+
+    py::class_<PyGenericScopedTryLock<CriticalSection>> classScopedTryLockCriticalSection (classCriticalSection, "ScopedTryLock");
+
+    classScopedTryLockCriticalSection
+        .def (py::init<CriticalSection&, int>(), "lock"_a, "acquireLockOnInitialisation"_a = true)
+        .def ("__enter__", [](PyGenericScopedTryLock<CriticalSection>& self) -> PyGenericScopedTryLock<CriticalSection>*
+        {
+            self.enter();
+            return std::addressof (self);
+        }, py::return_value_policy::reference, py::call_guard<py::gil_scoped_release>())
+        .def ("__exit__", [](PyGenericScopedTryLock<CriticalSection>& self, const std::optional<py::type>&, const std::optional<py::object>&, const std::optional<py::object>&)
+        {
+            self.exit();
+        })
     ;
 
     // ============================================================================================ juce::SpinLock
@@ -1908,7 +2203,7 @@ void registerJuceCoreBindings (py::module_& m)
 
     classSpinLock
         .def (py::init<>())
-        .def ("enter", &SpinLock::enter)
+        .def ("enter", &SpinLock::enter, py::call_guard<py::gil_scoped_release>())
         .def ("tryEnter", &SpinLock::tryEnter)
         .def ("exit", &SpinLock::exit)
     ;
@@ -1919,7 +2214,7 @@ void registerJuceCoreBindings (py::module_& m)
 
     classWaitableEvent
         .def (py::init<bool>(), "manualReset"_a = false)
-        .def ("wait", &WaitableEvent::wait, "timeOutMilliseconds"_a = -1.0)
+        .def ("wait", &WaitableEvent::wait, "timeOutMilliseconds"_a = -1.0, py::call_guard<py::gil_scoped_release>())
         .def ("signal", &WaitableEvent::signal)
         .def ("reset", &WaitableEvent::reset)
     ;
@@ -1930,12 +2225,12 @@ void registerJuceCoreBindings (py::module_& m)
 
     classReadWriteLock
         .def (py::init<>())
-        .def ("enterRead", &ReadWriteLock::enterRead)
+        .def ("enterRead", &ReadWriteLock::enterRead, py::call_guard<py::gil_scoped_release>())
         .def ("tryEnterRead", &ReadWriteLock::tryEnterRead)
-        .def ("exitRead", &ReadWriteLock::exitRead)
-        .def ("enterWrite", &ReadWriteLock::enterWrite)
+        .def ("exitRead", &ReadWriteLock::exitRead, py::call_guard<py::gil_scoped_release>())
+        .def ("enterWrite", &ReadWriteLock::enterWrite, py::call_guard<py::gil_scoped_release>())
         .def ("tryEnterWrite", &ReadWriteLock::tryEnterWrite)
-        .def ("exitWrite", &ReadWriteLock::exitWrite)
+        .def ("exitWrite", &ReadWriteLock::exitWrite, py::call_guard<py::gil_scoped_release>())
     ;
 
     // ============================================================================================ juce::InterProcessLock
@@ -1944,7 +2239,7 @@ void registerJuceCoreBindings (py::module_& m)
 
     classInterProcessLock
         .def (py::init<const String&>())
-        .def ("enter", &InterProcessLock::enter, "timeOutMillisecs"_a = -1)
+        .def ("enter", &InterProcessLock::enter, "timeOutMillisecs"_a = -1, py::call_guard<py::gil_scoped_release>())
         .def ("exit", &InterProcessLock::exit)
     ;
 
@@ -1965,10 +2260,18 @@ void registerJuceCoreBindings (py::module_& m)
 
     py::class_<ChildProcess> classChildProcess (m, "ChildProcess");
 
+    py::enum_<ChildProcess::StreamFlags> (classChildProcess, "StreamFlags", py::arithmetic())
+        .value ("wantStdOut", ChildProcess::StreamFlags::wantStdOut)
+        .value ("wantStdErr", ChildProcess::StreamFlags::wantStdErr);
+
     classChildProcess
         .def (py::init<>())
-        .def ("start", py::overload_cast<const String &, int> (&ChildProcess::start))
-        .def ("start", py::overload_cast<const StringArray &, int> (&ChildProcess::start))
+        .def ("start", py::overload_cast<const String&, int> (&ChildProcess::start), "command"_a, "streamFlags"_a = ChildProcess::wantStdOut | ChildProcess::wantStdErr)
+        .def ("start", py::overload_cast<const StringArray&, int> (&ChildProcess::start), "command"_a, "streamFlags"_a = ChildProcess::wantStdOut | ChildProcess::wantStdErr)
+        .def ("start", [](ChildProcess& self, const String& command, ChildProcess::StreamFlags streamFlags)
+            { return self.start (command, streamFlags); }, "command"_a, "streamFlags"_a)
+        .def ("start", [](ChildProcess& self, const StringArray& command, ChildProcess::StreamFlags streamFlags)
+            { return self.start (command, streamFlags); }, "command"_a, "streamFlags"_a)
         .def ("isRunning", &ChildProcess::isRunning)
         .def ("readProcessOutput", [](ChildProcess& self, py::buffer data)
         {
@@ -2136,7 +2439,7 @@ void registerJuceCoreBindings (py::module_& m)
 
     // ============================================================================================ juce::TimeSliceThread
 
-    py::class_<TimeSliceThread, PyThread<TimeSliceThread>> classTimeSliceThread (m, "TimeSliceThread");
+    py::class_<TimeSliceThread, Thread, PyThread<TimeSliceThread>> classTimeSliceThread (m, "TimeSliceThread");
     py::class_<TimeSliceClient, PyTimeSliceClient> classTimeSliceClient (m, "TimeSliceClient");
 
     classTimeSliceClient
@@ -2478,6 +2781,10 @@ void registerJuceCoreBindings (py::module_& m)
     // ============================================================================================ juce::Array<>
 
     registerArray<Array, bool, int, float, String, File> (m);
+
+    // ============================================================================================ juce::SparseSet<>
+
+    registerSparseSet<SparseSet, int> (m);
 
     // ============================================================================================ testing
 

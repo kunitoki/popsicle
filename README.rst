@@ -216,7 +216,7 @@ Supported Modules
      - Planned
    * - juce_core
      - ✅
-     - 44.82%
+     - 47.7%
      - Ready
    * - juce_cryptography
      - ⛔️
@@ -328,6 +328,11 @@ Some images of JUCE tutorials and other small apps ported to *popsicle*.
 
    .. image:: images/emojis_component.png
        :target: examples/emojis_font_component.py
+
+- Wgpu Triangle Rendering Embedded Component
+
+   .. image:: images/wgpu_triangle.png
+       :target: examples/webgpu/
 
 
 -------------

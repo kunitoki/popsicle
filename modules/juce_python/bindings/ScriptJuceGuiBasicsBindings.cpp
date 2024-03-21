@@ -611,10 +611,10 @@ void registerJuceGuiBasicsBindings (py::module_& m)
         .def_static ("isScreenSaverEnabled", &Desktop::isScreenSaverEnabled)
         .def ("addGlobalMouseListener", &Desktop::addGlobalMouseListener)
         .def ("removeGlobalMouseListener", &Desktop::removeGlobalMouseListener)
-        .def ("addFocusChangeListener", &Desktop::addFocusChangeListener)
-        .def ("removeFocusChangeListener", &Desktop::removeFocusChangeListener)
-        .def ("addDarkModeSettingListener", &Desktop::addDarkModeSettingListener)
-        .def ("removeDarkModeSettingListener", &Desktop::removeDarkModeSettingListener)
+    //.def ("addFocusChangeListener", &Desktop::addFocusChangeListener)
+    //.def ("removeFocusChangeListener", &Desktop::removeFocusChangeListener)
+    //.def ("addDarkModeSettingListener", &Desktop::addDarkModeSettingListener)
+    //.def ("removeDarkModeSettingListener", &Desktop::removeDarkModeSettingListener)
         .def ("isDarkModeActive", &Desktop::isDarkModeActive)
         .def ("setKioskModeComponent", &Desktop::setKioskModeComponent)
         .def ("getKioskModeComponent", &Desktop::getKioskModeComponent)
@@ -650,7 +650,7 @@ void registerJuceGuiBasicsBindings (py::module_& m)
 
     // ============================================================================================ juce::Desktop
 
-    py::class_<ComponentAnimator> classComponentAnimator (m, "ComponentAnimator");
+    py::class_<ComponentAnimator, ChangeBroadcaster> classComponentAnimator (m, "ComponentAnimator");
 
     classComponentAnimator
         .def (py::init<>())
@@ -684,7 +684,8 @@ void registerJuceGuiBasicsBindings (py::module_& m)
         })
     ;
 
-    py::class_<FocusTraverser, ComponentTraverser, PyFocusTraverser<>> (m, "FocusTraverser");
+    py::class_<FocusTraverser, ComponentTraverser, PyFocusTraverser<FocusTraverser>> (m, "FocusTraverser");
+    py::class_<KeyboardFocusTraverser, ComponentTraverser, PyFocusTraverser<KeyboardFocusTraverser>> (m, "KeyboardFocusTraverser");
 
     // ============================================================================================ juce::ModalComponentManager
 
@@ -756,7 +757,7 @@ void registerJuceGuiBasicsBindings (py::module_& m)
         .def ("getComponent", &ComponentPeer::getComponent, py::return_value_policy::reference)
         .def ("getStyleFlags", &ComponentPeer::getStyleFlags)
         .def ("getUniqueID", &ComponentPeer::getUniqueID)
-        .def ("getNativeHandle", [](const ComponentPeer& self) { return PyNativeHandle (self.getNativeHandle()); })
+        .def ("getNativeHandle", [](const ComponentPeer& self) { return reinterpret_cast<std::intptr_t> (self.getNativeHandle()); })
         .def ("setVisible", &ComponentPeer::setVisible)
         .def ("setTitle", &ComponentPeer::setTitle)
         .def ("setDocumentEditedStatus", &ComponentPeer::setDocumentEditedStatus)
@@ -847,10 +848,14 @@ void registerJuceGuiBasicsBindings (py::module_& m)
         .def ("isVisible", &Component::isVisible)
         .def ("visibilityChanged", &Component::visibilityChanged)
         .def ("isShowing", &Component::isShowing)
-        .def ("addToDesktop", [](Component& self, ComponentPeer::StyleFlags windowStyleFlags, PyNativeHandle nativeWindowToAttachTo) { self.addToDesktop (static_cast<int> (windowStyleFlags), nativeWindowToAttachTo); },
-            "windowStyleFlags"_a, "nativeWindowToAttachTo"_a = nullptr)
-        .def ("addToDesktop", [](Component& self, int windowStyleFlags, PyNativeHandle nativeWindowToAttachTo) { self.addToDesktop (windowStyleFlags, nativeWindowToAttachTo); },
-            "windowStyleFlags"_a, "nativeWindowToAttachTo"_a = nullptr)
+        .def ("addToDesktop", [](Component& self, ComponentPeer::StyleFlags windowStyleFlags, std::optional<std::intptr_t> nativeWindowToAttachTo)
+        {
+            self.addToDesktop (static_cast<int> (windowStyleFlags), nativeWindowToAttachTo ? reinterpret_cast<void*>(*nativeWindowToAttachTo) : nullptr);
+        }, "windowStyleFlags"_a, "nativeWindowToAttachTo"_a = std::optional<std::intptr_t>())
+        .def ("addToDesktop", [](Component& self, int windowStyleFlags, std::optional<std::intptr_t> nativeWindowToAttachTo)
+        {
+            self.addToDesktop (windowStyleFlags, nativeWindowToAttachTo ? reinterpret_cast<void*>(*nativeWindowToAttachTo) : nullptr);
+        }, "windowStyleFlags"_a, "nativeWindowToAttachTo"_a = std::optional<std::intptr_t>())
         .def ("removeFromDesktop", &Component::removeFromDesktop)
         .def ("isOnDesktop", &Component::isOnDesktop)
         .def ("getDesktopScaleFactor", &Component::getDesktopScaleFactor)
@@ -1030,7 +1035,7 @@ void registerJuceGuiBasicsBindings (py::module_& m)
         .def ("isColourSpecified", &Component::isColourSpecified)
         .def ("copyAllExplicitColoursTo", [](const Component& self, Component* target) { self.copyAllExplicitColoursTo (*target); })
         .def ("colourChanged", &Component::colourChanged)
-        .def ("getWindowHandle", [](const Component& self) { return PyNativeHandle (self.getWindowHandle()); })
+        .def ("getWindowHandle", [](const Component& self) { return reinterpret_cast<std::intptr_t> (self.getWindowHandle()); })
     //.def ("getPositioner", &Component::getPositioner)
     //.def ("setPositioner", &Component::setPositioner)
     //.def ("setCachedComponentImage", &Component::setCachedComponentImage)
@@ -1676,13 +1681,44 @@ void registerJuceGuiBasicsBindings (py::module_& m)
         .def ("getClicksOutsideDismissVirtualKeyboard", &TextEditor::getClicksOutsideDismissVirtualKeyboard)
     ;
 
+    // ============================================================================================ juce::GroupComponent
+
+    py::class_<GroupComponent, PyComponent<GroupComponent>> classGroupComponent (m, "GroupComponent");
+
+    classGroupComponent
+        .def (py::init<const String&, const String&>(), "componentName"_a, "labelText"_a)
+        .def ("setText", &GroupComponent::setText, "newText"_a)
+        .def ("getText", &GroupComponent::getText)
+        .def ("setTextLabelPosition", &GroupComponent::setTextLabelPosition, "justification"_a)
+        .def ("setTextLabelPosition", [](GroupComponent& self, Justification::Flags flags) { self.setTextLabelPosition (flags); }, "justification"_a)
+        .def ("setTextLabelPosition", [](GroupComponent& self, int flags) { self.setTextLabelPosition (Justification (flags)); }, "justification"_a)
+        .def ("getTextLabelPosition", &GroupComponent::getTextLabelPosition)
+    ;
+
+    classGroupComponent.attr ("outlineColourId") = py::int_ (static_cast<int> (GroupComponent::outlineColourId));
+    classGroupComponent.attr ("textColourId") = py::int_ (static_cast<int> (GroupComponent::textColourId));
+
     // ============================================================================================ juce::ListBox
 
     py::class_<ListBoxModel, PyListBoxModel> classListBoxModel (m, "ListBoxModel");
 
     classListBoxModel
         .def (py::init<>())
-        // TODO
+        .def ("getNumRows", &ListBoxModel::getNumRows)
+        .def ("paintListBoxItem", &ListBoxModel::paintListBoxItem)
+        .def ("refreshComponentForRow", &ListBoxModel::refreshComponentForRow, py::return_value_policy::reference_internal)
+        .def ("getNameForRow", &ListBoxModel::getNameForRow)
+        .def ("listBoxItemClicked", &ListBoxModel::listBoxItemClicked)
+        .def ("listBoxItemDoubleClicked", &ListBoxModel::listBoxItemDoubleClicked)
+        .def ("backgroundClicked", &ListBoxModel::backgroundClicked)
+        .def ("selectedRowsChanged", &ListBoxModel::selectedRowsChanged)
+        .def ("deleteKeyPressed", &ListBoxModel::deleteKeyPressed)
+        .def ("returnKeyPressed", &ListBoxModel::returnKeyPressed)
+        .def ("listWasScrolled", &ListBoxModel::listWasScrolled)
+        .def ("getDragSourceDescription", &ListBoxModel::getDragSourceDescription)
+        .def ("mayDragToExternalWindows", &ListBoxModel::mayDragToExternalWindows)
+        .def ("getTooltipForRow", &ListBoxModel::getTooltipForRow)
+        .def ("getMouseCursorForRow", &ListBoxModel::getMouseCursorForRow)
     ;
 
     py::class_<ListBox, Component, PyListBox<>> classListBox (m, "ListBox");
@@ -1702,8 +1738,8 @@ void registerJuceGuiBasicsBindings (py::module_& m)
         .def ("deselectRow", &ListBox::deselectRow)
         .def ("deselectAllRows", &ListBox::deselectAllRows)
         .def ("flipRowSelection", &ListBox::flipRowSelection)
-    //.def ("getSelectedRows", &ListBox::getSelectedRows)
-    //.def ("setSelectedRows", &ListBox::setSelectedRows, "setOfRowsToBeSelected"_a, "sendNotificationEventToModel"_a = sendNotification)
+        .def ("getSelectedRows", &ListBox::getSelectedRows)
+        .def ("setSelectedRows", py::overload_cast<const SparseSet<int>&, NotificationType> (&ListBox::setSelectedRows), "setOfRowsToBeSelected"_a, "sendNotificationEventToModel"_a = sendNotification)
         .def ("isRowSelected", &ListBox::isRowSelected)
         .def ("getNumSelectedRows", &ListBox::getNumSelectedRows)
         .def ("getSelectedRow", &ListBox::getSelectedRow, "index"_a = 0)
@@ -2110,6 +2146,74 @@ void registerJuceGuiBasicsBindings (py::module_& m)
     ;
 
     classDocumentWindow.attr ("textColourId") = py::int_ (static_cast<int> (DocumentWindow::textColourId));
+
+    // ============================================================================================ juce::DialogWindow
+
+    py::class_<DialogWindow, DocumentWindow, PyDocumentWindow<DialogWindow>> classDialogWindow (m, "DialogWindow");
+
+    py::class_<DialogWindow::LaunchOptions> classDialogWindowLaunchOptions (classDialogWindow, "LaunchOptions");
+
+    classDialogWindowLaunchOptions
+        .def (py::init<>())
+        .def_readwrite ("dialogTitle", &DialogWindow::LaunchOptions::dialogTitle)
+        .def_readwrite ("dialogBackgroundColour", &DialogWindow::LaunchOptions::dialogBackgroundColour)
+    //.def_readwrite ("content", &DialogWindow::LaunchOptions::content)
+        .def_readwrite ("componentToCentreAround", &DialogWindow::LaunchOptions::componentToCentreAround)
+        .def_readwrite ("escapeKeyTriggersCloseButton", &DialogWindow::LaunchOptions::escapeKeyTriggersCloseButton)
+        .def_readwrite ("useNativeTitleBar", &DialogWindow::LaunchOptions::useNativeTitleBar)
+        .def_readwrite ("resizable", &DialogWindow::LaunchOptions::resizable)
+        .def_readwrite ("useBottomRightCornerResizer", &DialogWindow::LaunchOptions::useBottomRightCornerResizer)
+        .def ("launchAsync", &DialogWindow::LaunchOptions::launchAsync)
+        .def ("create", &DialogWindow::LaunchOptions::create)
+#if JUCE_MODAL_LOOPS_PERMITTED
+        .def ("runModal", &DialogWindow::LaunchOptions::runModal)
+#endif
+    ;
+
+    classDialogWindow
+        .def (py::init<const String&, Colour, bool, bool, float>(),
+            "name"_a, "backgroundColour"_a, "escapeKeyTriggersCloseButton"_a, "addToDesktop"_a = true, "desktopScale"_a = 1.0f)
+        .def_static ("showDialog", &DialogWindow::showDialog,
+            "dialogTitle"_a, "contentComponent"_a, "componentToCentreAround"_a, "backgroundColour"_a, "escapeKeyTriggersCloseButton"_a, "shouldBeResizable"_a = false, "useBottomRightCornerResizer"_a = false)
+#if JUCE_MODAL_LOOPS_PERMITTED
+        .def_static ("showModalDialog", &DialogWindow::showModalDialog,
+            "dialogTitle"_a, "contentComponent"_a, "componentToCentreAround"_a, "backgroundColour"_a, "escapeKeyTriggersCloseButton"_a, "shouldBeResizable"_a = false, "useBottomRightCornerResizer"_a = false)
+#endif
+    ;
+
+    // ============================================================================================ juce::TooltipWindow
+
+    py::class_<TooltipWindow, Component, PyTooltipWindow<>> classTooltipWindow (m, "TooltipWindow");
+
+    classTooltipWindow
+        .def (py::init<Component*, int>(), "parentComponent"_a = static_cast<Component*>(nullptr), "millisecondsBeforeTipAppears"_a = 700)
+        .def ("setMillisecondsBeforeTipAppears", &TooltipWindow::setMillisecondsBeforeTipAppears, "newTimeMs"_a = 700)
+        .def ("displayTip", &TooltipWindow::displayTip)
+        .def ("hideTip", &TooltipWindow::hideTip)
+        .def ("getTipFor", &TooltipWindow::getTipFor)
+        .def ("displayTip", &TooltipWindow::displayTip)
+    ;
+
+    classTooltipWindow.attr ("backgroundColourId") = py::int_ (static_cast<int> (TooltipWindow::backgroundColourId));
+    classTooltipWindow.attr ("textColourId") = py::int_ (static_cast<int> (TooltipWindow::textColourId));
+    classTooltipWindow.attr ("outlineColourId") = py::int_ (static_cast<int> (TooltipWindow::outlineColourId));
+
+    // ============================================================================================ juce::ThreadWithProgressWindow
+
+    py::class_<ThreadWithProgressWindow, Thread, PyThreadWithProgressWindow<>> classThreadWithProgressWindow (m, "ThreadWithProgressWindow");
+
+    classThreadWithProgressWindow
+        .def (py::init<const String&, bool, bool, int, const String&, Component*>(),
+            "windowTitle"_a, "hasProgressBar"_a, "hasCancelButton"_a, "timeOutMsWhenCancelling"_a = 10000, "cancelButtonText"_a = String(), "componentToCentreAround"_a = static_cast<Component*>(nullptr))
+#if JUCE_MODAL_LOOPS_PERMITTED
+        .def ("runThread", &ThreadWithProgressWindow::runThread)
+#endif
+        .def ("launchThread", &ThreadWithProgressWindow::launchThread)
+        .def ("setProgress", &ThreadWithProgressWindow::setProgress)
+        .def ("setStatusMessage", &ThreadWithProgressWindow::setStatusMessage)
+    //.def ("getAlertWindow", &ThreadWithProgressWindow::getAlertWindow)
+        .def ("threadComplete", &ThreadWithProgressWindow::threadComplete)
+    ;
 
     // ============================================================================================ juce::FileChooser
 

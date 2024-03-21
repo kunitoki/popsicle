@@ -20,6 +20,6 @@
 
 #include "juce_python.h"
 
-#include "bindings/ScriptJuceGuiBasicsBindings.cpp"
+#include "bindings/ScriptJuceGuiEntryPointsBindings.cpp"
 
 #endif

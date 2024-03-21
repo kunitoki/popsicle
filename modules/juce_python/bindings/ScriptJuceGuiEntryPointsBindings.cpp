@@ -66,24 +66,22 @@ void runApplication (JUCEApplicationBase* application, int milliseconds)
 
     while (! MessageManager::getInstance()->hasStopMessageBeenSent())
     {
-        if (globalOptions().catchExceptionsAndContinue)
-        {
-            try
-            {
-                py::gil_scoped_release release;
-
-                MessageManager::getInstance()->runDispatchLoopUntil (milliseconds);
-            }
-            catch (const py::error_already_set& e)
-            {
-                Helpers::printPythonException (e);
-            }
-        }
-        else
+        try
         {
             py::gil_scoped_release release;
 
             MessageManager::getInstance()->runDispatchLoopUntil (milliseconds);
+        }
+        catch (const py::error_already_set& e)
+        {
+            if (globalOptions().catchExceptionsAndContinue)
+            {
+                Helpers::printPythonException (e);
+            }
+            else
+            {
+                throw e;
+            }
         }
 
         if (globalOptions().caughtKeyboardInterrupt)
@@ -104,6 +102,10 @@ void registerJuceGuiEntryPointsBindings (py::module_& m)
 
     m.def ("START_JUCE_APPLICATION", [](py::handle applicationType, bool catchExceptionsAndContinue)
     {
+#if JUCE_MAC
+        juce::Process::setDockIconVisible (true);
+#endif
+
         globalOptions().catchExceptionsAndContinue = catchExceptionsAndContinue;
         globalOptions().caughtKeyboardInterrupt = false;
 
