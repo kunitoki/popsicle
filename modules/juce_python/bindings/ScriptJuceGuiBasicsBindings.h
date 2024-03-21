@@ -121,29 +121,31 @@ struct PyJUCEApplication : juce::JUCEApplication
             return;
         }
 
-        if (globalOptions().catchExceptionsAndContinue)
+        if (pyEx != nullptr)
         {
-            pybind11::print (100, ex->what());
+            pybind11::print (ex->what());
+            traceback.attr ("print_tb")(pyEx->trace());
 
-            if (pyEx != nullptr)
+            if (pyEx->matches (PyExc_KeyboardInterrupt) || PyErr_CheckSignals() != 0)
             {
-                traceback.attr ("print_tb")(pyEx->trace());
-
-                if (pyEx->matches (PyExc_KeyboardInterrupt))
-                    globalOptions().caughtKeyboardInterrupt = true;
-            }
-            else
-            {
-                traceback.attr ("print_stack")();
-
-                if (PyErr_CheckSignals() != 0)
-                    globalOptions().caughtKeyboardInterrupt = true;
+                globalOptions().caughtKeyboardInterrupt = true;
+                return;
             }
         }
         else
         {
-            std::terminate();
+            pybind11::print (ex->what());
+            traceback.attr ("print_stack")();
+
+            if (PyErr_CheckSignals() != 0)
+            {
+                globalOptions().caughtKeyboardInterrupt = true;
+                return;
+            }
         }
+
+        if (! globalOptions().catchExceptionsAndContinue)
+            std::terminate();
     }
 
     void memoryWarningReceived() override

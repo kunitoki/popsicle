@@ -27,6 +27,36 @@ def enable_hidpi():
 enable_hidpi()
 
 
+def convert_buttons(event: juce.MouseEvent):
+    button = 0
+    buttons = []
+    if event.mods.isLeftButtonDown():
+        button = 1
+        buttons.append(1)
+    if event.mods.isRightButtonDown():
+        button = 2
+        buttons.append(2)
+    if event.mods.isMiddleButtonDown():
+        button = 3
+        buttons.append(3)
+
+    modifiers = []
+    if event.mods.getCurrentModifiers() == juce.ModifierKeys.altModifier:
+        modifiers.append("Alt")
+    if event.mods.getCurrentModifiers() == juce.ModifierKeys.shiftModifier:
+        modifiers.append("Shift")
+    if event.mods.getCurrentModifiers() == juce.ModifierKeys.ctrlModifier:
+        modifiers.append("Control")
+    if event.mods.getCurrentModifiers() == juce.ModifierKeys.commandModifier:
+        modifiers.append("Meta")
+
+    return button, buttons, modifiers
+
+
+def call_later(delay, callback, *args):
+    juce.MessageManager.callAsync(lambda: callback(*args)) # int(delay * 1000)
+
+
 class JUCECallbackTimer(juce.Timer):
     def __init__(self, callback):
         juce.Timer.__init__(self)
@@ -114,6 +144,66 @@ class JUCEWgpuComponent(WgpuAutoGui, WgpuCanvasBase, JUCEWgpuComponentBase):
 
     def is_closed(self):
         return not self.isVisible()
+
+    # User events to jupyter_rfb events
+
+    def _mouse_event(self, event_type, event, touches=True):
+        button, buttons, modifiers = convert_buttons(event)
+
+        ev = {
+            "event_type": event_type,
+            "x": event.getPosition().x,
+            "y": event.getPosition().y,
+            "button": button,
+            "buttons": buttons,
+            "modifiers": modifiers,
+        }
+
+        if touches:
+            ev.update({
+                "ntouches": 0,
+                "touches": {}
+            })
+
+        if event_type == "pointer_move":
+            match_keys = {"buttons", "modifiers", "ntouches"}
+            accum_keys = {}
+            self._handle_event_rate_limited(ev, call_later, match_keys, accum_keys)
+        else:
+            self._handle_event_and_flush(ev)
+
+    def mouseDown(self, event):  # noqa: N802
+        self._mouse_event("pointer_down", event)
+
+    def mouseMove(self, event):  # noqa: N802
+        self._mouse_event("pointer_move", event)
+
+    def mouseDrag(self, event):  # noqa: N802
+        self._mouse_event("pointer_move", event)
+
+    def mouseUp(self, event):  # noqa: N802
+        self._mouse_event("pointer_up", event)
+
+    def mouseDoubleClick(self, event):  # noqa: N802
+        self._mouse_event("double_click", event, touches=False)
+
+    def mouseWheelMove(self, event, wheel):
+        _, buttons, modifiers = convert_buttons(event)
+
+        ev = {
+            "event_type": "wheel",
+            "dx": -wheel.deltaX * 200,
+            "dy": -wheel.deltaY * 200,
+            "x": event.getPosition().x,
+            "y": event.getPosition().y,
+            "buttons": buttons,
+            "modifiers": modifiers
+        }
+
+        match_keys = {"modifiers"}
+        accum_keys = {"dx", "dy"}
+
+        self._handle_event_rate_limited(ev, call_later, match_keys, accum_keys)
 
     # Custom methods to make Component work when used standalone
 
