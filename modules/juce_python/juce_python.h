@@ -108,6 +108,23 @@ static inline constexpr const char* const PythonLogsModuleName = JUCE_PYTHON_STR
 #endif
 
 //==============================================================================
+/**
+ * @brief Use `JUCE_PYTHON_DEFINE_EMBEDDED_MODULES` when defining a plugin.
+ *
+ * Because JUCE plugins are compiled with a shared static library, the embedded modules defined in the library are discarded by the linker
+ * when building the final plugin shared library.
+ *
+ * @see https://github.com/pybind/pybind11/discussions/4619 for moe information.
+ */
+#if JUCE_MODULE_AVAILABLE_juce_audio_plugin_client
+ #define JUCE_PYTHON_DEFINE_EMBEDDED_MODULES                                                                 \
+    PYBIND11_EMBEDDED_MODULE (JUCE_PYTHON_MODULE_NAME, m) { popsicle::registerMainModule (m); }              \
+    PYBIND11_EMBEDDED_MODULE (JUCE_PYTHON_LOGS_MODULE_NAME, m) { popsicle::registerLoggingModule (m); }
+#else
+ #define JUCE_PYTHON_DEFINE_EMBEDDED_MODULES
+#endif
+
+//==============================================================================
 
 #include "scripting/ScriptException.h"
 #include "scripting/ScriptEngine.h"

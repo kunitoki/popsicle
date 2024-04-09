@@ -3,15 +3,7 @@
 
 // =================================================================================================
 
-PYBIND11_EMBEDDED_MODULE (JUCE_PYTHON_MODULE_NAME, m)
-{
-    popsicle::registerMainModule (m);
-}
-
-PYBIND11_EMBEDDED_MODULE (JUCE_PYTHON_LOGS_MODULE_NAME, m)
-{
-    popsicle::registerLoggingModule (m);
-}
+JUCE_PYTHON_DEFINE_EMBEDDED_MODULES
 
 // =================================================================================================
 
