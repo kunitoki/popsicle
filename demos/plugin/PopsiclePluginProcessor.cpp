@@ -28,36 +28,15 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
                        )
-    , engine (popsicle::ScriptEngine::prepareScriptingHome (
-        juce::JUCEApplication::getInstance()->getApplicationName(),
-        juce::File::getSpecialLocation (juce::File::tempDirectory),
-        [](const char* resourceName) -> juce::MemoryBlock
-        {
-            int dataSize = 0;
-            auto data = BinaryData::getNamedResource (resourceName, dataSize);
-            return { data, static_cast<size_t> (dataSize) };
-        }))
+    , Thread ("Popsicle Python Thread")
 {
-    pybind11::dict locals;
-    locals["custom"] = pybind11::module_::import ("custom");
-    locals["juce"] = pybind11::module_::import (popsicle::PythonModuleName);
-    //locals["this"] = pybind11::cast (this);
-
-    auto result = engine.runScript (R"(
-import sys
-import tomli
-
-print("Scripting JUCE!")
-print("Running Popsicle as Python" + ".".join(sys.version.split(".")[:2]))
-print(dir(tomli))
-    )", locals);
-
-    if (result.failed())
-        std::cout << result.getErrorMessage();
+    startThread();
 }
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor()
 {
+    signalThreadShouldExit();
+    waitForThreadToExit(10000);
 }
 
 // =================================================================================================
@@ -219,6 +198,62 @@ void AudioPluginAudioProcessor::setStateInformation (const void* data, int sizeI
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
     juce::ignoreUnused (data, sizeInBytes);
+}
+
+// =================================================================================================
+
+void AudioPluginAudioProcessor::run()
+{
+    auto engine = popsicle::ScriptEngine (popsicle::ScriptEngine::prepareScriptingHome (
+        juce::JUCEApplication::getInstance()->getApplicationName(),
+        juce::File::getSpecialLocation (juce::File::tempDirectory),
+        [](const char* resourceName) -> juce::MemoryBlock
+        {
+            int dataSize = 0;
+            auto data = BinaryData::getNamedResource (resourceName, dataSize);
+            return { data, static_cast<size_t> (dataSize) };
+        }));
+
+    pybind11::dict locals;
+    locals["custom"] = pybind11::module_::import ("custom");
+    locals["juce"] = pybind11::module_::import (popsicle::PythonModuleName);
+    //locals["this"] = pybind11::cast (this);
+
+    pybind11::dict globals = pybind11::globals();
+
+    {
+        auto result = engine.runScript (R"(
+
+def initialise():
+    import sys
+
+    print("Running Popsicle as Python" + ".".join(sys.version.split(".")[:2]))
+
+def run():
+    import sys
+    import popsicle as juce
+
+    sys.stdout.write(".")
+    sys.stdout.flush()
+    juce.Thread.sleep(1000)
+
+def finalise():
+    print("\nFinished Running Popsicle")
+
+        )", locals, globals);
+
+        if (result.failed())
+            std::cout << result.getErrorMessage();
+    }
+
+    globals["initialise"]();
+
+    while (! threadShouldExit())
+    {
+        globals["run"]();
+    }
+
+    globals["finalise"]();
 }
 
 // =================================================================================================

@@ -22,12 +22,24 @@ def file_hash(file):
     return h.hexdigest()
 
 
-def make_archive(file, directory):
+def append_files(*args):
     archived_files = []
-    for dirname, _, files in os.walk(directory):
-        for filename in files:
-            path = os.path.join(dirname, filename)
-            archived_files.append((path, os.path.relpath(path, directory)))
+
+    for directory_or_file in args:
+        if os.path.isdir(directory_or_file):
+            for dirname, _, files in os.walk(directory_or_file):
+                for filename in files:
+                    path = os.path.join(dirname, filename)
+                    archived_files.append((path, os.path.relpath(path, directory_or_file)))
+        else:
+            assert os.path.isabs(directory_or_file)
+            archived_files.append((directory_or_file, os.path.split(directory_or_file)[1]))
+
+    return archived_files
+
+
+def make_archive(file, directory_or_file, *args):
+    archived_files = append_files(directory_or_file, *args)
 
     with zipfile.ZipFile(file, "w") as zf:
         for path, archive_path in sorted(archived_files):
@@ -49,17 +61,21 @@ if __name__ == "__main__":
     parser.add_argument("-m", "--version-minor", type=int, help="Minor version number (integer).")
     parser.add_argument("-x", "--exclude-patterns", type=str, default=None, help="Excluded patterns (semicolon separated list).")
     parser.add_argument("-p", "--pip-packages", type=str, default=None, help="Pip packages to install (semicolon separated list).")
+    parser.add_argument("-z", "--zip-python-executable", action="store_true", help="Store the python executable in an archive.")
 
     args = parser.parse_args()
 
     version = f"{args.version_major}.{args.version_minor}"
     version_nodot = f"{args.version_major}{args.version_minor}"
 
+    base_python: Path = args.base_folder / "lib" / f"python{version}"
     final_location: Path = args.output_folder / "python"
     site_packages: Path = final_location / "site-packages"
-    base_python: Path = args.base_folder / "lib" / f"python{version}"
+
     final_archive: Path = args.output_folder / f"python{version_nodot}.zip"
     temp_archive: Path = args.output_folder / f"temp{version_nodot}.zip"
+    final_python_archive: Path = args.output_folder / f"python{version_nodot}_executable.zip"
+    temp_python_archive: Path = args.output_folder / f"temp{version_nodot}_executable.zip"
 
     base_patterns = [
         "*.pyc",
@@ -81,7 +97,7 @@ if __name__ == "__main__":
         "pydoc*",
         "site-packages",
         "test",
-        "turtledemo",
+        "turtle*",
         "LICENSE.txt",
     ]
 
@@ -108,10 +124,27 @@ if __name__ == "__main__":
         packages = uniquify([x.strip() for x in args.pip_packages.split(";")])
         os.system(f"{sys.executable} -m pip install --no-compile --target={site_packages} {' '.join(packages)}")
 
-    print("making archive...")
+    print("making packages archive...")
     if os.path.exists(final_archive):
         make_archive(temp_archive, final_location)
         if file_hash(temp_archive) != file_hash(final_archive):
             shutil.copy(temp_archive, final_archive)
     else:
         make_archive(final_archive, final_location)
+
+    if args.zip_python_executable:
+        print("making python executable archive...")
+        python_executable = os.path.realpath(sys.executable)
+        print(python_executable)
+
+        # TODO (darwin)
+        # 1. otool -L python_executable
+        # 2. if this contains a Python shared library in the Frameworks/Python.framework whatever, copy that as well
+        # 3. fix install_name_tool on python_executable to use the local
+
+        if os.path.exists(final_python_archive):
+            make_archive(temp_python_archive, python_executable)
+            if file_hash(temp_python_archive) != file_hash(final_python_archive):
+                shutil.copy(temp_python_archive, final_python_archive)
+        else:
+            make_archive(final_python_archive, python_executable)
