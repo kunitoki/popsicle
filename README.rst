@@ -334,6 +334,11 @@ Some images of JUCE tutorials and other small apps ported to *popsicle*.
    .. image:: images/wgpu_triangle.png
        :target: examples/webgpu/
 
+- Pygfx PBR Renderer Integration (`pbr2_embed.py <examples/webgpu/pbr2_embed.py>`_)
+
+   .. image:: images/pygfx_3d_video.png
+       :target: https://www.youtube.com/watch?v=8aV-wZtRkIg
+
 
 -------------
 Code Coverage
