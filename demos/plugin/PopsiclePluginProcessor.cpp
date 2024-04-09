@@ -3,6 +3,18 @@
 
 // =================================================================================================
 
+PYBIND11_EMBEDDED_MODULE (JUCE_PYTHON_MODULE_NAME, m)
+{
+    popsicle::registerMainModule (m);
+}
+
+PYBIND11_EMBEDDED_MODULE (JUCE_PYTHON_LOGS_MODULE_NAME, m)
+{
+    popsicle::registerLoggingModule (m);
+}
+
+// =================================================================================================
+
 PYBIND11_EMBEDDED_MODULE(custom, m)
 {
     namespace py = pybind11;
@@ -24,7 +36,7 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
                        )
-/*    , engine (popsicle::ScriptEngine::prepareScriptingHome (
+    , engine (popsicle::ScriptEngine::prepareScriptingHome (
         juce::JUCEApplication::getInstance()->getApplicationName(),
         juce::File::getSpecialLocation (juce::File::tempDirectory),
         [](const char* resourceName) -> juce::MemoryBlock
@@ -32,22 +44,20 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
             int dataSize = 0;
             auto data = BinaryData::getNamedResource (resourceName, dataSize);
             return { data, static_cast<size_t> (dataSize) };
-        }))*/
+        }))
 {
     pybind11::dict locals;
-    //locals["custom"] = pybind11::module_::import ("custom");
+    locals["custom"] = pybind11::module_::import ("custom");
     locals["juce"] = pybind11::module_::import (popsicle::PythonModuleName);
     //locals["this"] = pybind11::cast (this);
 
     auto result = engine.runScript (R"(
-# import sys
+import sys
+import tomli
 
-# An example of scriptable self
 print("Scripting JUCE!")
-
-#this.text = "Popsicle " + sys.version.split(" ")[0]
-#this.setOpaque(True)
-#this.setSize(600, 300)
+print("Running Popsicle as Python" + ".".join(sys.version.split(".")[:2]))
+print(dir(tomli))
     )", locals);
 
     if (result.failed())
@@ -145,15 +155,9 @@ bool AudioPluginAudioProcessor::isBusesLayoutSupported (const BusesLayout& layou
     juce::ignoreUnused (layouts);
     return true;
   #else
-    // This is the place where you check if the layout is supported.
-    // In this template code we only support mono or stereo.
-    // Some plugin hosts, such as certain GarageBand versions, will only
-    // load plugins that support stereo bus layouts.
-    if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
-     && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
+    if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
         return false;
 
-    // This checks if the input layout matches the output layout
    #if ! JucePlugin_IsSynth
     if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
         return false;
@@ -163,12 +167,12 @@ bool AudioPluginAudioProcessor::isBusesLayoutSupported (const BusesLayout& layou
   #endif
 }
 
-void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
-                                              juce::MidiBuffer& midiMessages)
+void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ignoreUnused (midiMessages);
 
     juce::ScopedNoDenormals noDenormals;
+
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
@@ -190,6 +194,7 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         auto* channelData = buffer.getWritePointer (channel);
+
         juce::ignoreUnused (channelData);
         // ..do something to the data...
     }

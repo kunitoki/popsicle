@@ -1,10 +1,16 @@
 import os
+import sys
 import stat
 import shutil
 import hashlib
 import zipfile
 from pathlib import Path
 from argparse import ArgumentParser
+
+
+def uniquify(seq):
+    seen = set()
+    return [x for x in seq if x and x not in seen and not seen.add(x)]
 
 
 def file_hash(file):
@@ -42,6 +48,7 @@ if __name__ == "__main__":
     parser.add_argument("-M", "--version-major", type=int, help="Major version number (integer).")
     parser.add_argument("-m", "--version-minor", type=int, help="Minor version number (integer).")
     parser.add_argument("-x", "--exclude-patterns", type=str, default=None, help="Excluded patterns (semicolon separated list).")
+    parser.add_argument("-p", "--pip-packages", type=str, default=None, help="Pip packages to install (semicolon separated list).")
 
     args = parser.parse_args()
 
@@ -49,10 +56,10 @@ if __name__ == "__main__":
     version_nodot = f"{args.version_major}{args.version_minor}"
 
     final_location: Path = args.output_folder / "python"
-    site_packages = final_location / "site-packages"
+    site_packages: Path = final_location / "site-packages"
     base_python: Path = args.base_folder / "lib" / f"python{version}"
-    final_archive = args.output_folder / f"python{version_nodot}.zip"
-    temp_archive = args.output_folder / f"temp{version_nodot}.zip"
+    final_archive: Path = args.output_folder / f"python{version_nodot}.zip"
+    temp_archive: Path = args.output_folder / f"temp{version_nodot}.zip"
 
     base_patterns = [
         "*.pyc",
@@ -65,9 +72,13 @@ if __name__ == "__main__":
         "Tk*",
         "_tk*",
         "_test*",
+        "_xxtestfuzz*",
+        "doctest*",
+        "idlelib",
+        "lib2to3",
         "libpython*",
         "pkgconfig",
-        "idlelib",
+        "pydoc*",
         "site-packages",
         "test",
         "turtledemo",
@@ -75,18 +86,27 @@ if __name__ == "__main__":
     ]
 
     if args.exclude_patterns:
-        custom_patterns = [x.strip() for x in args.exclude_patterns.split(";")]
-        base_patterns += custom_patterns
+        base_patterns += [x.strip() for x in args.exclude_patterns.split(";")]
 
-    ignored_files = shutil.ignore_patterns(*base_patterns)
+    ignored_files = shutil.ignore_patterns(*uniquify(base_patterns))
 
     print("cleaning up...")
     if final_location.exists():
         shutil.rmtree(final_location)
 
     print("copying library...")
-    shutil.copytree(base_python, final_location, ignore=ignored_files, dirs_exist_ok=True)
+    shutil.copytree(
+        base_python,
+        final_location,
+        ignore=ignored_files,
+        ignore_dangling_symlinks=True,
+        dirs_exist_ok=True)
     os.makedirs(site_packages, exist_ok=True)
+
+    if args.pip_packages:
+        print("installing packages...")
+        packages = uniquify([x.strip() for x in args.pip_packages.split(";")])
+        os.system(f"{sys.executable} -m pip install --no-compile --target={site_packages} {' '.join(packages)}")
 
     print("making archive...")
     if os.path.exists(final_archive):

@@ -61,14 +61,15 @@ juce_add_plugin ("${PROJECT_NAME}"
 juce_generate_juce_header (${PROJECT_NAME})
 
 # Add the binary target for the python standard library
-set (ADDITIONAL_IGNORED_PYTHON_PATTERNS "lib2to3" "pydoc_data" "_xxtestfuzz*")
+set (ADDITIONAL_IGNORED_PYTHON_PATTERNS "email" "curses" "dbm" "html" "http" "unittest" "urllib" "tomllib" "wsgiref" "xmlrpc")
+set (ADDITIONAL_PYTHON_PACKAGES "tomli")
 set (PYTHON_STANDARD_LIBRARY "${CMAKE_CURRENT_BINARY_DIR}/python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}.zip")
 
 add_custom_target (
     ${PROJECT_NAME}_stdlib
     ${Python_EXECUTABLE} ${ROOT_PATH}/cmake/ArchivePythonStdlib.py
         -b ${Python_ROOT_DIR} -o ${CMAKE_CURRENT_BINARY_DIR} -M ${Python_VERSION_MAJOR} -m ${Python_VERSION_MINOR}
-        -x "\"${ADDITIONAL_IGNORED_PYTHON_PATTERNS}\""
+        -x "\"${ADDITIONAL_IGNORED_PYTHON_PATTERNS}\"" -p "\"${ADDITIONAL_PYTHON_PACKAGES}\""
     BYPRODUCTS ${PYTHON_STANDARD_LIBRARY})
 add_dependencies (${PROJECT_NAME} ${PROJECT_NAME}_stdlib)
 

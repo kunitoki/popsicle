@@ -16,6 +16,8 @@
  * OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE DISCLAIMED.
  */
 
+#include "ScriptPopsicleLogsModule.h"
+
 #if JUCE_PYTHON_EMBEDDED_INTERPRETER
 
 #define JUCE_PYTHON_INCLUDE_PYBIND11_STL
@@ -24,7 +26,8 @@
 #include <iostream>
 #include <string>
 
-PYBIND11_EMBEDDED_MODULE(__popsicle__, m)
+namespace popsicle {
+void registerLoggingModule (pybind11::module_& m)
 {
     namespace py = pybind11;
 
@@ -70,5 +73,13 @@ PYBIND11_EMBEDDED_MODULE(__popsicle__, m)
         sys.attr ("stderr") = popsicleSys.attr ("__saved_stderr__");
     });
 }
+} // namespace popsicle
+
+#if ! JUCE_MODULE_AVAILABLE_juce_audio_plugin_client
+PYBIND11_EMBEDDED_MODULE(JUCE_PYTHON_LOGS_MODULE_NAME, m)
+{
+    popsicle::registerLoggingModule (m);
+}
+#endif
 
 #endif

@@ -16,8 +16,7 @@
  * OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE DISCLAIMED.
  */
 
-#include "../utilities/PyBind11Includes.h"
-
+#include "ScriptJuceBindings.h"
 #include "ScriptJuceCoreBindings.h"
 
 #if JUCE_MODULE_AVAILABLE_juce_events
@@ -62,13 +61,10 @@
 #endif
 
 // =================================================================================================
-#if JUCE_PYTHON_EMBEDDED_INTERPRETER
-PYBIND11_EMBEDDED_MODULE (JUCE_PYTHON_MODULE_NAME, m)
-#else
-PYBIND11_MODULE (JUCE_PYTHON_MODULE_NAME, m)
-#endif
+namespace popsicle {
+void registerMainModule(pybind11::module_& m)
 {
-#if JUCE_MAC
+#if JUCE_MAC && ! JUCE_MODULE_AVAILABLE_juce_audio_plugin_client
     juce::Process::setDockIconVisible (false);
 #endif
 
@@ -115,3 +111,17 @@ PYBIND11_MODULE (JUCE_PYTHON_MODULE_NAME, m)
     popsicle::Bindings::registerJuceAudioUtilsBindings (m);
 #endif
 }
+} // namespace popsicle
+
+// =================================================================================================
+
+#if ! JUCE_MODULE_AVAILABLE_juce_audio_plugin_client
+#if JUCE_PYTHON_EMBEDDED_INTERPRETER
+PYBIND11_EMBEDDED_MODULE (JUCE_PYTHON_MODULE_NAME, m)
+#else
+PYBIND11_MODULE (JUCE_PYTHON_MODULE_NAME, m)
+#endif
+{
+    popsicle::registerMainModule (m);
+}
+#endif

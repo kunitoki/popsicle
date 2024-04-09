@@ -83,11 +83,19 @@
 #endif
 
 /**
+ * @brief Custom logs module name, it's possible to change but beware to update your `import` statements !
+ */
+#ifndef JUCE_PYTHON_LOGS_MODULE_NAME
+ #define JUCE_PYTHON_LOGS_MODULE_NAME __popsicle__
+#endif
+
+/**
  * @brief Custom python module name as string.
  */
 namespace popsicle {
 
 static inline constexpr const char* const PythonModuleName = JUCE_PYTHON_STRINGIFY (JUCE_PYTHON_MODULE_NAME);
+static inline constexpr const char* const PythonLogsModuleName = JUCE_PYTHON_STRINGIFY (JUCE_PYTHON_LOGS_MODULE_NAME);
 
 } // namespace popsicle
 
@@ -109,4 +117,7 @@ static inline constexpr const char* const PythonModuleName = JUCE_PYTHON_STRINGI
 #include "utilities/CrashHandling.h"
 #include "utilities/PythonInterop.h"
 
+#include "bindings/ScriptJuceBindings.h"
 #include "bindings/ScriptJuceCoreBindings.h"
+
+#include "modules/ScriptPopsicleLogsModule.h"
