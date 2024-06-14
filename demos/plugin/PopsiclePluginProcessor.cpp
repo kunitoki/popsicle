@@ -3,6 +3,10 @@
 
 // =================================================================================================
 
+JUCE_PYTHON_DEFINE_EMBEDDED_MODULES
+
+// =================================================================================================
+
 PYBIND11_EMBEDDED_MODULE(custom, m)
 {
     namespace py = pybind11;
@@ -24,38 +28,19 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
                        )
-/*    , engine (popsicle::ScriptEngine::prepareScriptingHome (
-        juce::JUCEApplication::getInstance()->getApplicationName(),
-        juce::File::getSpecialLocation (juce::File::tempDirectory),
-        [](const char* resourceName) -> juce::MemoryBlock
-        {
-            int dataSize = 0;
-            auto data = BinaryData::getNamedResource (resourceName, dataSize);
-            return { data, static_cast<size_t> (dataSize) };
-        }))*/
+    , Thread ("Popsicle Python Thread")
 {
-    pybind11::dict locals;
-    //locals["custom"] = pybind11::module_::import ("custom");
-    locals["juce"] = pybind11::module_::import (popsicle::PythonModuleName);
-    //locals["this"] = pybind11::cast (this);
-
-    auto result = engine.runScript (R"(
-# import sys
-
-# An example of scriptable self
-print("Scripting JUCE!")
-
-#this.text = "Popsicle " + sys.version.split(" ")[0]
-#this.setOpaque(True)
-#this.setSize(600, 300)
-    )", locals);
-
-    if (result.failed())
-        std::cout << result.getErrorMessage();
+    startThread();
 }
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor()
 {
+    signalThreadShouldExit();
+
+    audioReady.arrive_and_wait();
+    backgroundReady.arrive_and_wait();
+
+    waitForThreadToExit(10000);
 }
 
 // =================================================================================================
@@ -126,34 +111,15 @@ void AudioPluginAudioProcessor::changeProgramName (int index, const juce::String
 
 // =================================================================================================
 
-void AudioPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
-{
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
-    juce::ignoreUnused (sampleRate, samplesPerBlock);
-}
-
-void AudioPluginAudioProcessor::releaseResources()
-{
-    // When playback stops, you can use this as an opportunity to free up any
-    // spare memory, etc.
-}
-
 bool AudioPluginAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
   #if JucePlugin_IsMidiEffect
     juce::ignoreUnused (layouts);
     return true;
   #else
-    // This is the place where you check if the layout is supported.
-    // In this template code we only support mono or stereo.
-    // Some plugin hosts, such as certain GarageBand versions, will only
-    // load plugins that support stereo bus layouts.
-    if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
-     && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
+    if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
         return false;
 
-    // This checks if the input layout matches the output layout
    #if ! JucePlugin_IsSynth
     if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
         return false;
@@ -161,38 +127,6 @@ bool AudioPluginAudioProcessor::isBusesLayoutSupported (const BusesLayout& layou
 
     return true;
   #endif
-}
-
-void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
-                                              juce::MidiBuffer& midiMessages)
-{
-    juce::ignoreUnused (midiMessages);
-
-    juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
-
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
-
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-        juce::ignoreUnused (channelData);
-        // ..do something to the data...
-    }
 }
 
 // =================================================================================================
@@ -222,6 +156,120 @@ void AudioPluginAudioProcessor::setStateInformation (const void* data, int sizeI
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
     juce::ignoreUnused (data, sizeInBytes);
+}
+
+// =================================================================================================
+
+void AudioPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+{
+    juce::ignoreUnused (sampleRate);
+
+    audioBuffer.setSize (2, samplesPerBlock);
+    backgroundBuffer.setSize (2, samplesPerBlock);
+}
+
+void AudioPluginAudioProcessor::releaseResources()
+{
+}
+
+void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+{
+    juce::ignoreUnused (midiMessages);
+
+    juce::ScopedNoDenormals noDenormals;
+
+    auto totalNumInputChannels = getTotalNumInputChannels();
+    auto totalNumOutputChannels = getTotalNumOutputChannels();
+
+    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+        buffer.clear (i, 0, buffer.getNumSamples());
+
+    audioBuffer.copyFrom(0, 0, buffer, 0, 0, buffer.getNumSamples());
+    audioBuffer.copyFrom(1, 0, buffer, 1, 0, buffer.getNumSamples());
+
+    if (isThreadRunning() && ! threadShouldExit())
+    {
+        audioReady.arrive_and_wait();
+
+        std::swap(audioBuffer, backgroundBuffer);
+
+        backgroundReady.arrive_and_wait();
+    }
+
+    buffer.clear();
+}
+
+// =================================================================================================
+
+void AudioPluginAudioProcessor::run()
+{
+    auto tempPath = juce::File::getSpecialLocation (juce::File::tempDirectory);
+    tempPath.deleteRecursively();
+
+    auto engine = popsicle::ScriptEngine (popsicle::ScriptEngine::prepareScriptingHome (
+        juce::JUCEApplication::getInstance()->getApplicationName(),
+        tempPath,
+        [](const char* resourceName) -> juce::MemoryBlock
+        {
+            int dataSize = 0;
+            auto data = BinaryData::getNamedResource (resourceName, dataSize);
+            return { data, static_cast<size_t> (dataSize) };
+        }));
+
+    pybind11::dict locals;
+    locals["custom"] = pybind11::module_::import ("custom");
+    locals["juce"] = pybind11::module_::import (popsicle::PythonModuleName);
+    //locals["this"] = pybind11::cast (this);
+
+    pybind11::dict globals = pybind11::globals();
+
+/*
+import threading
+
+def example_thread(should_stop):
+    import sys, time
+    while not should_stop.is_set():
+        sys.stdout.write("x")
+        sys.stdout.flush()
+        time.sleep(1)
+
+should_stop = threading.Event()
+t = threading.Thread(target=example_thread, args=(should_stop,))
+t.daemon = True
+t.start()
+*/
+    {
+        auto result = engine.runScript (R"(
+import numpy as np
+
+def initialise():
+    import sys
+    print("Running Popsicle as Python" + ".".join(sys.version.split(".")[:2]))
+
+def run(audioBuffer):
+    return audioBuffer
+
+def finalise():
+    print("\nFinished Running Popsicle")
+
+        )", locals, globals);
+
+        if (result.failed())
+            std::cout << result.getErrorMessage();
+    }
+
+    globals["initialise"]();
+
+    while (! threadShouldExit())
+    {
+        audioReady.arrive_and_wait();
+        backgroundReady.arrive_and_wait();
+
+        auto maxValue = globals["run"](backgroundBuffer);
+        std::cout << pybind11::str(maxValue) << std::endl;
+    }
+
+    globals["finalise"]();
 }
 
 // =================================================================================================

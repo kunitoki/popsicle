@@ -27,7 +27,7 @@ namespace py = pybind11;
 ScriptStreamRedirection::ScriptStreamRedirection() noexcept
 {
 #if JUCE_PYTHON_EMBEDDED_INTERPRETER
-    sys = py::module::import ("__popsicle__");
+    sys = py::module_::import (PythonLogsModuleName);
 
     sys.attr ("__redirect__")();
 #endif

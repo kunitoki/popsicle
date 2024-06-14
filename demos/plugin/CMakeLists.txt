@@ -41,8 +41,13 @@ add_subdirectory (${MODULES_PATH} ./modules)
 if (APPLE)
     set (Python_ROOT_DIR "/Library/Frameworks/Python.framework/Versions/Current")
 endif()
-set (Python_USE_STATIC_LIBS TRUE)
+set (Python_USE_STATIC_LIBS FALSE)
 find_package (Python REQUIRED Interpreter Development.Embed)
+message("-- Popsicle -- Python_FOUND:                   ${Python_FOUND}")
+message("-- Popsicle -- Python_VERSION:                 ${Python_VERSION}")
+message("-- Popsicle -- Python_Development.Embed_FOUND: ${Python_Development.Embed_FOUND}")
+message("-- Popsicle -- Python_INCLUDE_DIRS:            ${Python_INCLUDE_DIRS}")
+message("-- Popsicle -- Python_LIBRARIES:               ${Python_LIBRARIES}")
 
 # Setup the juce app
 juce_add_plugin ("${PROJECT_NAME}"
@@ -56,19 +61,20 @@ juce_add_plugin ("${PROJECT_NAME}"
     NEEDS_MIDI_INPUT OFF
     NEEDS_MIDI_OUTPUT OFF
     IS_MIDI_EFFECT OFF
-    APP_SANDBOX_ENABLED ON
+    #APP_SANDBOX_ENABLED ON
     COPY_PLUGIN_AFTER_BUILD ON)
 juce_generate_juce_header (${PROJECT_NAME})
 
 # Add the binary target for the python standard library
-set (ADDITIONAL_IGNORED_PYTHON_PATTERNS "lib2to3" "pydoc_data" "_xxtestfuzz*")
+set (ADDITIONAL_IGNORED_PYTHON_PATTERNS "email" "curses" "dbm" "html" "http" "unittest" "tomllib" "wsgiref" "xmlrpc")
+set (ADDITIONAL_PYTHON_PACKAGES "numpy")
 set (PYTHON_STANDARD_LIBRARY "${CMAKE_CURRENT_BINARY_DIR}/python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}.zip")
 
 add_custom_target (
     ${PROJECT_NAME}_stdlib
     ${Python_EXECUTABLE} ${ROOT_PATH}/cmake/ArchivePythonStdlib.py
         -b ${Python_ROOT_DIR} -o ${CMAKE_CURRENT_BINARY_DIR} -M ${Python_VERSION_MAJOR} -m ${Python_VERSION_MINOR}
-        -x "\"${ADDITIONAL_IGNORED_PYTHON_PATTERNS}\""
+        -x "\"${ADDITIONAL_IGNORED_PYTHON_PATTERNS}\"" -p "\"${ADDITIONAL_PYTHON_PACKAGES}\""
     BYPRODUCTS ${PYTHON_STANDARD_LIBRARY})
 add_dependencies (${PROJECT_NAME} ${PROJECT_NAME}_stdlib)
 
@@ -82,8 +88,7 @@ target_sources (${PROJECT_NAME} PRIVATE
     PopsiclePluginProcessor.cpp
     PopsiclePluginProcessor.h)
 
-#set_target_properties (${PROJECT_NAME} PROPERTIES JUCE_TARGET_KIND_STRING "App")
-set_target_properties (${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
+set_target_properties (${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 set_target_properties (${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET "hidden")
 set_target_properties (${PROJECT_NAME} PROPERTIES VISIBILITY_INLINES_HIDDEN TRUE)
 set_target_properties (${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
@@ -91,7 +96,7 @@ set_target_properties (${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE TRUE
 if (APPLE)
     #set_target_properties (${PROJECT_NAME} PROPERTIES OSX_ARCHITECTURES "arm64;x86_64")
     #set_target_properties (BinaryData PROPERTIES OSX_ARCHITECTURES "arm64;x86_64")
-    target_link_options (${PROJECT_NAME} PRIVATE "-Wl,-weak_reference_mismatches,weak")
+    target_link_options (${PROJECT_NAME} PRIVATE "-Wl,-weak_reference_mismatches,weak -Wl,-undefined,dynamic_lookup")
     #set (LTO_CONFIGURATION "juce::juce_recommended_lto_flags")
     set (LTO_CONFIGURATION "")
 else()
@@ -111,9 +116,8 @@ elseif (UNIX)
 endif()
 
 target_compile_definitions (${PROJECT_NAME} PRIVATE
-    #JUCE_STANDALONE_APPLICATION=1
     JUCE_DISPLAY_SPLASH_SCREEN=0
-    JUCE_MODAL_LOOPS_PERMITTED=1
+    JUCE_MODAL_LOOPS_PERMITTED=0
     JUCE_CATCH_UNHANDLED_EXCEPTIONS=0
     JUCE_LOG_ASSERTIONS=1
     JUCE_ALLOW_STATIC_NULL_VARIABLES=0
@@ -122,6 +126,9 @@ target_compile_definitions (${PROJECT_NAME} PRIVATE
     JUCE_LOAD_CURL_SYMBOLS_LAZILY=1
     JUCE_SILENCE_XCODE_15_LINKER_WARNING=1
     PYBIND11_DETAILED_ERROR_MESSAGES=1)
+
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${Python_INCLUDE_DIRS})
 
 target_link_libraries (${PROJECT_NAME} PRIVATE
     #juce::juce_analytics
@@ -144,8 +151,9 @@ target_link_libraries (${PROJECT_NAME} PRIVATE
     #juce::juce_video
     juce::juce_recommended_config_flags
     juce::juce_recommended_warning_flags
-    Python::Python
+    #Python::Python
     popsicle::juce_python
     popsicle::juce_python_recommended_warning_flags
     BinaryData
+    ${Python_LIBRARIES}
     ${LTO_CONFIGURATION})

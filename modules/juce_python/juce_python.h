@@ -83,11 +83,19 @@
 #endif
 
 /**
+ * @brief Custom logs module name, it's possible to change but beware to update your `import` statements !
+ */
+#ifndef JUCE_PYTHON_LOGS_MODULE_NAME
+ #define JUCE_PYTHON_LOGS_MODULE_NAME __popsicle__
+#endif
+
+/**
  * @brief Custom python module name as string.
  */
 namespace popsicle {
 
 static inline constexpr const char* const PythonModuleName = JUCE_PYTHON_STRINGIFY (JUCE_PYTHON_MODULE_NAME);
+static inline constexpr const char* const PythonLogsModuleName = JUCE_PYTHON_STRINGIFY (JUCE_PYTHON_LOGS_MODULE_NAME);
 
 } // namespace popsicle
 
@@ -100,6 +108,23 @@ static inline constexpr const char* const PythonModuleName = JUCE_PYTHON_STRINGI
 #endif
 
 //==============================================================================
+/**
+ * @brief Use `JUCE_PYTHON_DEFINE_EMBEDDED_MODULES` when defining a plugin.
+ *
+ * Because JUCE plugins are compiled with a shared static library, the embedded modules defined in the library are discarded by the linker
+ * when building the final plugin shared library.
+ *
+ * @see https://github.com/pybind/pybind11/discussions/4619 for moe information.
+ */
+#if JUCE_MODULE_AVAILABLE_juce_audio_plugin_client
+ #define JUCE_PYTHON_DEFINE_EMBEDDED_MODULES                                                                 \
+    PYBIND11_EMBEDDED_MODULE (JUCE_PYTHON_MODULE_NAME, m) { popsicle::registerMainModule (m); }              \
+    PYBIND11_EMBEDDED_MODULE (JUCE_PYTHON_LOGS_MODULE_NAME, m) { popsicle::registerLoggingModule (m); }
+#else
+ #define JUCE_PYTHON_DEFINE_EMBEDDED_MODULES
+#endif
+
+//==============================================================================
 
 #include "scripting/ScriptException.h"
 #include "scripting/ScriptEngine.h"
@@ -109,4 +134,7 @@ static inline constexpr const char* const PythonModuleName = JUCE_PYTHON_STRINGI
 #include "utilities/CrashHandling.h"
 #include "utilities/PythonInterop.h"
 
+#include "bindings/ScriptJuceBindings.h"
 #include "bindings/ScriptJuceCoreBindings.h"
+
+#include "modules/ScriptPopsicleLogsModule.h"

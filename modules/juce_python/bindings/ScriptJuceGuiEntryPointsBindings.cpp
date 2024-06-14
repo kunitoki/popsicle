@@ -160,8 +160,6 @@ void registerJuceGuiEntryPointsBindings (py::module_& m)
         systemExit();
     }, "applicationType"_a, "catchExceptionsAndContinue"_a = false);
 
-#endif
-
     // =================================================================================================
 
     struct PyTestableApplication
@@ -265,6 +263,8 @@ void registerJuceGuiEntryPointsBindings (py::module_& m)
             return std::addressof (self);
         }, py::return_value_policy::reference)
     ;
+
+#endif
 }
 
 } // namespace popsicle::Bindings

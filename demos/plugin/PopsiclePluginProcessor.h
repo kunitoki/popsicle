@@ -2,8 +2,11 @@
 
 #include "JuceHeader.h"
 
+#include <barrier>
+#include <memory>
+
 //==============================================================================
-class AudioPluginAudioProcessor  : public juce::AudioProcessor
+class AudioPluginAudioProcessor  : public juce::AudioProcessor, public juce::Thread
 {
 public:
     //==============================================================================
@@ -16,7 +19,7 @@ public:
 
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
 
-    void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+    void processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiBuffer) override;
     using AudioProcessor::processBlock;
 
     //==============================================================================
@@ -42,8 +45,14 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    //==============================================================================
+    void run() override;
+
 private:
-    popsicle::ScriptEngine engine;
+    AudioBuffer<float> audioBuffer;
+    AudioBuffer<float> backgroundBuffer;
+    std::barrier<> audioReady{ 2 };
+    std::barrier<> backgroundReady{ 2 };
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessor)

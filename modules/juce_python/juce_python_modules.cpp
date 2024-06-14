@@ -18,4 +18,4 @@
 
 #include "juce_python.h"
 
-#include "modules/ScriptPopsicleModule.cpp"
+#include "modules/ScriptPopsicleLogsModule.cpp"
