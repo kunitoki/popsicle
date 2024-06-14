@@ -36,6 +36,10 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor()
 {
     signalThreadShouldExit();
+
+    audioReady.arrive_and_wait();
+    backgroundReady.arrive_and_wait();
+
     waitForThreadToExit(10000);
 }
 
@@ -107,19 +111,6 @@ void AudioPluginAudioProcessor::changeProgramName (int index, const juce::String
 
 // =================================================================================================
 
-void AudioPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
-{
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
-    juce::ignoreUnused (sampleRate, samplesPerBlock);
-}
-
-void AudioPluginAudioProcessor::releaseResources()
-{
-    // When playback stops, you can use this as an opportunity to free up any
-    // spare memory, etc.
-}
-
 bool AudioPluginAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
   #if JucePlugin_IsMidiEffect
@@ -136,39 +127,6 @@ bool AudioPluginAudioProcessor::isBusesLayoutSupported (const BusesLayout& layou
 
     return true;
   #endif
-}
-
-void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
-{
-    juce::ignoreUnused (midiMessages);
-
-    juce::ScopedNoDenormals noDenormals;
-
-    auto totalNumInputChannels  = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
-
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
-
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-
-        juce::ignoreUnused (channelData);
-        // ..do something to the data...
-    }
 }
 
 // =================================================================================================
@@ -202,11 +160,55 @@ void AudioPluginAudioProcessor::setStateInformation (const void* data, int sizeI
 
 // =================================================================================================
 
+void AudioPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+{
+    juce::ignoreUnused (sampleRate);
+
+    audioBuffer.setSize (2, samplesPerBlock);
+    backgroundBuffer.setSize (2, samplesPerBlock);
+}
+
+void AudioPluginAudioProcessor::releaseResources()
+{
+}
+
+void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+{
+    juce::ignoreUnused (midiMessages);
+
+    juce::ScopedNoDenormals noDenormals;
+
+    auto totalNumInputChannels = getTotalNumInputChannels();
+    auto totalNumOutputChannels = getTotalNumOutputChannels();
+
+    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+        buffer.clear (i, 0, buffer.getNumSamples());
+
+    audioBuffer.copyFrom(0, 0, buffer, 0, 0, buffer.getNumSamples());
+    audioBuffer.copyFrom(1, 0, buffer, 1, 0, buffer.getNumSamples());
+
+    if (isThreadRunning() && ! threadShouldExit())
+    {
+        audioReady.arrive_and_wait();
+
+        std::swap(audioBuffer, backgroundBuffer);
+
+        backgroundReady.arrive_and_wait();
+    }
+
+    buffer.clear();
+}
+
+// =================================================================================================
+
 void AudioPluginAudioProcessor::run()
 {
+    auto tempPath = juce::File::getSpecialLocation (juce::File::tempDirectory);
+    tempPath.deleteRecursively();
+
     auto engine = popsicle::ScriptEngine (popsicle::ScriptEngine::prepareScriptingHome (
         juce::JUCEApplication::getInstance()->getApplicationName(),
-        juce::File::getSpecialLocation (juce::File::tempDirectory),
+        tempPath,
         [](const char* resourceName) -> juce::MemoryBlock
         {
             int dataSize = 0;
@@ -221,21 +223,31 @@ void AudioPluginAudioProcessor::run()
 
     pybind11::dict globals = pybind11::globals();
 
+/*
+import threading
+
+def example_thread(should_stop):
+    import sys, time
+    while not should_stop.is_set():
+        sys.stdout.write("x")
+        sys.stdout.flush()
+        time.sleep(1)
+
+should_stop = threading.Event()
+t = threading.Thread(target=example_thread, args=(should_stop,))
+t.daemon = True
+t.start()
+*/
     {
         auto result = engine.runScript (R"(
+import numpy as np
 
 def initialise():
     import sys
-
     print("Running Popsicle as Python" + ".".join(sys.version.split(".")[:2]))
 
-def run():
-    import sys
-    import popsicle as juce
-
-    sys.stdout.write(".")
-    sys.stdout.flush()
-    juce.Thread.sleep(1000)
+def run(audioBuffer):
+    return audioBuffer
 
 def finalise():
     print("\nFinished Running Popsicle")
@@ -250,7 +262,11 @@ def finalise():
 
     while (! threadShouldExit())
     {
-        globals["run"]();
+        audioReady.arrive_and_wait();
+        backgroundReady.arrive_and_wait();
+
+        auto maxValue = globals["run"](backgroundBuffer);
+        std::cout << pybind11::str(maxValue) << std::endl;
     }
 
     globals["finalise"]();

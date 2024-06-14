@@ -2,6 +2,7 @@
 
 #include "JuceHeader.h"
 
+#include <barrier>
 #include <memory>
 
 //==============================================================================
@@ -48,6 +49,11 @@ public:
     void run() override;
 
 private:
+    AudioBuffer<float> audioBuffer;
+    AudioBuffer<float> backgroundBuffer;
+    std::barrier<> audioReady{ 2 };
+    std::barrier<> backgroundReady{ 2 };
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessor)
 };

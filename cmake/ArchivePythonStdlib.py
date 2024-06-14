@@ -1,4 +1,5 @@
 import os
+import fnmatch
 import sys
 import stat
 import shutil
@@ -20,6 +21,23 @@ def file_hash(file):
         h.update(f.read())
 
     return h.hexdigest()
+
+
+def cleanup_files(directory, file_patterns = None, folder_patterns = None):
+    for dirname, folders, files in os.walk(directory):
+        if folder_patterns:
+            for foldername in folders:
+                for pattern in folder_patterns:
+                    if fnmatch.fnmatch(foldername, pattern):
+                        shutil.rmtree(os.path.join(dirname, foldername))
+                        break
+
+        if file_patterns:
+            for filename in files:
+                for pattern in file_patterns:
+                    if fnmatch.fnmatch(filename, pattern):
+                        os.remove(os.path.join(dirname, filename))
+                        break
 
 
 def append_files(*args):
@@ -106,9 +124,13 @@ if __name__ == "__main__":
 
     ignored_files = shutil.ignore_patterns(*uniquify(base_patterns))
 
+    #==============================================================================================
+
     print("cleaning up...")
     if final_location.exists():
         shutil.rmtree(final_location)
+
+    #==============================================================================================
 
     print("copying library...")
     shutil.copytree(
@@ -119,18 +141,30 @@ if __name__ == "__main__":
         dirs_exist_ok=True)
     os.makedirs(site_packages, exist_ok=True)
 
+    #==============================================================================================
+
     if args.pip_packages:
         print("installing packages...")
         packages = uniquify([x.strip() for x in args.pip_packages.split(";")])
         os.system(f"{sys.executable} -m pip install --no-compile --target={site_packages} {' '.join(packages)}")
 
+        print("cleaning up packages...")
+        cleanup_files(site_packages, ["*.pyi"], ["tests", "bin"])
+
+    #==============================================================================================
+
     print("making packages archive...")
+    #if sys.platform == "darwin":
+    #    os.system(f"xattr -cr {final_location}")
+
     if os.path.exists(final_archive):
         make_archive(temp_archive, final_location)
         if file_hash(temp_archive) != file_hash(final_archive):
             shutil.copy(temp_archive, final_archive)
     else:
         make_archive(final_archive, final_location)
+
+    #==============================================================================================
 
     if args.zip_python_executable:
         print("making python executable archive...")
